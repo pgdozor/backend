@@ -217,11 +217,11 @@ latest AS (
     LIMIT 1
 ),
 tq_ins AS (
-    INSERT INTO transaction_queries (transaction_id, query_start, statement_id, query, query_tags)
-    SELECT tx.id, params.query_start, norm.statement_id, norm.query, params.query_tags
+    INSERT INTO transaction_queries (transaction_id, xact_start, query_start, statement_id, query, query_tags)
+    SELECT tx.id, params.xact_start, params.query_start, norm.statement_id, norm.query, params.query_tags
     FROM tx, norm, params
     WHERE params.query_start IS DISTINCT FROM (SELECT query_start FROM latest)
-    ON CONFLICT (transaction_id, query_start) DO NOTHING
+    ON CONFLICT (transaction_id, query_start, xact_start) DO NOTHING
     RETURNING id
 ),
 tq AS (
@@ -247,10 +247,10 @@ extended AS (
     RETURNING e.id
 )
 INSERT INTO transaction_events (
-    transaction_query_id, state, wait_event_type, wait_event,
+    transaction_query_id, xact_start, state, wait_event_type, wait_event,
     blocked_by_pid, lock_wait_start, lock_mode, first_seen_at, last_seen_at
 )
-SELECT tq.id, params.state, norm.wait_event_type, norm.wait_event,
+SELECT tq.id, params.xact_start, params.state, norm.wait_event_type, norm.wait_event,
        norm.blocked_by_pid, params.lock_wait_start, norm.lock_mode, params.collected_at, params.collected_at
 FROM tq, norm, params
 WHERE NOT EXISTS (SELECT 1 FROM extended)

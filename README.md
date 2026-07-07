@@ -73,6 +73,19 @@ make run
 - After editing `proto/`: `make buf-generate`.
 - After editing `db/queries/` or `db/migrations/`: `make sqlc-generate`.
 
+## Retention
+
+The high-volume append-only tables (`log_events`, `statement_deltas`,
+`statement_samples`, `transactions`, `transaction_queries`,
+`transaction_events`) are RANGE-partitioned by time into weekly partitions. A
+background job (`internal/retention`) creates upcoming partitions ahead of writes
+and drops whole partitions once their week has aged past the retention window —
+an instant metadata operation, unlike a bloat-inducing `DELETE`.
+
+`RETENTION_DAYS` controls the window (default `30`; clamped up to a `14`-day
+minimum so the weekly digest's week-over-week comparison stays intact; `0`
+disables dropping and keeps everything).
+
 ## API
 
 Two Connect services are exposed under `http://localhost:3000`:

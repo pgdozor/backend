@@ -1,8 +1,4 @@
 -- name: RecordTransactionEvent :batchexec
--- Upsert the transaction and its current query, then append one event row --
--- unless the latest event is byte-for-byte unchanged, in which case just extend
--- its last_seen_at. Every @arg is bound once in the params CTE so sqlc emits a
--- stable 18-field struct; downstream CTEs read from params/norm, never @args.
 WITH params AS (
     SELECT
         @server_name::text            AS server_name,
@@ -57,11 +53,11 @@ latest AS (
     LIMIT 1
 ),
 tq_ins AS (
-    INSERT INTO transaction_queries (transaction_id, query_start, statement_id, query, query_tags)
-    SELECT tx.id, params.query_start, norm.statement_id, norm.query, params.query_tags
+    INSERT INTO transaction_queries (transaction_id, xact_start, query_start, statement_id, query, query_tags)
+    SELECT tx.id, params.xact_start, params.query_start, norm.statement_id, norm.query, params.query_tags
     FROM tx, norm, params
     WHERE params.query_start IS DISTINCT FROM (SELECT query_start FROM latest)
-    ON CONFLICT (transaction_id, query_start) DO NOTHING
+    ON CONFLICT (transaction_id, query_start, xact_start) DO NOTHING
     RETURNING id
 ),
 tq AS (
@@ -87,10 +83,10 @@ extended AS (
     RETURNING e.id
 )
 INSERT INTO transaction_events (
-    transaction_query_id, state, wait_event_type, wait_event,
+    transaction_query_id, xact_start, state, wait_event_type, wait_event,
     blocked_by_pid, lock_wait_start, lock_mode, first_seen_at, last_seen_at
 )
-SELECT tq.id, params.state, norm.wait_event_type, norm.wait_event,
+SELECT tq.id, params.xact_start, params.state, norm.wait_event_type, norm.wait_event,
        norm.blocked_by_pid, params.lock_wait_start, norm.lock_mode, params.collected_at, params.collected_at
 FROM tq, norm, params
 WHERE NOT EXISTS (SELECT 1 FROM extended);
@@ -185,7 +181,6 @@ WHERE (sqlc.narg('server_name')::text IS NULL OR s.server_name = sqlc.narg('serv
   );
 
 -- name: StatementMetricSeries :many
--- Each metric summed per time bucket across [since, until].
 SELECT
     b.bucket_start::timestamptz AS bucket_start,
     coalesce(a.total_exec_time, 0)::double precision AS total_exec_time,
@@ -257,7 +252,6 @@ WITH per_statement AS (
     GROUP BY s.id
 ),
 statement_tags AS (
-    -- Per statement, reduce its samples' tags to one value per key: the shared value when every sample agrees, otherwise '*'.
     SELECT statement_id, jsonb_object_agg(key, value) AS tags
     FROM (
         SELECT
@@ -281,7 +275,6 @@ SELECT
     ps.calls,
     ps.rows,
     ps.total_exec_time,
-    -- Denominator spans every matching statement, computed before LIMIT.
     (coalesce(ps.total_exec_time / NULLIF(sum(ps.total_exec_time) OVER (), 0), 0) * 100)::double precision AS pct_of_total,
     coalesce(st.tags, '{}'::jsonb) AS tags
 FROM per_statement ps
@@ -500,12 +493,9 @@ DELETE FROM alert_notifications WHERE alert_notifications.server_name = sqlc.arg
 SELECT slack_webhook_url FROM alert_settings WHERE server_name = $1;
 
 -- name: GetAlertEnabled :one
--- No row means the alert has never been overridden, so it is enabled by default.
 SELECT enabled FROM alert_toggles WHERE server_name = $1 AND alert_key = $2;
 
 -- name: TryClaimAlertNotification :one
--- Atomically claims the right to fire (server_name, alert_key): returns a row only
--- when this is the first fire or the cooldown has elapsed; no row means suppressed.
 INSERT INTO alert_notifications (server_name, alert_key, last_fired_at)
 VALUES (sqlc.arg('server_name'), sqlc.arg('alert_key'), now())
 ON CONFLICT (server_name, alert_key)
@@ -514,8 +504,6 @@ WHERE alert_notifications.last_fired_at < now() - sqlc.arg('cooldown')::interval
 RETURNING last_fired_at;
 
 -- name: ListStaleServers :many
--- Servers whose latest health report is older than the staleness cutoff but still
--- within retention, so a long-dead server stops re-alerting once it ages out.
 SELECT server_name
 FROM collector_health
 WHERE collected_at < now() - sqlc.arg('stale_after')::interval
@@ -523,7 +511,6 @@ WHERE collected_at < now() - sqlc.arg('stale_after')::interval
 ORDER BY server_name;
 
 -- name: ListServersWithDigestEnabled :many
--- Servers that have a Slack webhook and have not disabled the weekly digest.
 SELECT s.server_name
 FROM alert_settings s
 LEFT JOIN alert_toggles t
@@ -539,8 +526,6 @@ WHERE server_name = sqlc.arg('server_name')
   AND query_id = ANY(sqlc.arg('query_ids')::bigint[]);
 
 -- name: AlertDigestSummary :one
--- Current vs previous 7-day window for the weekly digest trend
--- (log levels 5/7/8 = ERROR/FATAL/PANIC).
 SELECT
     (SELECT coalesce(sum(d.total_exec_time), 0)::double precision
        FROM statement_deltas d JOIN statements s ON s.id = d.statement_id

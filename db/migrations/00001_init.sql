@@ -11,9 +11,9 @@ CREATE TABLE statements (
 );
 
 CREATE TABLE log_events (
-    id               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    server_name      TEXT        NOT NULL,
+    id               BIGINT GENERATED ALWAYS AS IDENTITY,
     collected_at     TIMESTAMPTZ NOT NULL,
+    server_name      TEXT        NOT NULL,
     occurred_at      TIMESTAMPTZ,
     log_level        INTEGER     NOT NULL,
     classification   INTEGER     NOT NULL,
@@ -27,33 +27,42 @@ CREATE TABLE log_events (
     context          TEXT,
     statement        TEXT,
     backend_type     TEXT,
-    state_code       TEXT
-);
+    state_code       TEXT,
+    PRIMARY KEY (id, collected_at)
+) PARTITION BY RANGE (collected_at);
+
+CREATE TABLE log_events_default PARTITION OF log_events DEFAULT;
 
 CREATE TABLE statement_deltas (
-    id                BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    statement_id      BIGINT           NOT NULL REFERENCES statements (id),
+    id                BIGINT GENERATED ALWAYS AS IDENTITY,
     collected_at      TIMESTAMPTZ      NOT NULL,
+    statement_id      BIGINT           NOT NULL REFERENCES statements (id),
     calls             BIGINT           NOT NULL,
     rows              BIGINT           NOT NULL,
     total_exec_time   DOUBLE PRECISION NOT NULL,
     shared_blks_read  BIGINT           NOT NULL,
-    temp_blks_written BIGINT           NOT NULL
-);
+    temp_blks_written BIGINT           NOT NULL,
+    PRIMARY KEY (id, collected_at)
+) PARTITION BY RANGE (collected_at);
+
+CREATE TABLE statement_deltas_default PARTITION OF statement_deltas DEFAULT;
 
 CREATE TABLE statement_samples (
-    id                BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    server_name       TEXT             NOT NULL,
+    id                BIGINT GENERATED ALWAYS AS IDENTITY,
     collected_at      TIMESTAMPTZ      NOT NULL,
+    server_name       TEXT             NOT NULL,
     occurred_at       TIMESTAMPTZ,
-    log_event_id      BIGINT           REFERENCES log_events (id),
+    log_event_id      BIGINT,
     statement_id      BIGINT           REFERENCES statements (id),
     query             TEXT             NOT NULL,
     duration_ms       DOUBLE PRECISION NOT NULL,
     parameters        TEXT[],
     explain_plan_json TEXT,
-    tags              JSONB
-);
+    tags              JSONB,
+    PRIMARY KEY (id, collected_at)
+) PARTITION BY RANGE (collected_at);
+
+CREATE TABLE statement_samples_default PARTITION OF statement_samples DEFAULT;
 
 CREATE TABLE collector_health (
     server_name  TEXT        PRIMARY KEY,
@@ -62,31 +71,39 @@ CREATE TABLE collector_health (
 );
 
 CREATE TABLE transactions (
-    id               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id               BIGINT GENERATED ALWAYS AS IDENTITY,
+    xact_start       TIMESTAMPTZ NOT NULL,
     server_name      TEXT        NOT NULL,
     pid              INTEGER     NOT NULL,
     backend_start    TIMESTAMPTZ NOT NULL,
-    xact_start       TIMESTAMPTZ NOT NULL,
     database_name    TEXT        NOT NULL,
     user_name        TEXT        NOT NULL,
     application_name TEXT        NOT NULL,
     last_seen_at     TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (id, xact_start),
     UNIQUE (server_name, pid, backend_start, xact_start)
-);
+) PARTITION BY RANGE (xact_start);
+
+CREATE TABLE transactions_default PARTITION OF transactions DEFAULT;
 
 CREATE TABLE transaction_queries (
-    id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    transaction_id BIGINT      NOT NULL REFERENCES transactions (id) ON DELETE CASCADE,
+    id             BIGINT GENERATED ALWAYS AS IDENTITY,
+    xact_start     TIMESTAMPTZ NOT NULL,
+    transaction_id BIGINT      NOT NULL,
     query_start    TIMESTAMPTZ NOT NULL,
     statement_id   BIGINT      REFERENCES statements (id),
     query          TEXT        NOT NULL,
     query_tags     JSONB,
-    UNIQUE (transaction_id, query_start)
-);
+    PRIMARY KEY (id, xact_start),
+    UNIQUE (transaction_id, query_start, xact_start)
+) PARTITION BY RANGE (xact_start);
+
+CREATE TABLE transaction_queries_default PARTITION OF transaction_queries DEFAULT;
 
 CREATE TABLE transaction_events (
-    id                   BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    transaction_query_id BIGINT      NOT NULL REFERENCES transaction_queries (id) ON DELETE CASCADE,
+    id                   BIGINT GENERATED ALWAYS AS IDENTITY,
+    xact_start           TIMESTAMPTZ NOT NULL,
+    transaction_query_id BIGINT      NOT NULL,
     state                TEXT        NOT NULL,
     wait_event_type      TEXT,
     wait_event           TEXT,
@@ -94,8 +111,11 @@ CREATE TABLE transaction_events (
     lock_wait_start      TIMESTAMPTZ,
     lock_mode            TEXT,
     first_seen_at        TIMESTAMPTZ NOT NULL,
-    last_seen_at         TIMESTAMPTZ NOT NULL
-);
+    last_seen_at         TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (id, xact_start)
+) PARTITION BY RANGE (xact_start);
+
+CREATE TABLE transaction_events_default PARTITION OF transaction_events DEFAULT;
 
 CREATE TABLE users (
     id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -103,7 +123,6 @@ CREATE TABLE users (
     email           TEXT        NOT NULL UNIQUE,
     password_hash   TEXT        NOT NULL,
     is_super_admin  BOOLEAN     NOT NULL DEFAULT false,
-    -- Postgres server names this user may view; empty for a super admin (sees all).
     allowed_servers TEXT[]      NOT NULL DEFAULT '{}',
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -125,14 +144,11 @@ CREATE TABLE collector_tokens (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Per-server Slack destination for alert notifications.
 CREATE TABLE alert_settings (
     server_name       TEXT PRIMARY KEY,
     slack_webhook_url TEXT NOT NULL DEFAULT ''
 );
 
--- Per-server, per-alert enable state. A missing row means the alert is enabled
--- (alerts default on), so only explicit overrides are stored.
 CREATE TABLE alert_toggles (
     server_name TEXT    NOT NULL,
     alert_key   TEXT    NOT NULL,
@@ -140,8 +156,6 @@ CREATE TABLE alert_toggles (
     PRIMARY KEY (server_name, alert_key)
 );
 
--- Last time each alert fired per server. The row is the cooldown/cadence ledger
--- that suppresses repeat notifications and survives backend restarts.
 CREATE TABLE alert_notifications (
     server_name   TEXT        NOT NULL,
     alert_key     TEXT        NOT NULL,

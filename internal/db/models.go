@@ -40,8 +40,28 @@ type CollectorToken struct {
 
 type LogEvent struct {
 	ID              int64
-	ServerName      string
 	CollectedAt     pgtype.Timestamptz
+	ServerName      string
+	OccurredAt      pgtype.Timestamptz
+	LogLevel        int32
+	Classification  int32
+	Message         string
+	Pid             pgtype.Int4
+	Username        pgtype.Text
+	DatabaseName    pgtype.Text
+	ApplicationName pgtype.Text
+	Detail          pgtype.Text
+	Hint            pgtype.Text
+	Context         pgtype.Text
+	Statement       pgtype.Text
+	BackendType     pgtype.Text
+	StateCode       pgtype.Text
+}
+
+type LogEventsDefault struct {
+	ID              int64
+	CollectedAt     pgtype.Timestamptz
+	ServerName      string
 	OccurredAt      pgtype.Timestamptz
 	LogLevel        int32
 	Classification  int32
@@ -69,8 +89,19 @@ type Statement struct {
 
 type StatementDelta struct {
 	ID              int64
-	StatementID     int64
 	CollectedAt     pgtype.Timestamptz
+	StatementID     int64
+	Calls           int64
+	Rows            int64
+	TotalExecTime   float64
+	SharedBlksRead  int64
+	TempBlksWritten int64
+}
+
+type StatementDeltasDefault struct {
+	ID              int64
+	CollectedAt     pgtype.Timestamptz
+	StatementID     int64
 	Calls           int64
 	Rows            int64
 	TotalExecTime   float64
@@ -80,8 +111,22 @@ type StatementDelta struct {
 
 type StatementSample struct {
 	ID              int64
-	ServerName      string
 	CollectedAt     pgtype.Timestamptz
+	ServerName      string
+	OccurredAt      pgtype.Timestamptz
+	LogEventID      pgtype.Int8
+	StatementID     pgtype.Int8
+	Query           string
+	DurationMs      float64
+	Parameters      []string
+	ExplainPlanJson pgtype.Text
+	Tags            []byte
+}
+
+type StatementSamplesDefault struct {
+	ID              int64
+	CollectedAt     pgtype.Timestamptz
+	ServerName      string
 	OccurredAt      pgtype.Timestamptz
 	LogEventID      pgtype.Int8
 	StatementID     pgtype.Int8
@@ -94,10 +139,10 @@ type StatementSample struct {
 
 type Transaction struct {
 	ID              int64
+	XactStart       pgtype.Timestamptz
 	ServerName      string
 	Pid             int32
 	BackendStart    pgtype.Timestamptz
-	XactStart       pgtype.Timestamptz
 	DatabaseName    string
 	UserName        string
 	ApplicationName string
@@ -106,6 +151,7 @@ type Transaction struct {
 
 type TransactionEvent struct {
 	ID                 int64
+	XactStart          pgtype.Timestamptz
 	TransactionQueryID int64
 	State              string
 	WaitEventType      pgtype.Text
@@ -117,13 +163,50 @@ type TransactionEvent struct {
 	LastSeenAt         pgtype.Timestamptz
 }
 
-type TransactionQuery struct {
+type TransactionEventsDefault struct {
+	ID                 int64
+	XactStart          pgtype.Timestamptz
+	TransactionQueryID int64
+	State              string
+	WaitEventType      pgtype.Text
+	WaitEvent          pgtype.Text
+	BlockedByPid       pgtype.Int4
+	LockWaitStart      pgtype.Timestamptz
+	LockMode           pgtype.Text
+	FirstSeenAt        pgtype.Timestamptz
+	LastSeenAt         pgtype.Timestamptz
+}
+
+type TransactionQueriesDefault struct {
 	ID            int64
+	XactStart     pgtype.Timestamptz
 	TransactionID int64
 	QueryStart    pgtype.Timestamptz
 	StatementID   pgtype.Int8
 	Query         string
 	QueryTags     []byte
+}
+
+type TransactionQuery struct {
+	ID            int64
+	XactStart     pgtype.Timestamptz
+	TransactionID int64
+	QueryStart    pgtype.Timestamptz
+	StatementID   pgtype.Int8
+	Query         string
+	QueryTags     []byte
+}
+
+type TransactionsDefault struct {
+	ID              int64
+	XactStart       pgtype.Timestamptz
+	ServerName      string
+	Pid             int32
+	BackendStart    pgtype.Timestamptz
+	DatabaseName    string
+	UserName        string
+	ApplicationName string
+	LastSeenAt      pgtype.Timestamptz
 }
 
 type User struct {

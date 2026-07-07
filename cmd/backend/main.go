@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,6 +19,7 @@ import (
 	"github.com/pgdozor/backend/gen/pgdozor/v1/pgdozorv1connect"
 	"github.com/pgdozor/backend/internal/alerts"
 	"github.com/pgdozor/backend/internal/db"
+	"github.com/pgdozor/backend/internal/retention"
 	"github.com/pgdozor/backend/internal/server"
 )
 
@@ -25,12 +28,19 @@ const (
 	readHeaderTimeout    = 10 * time.Second
 	connectTimeout       = 10 * time.Second
 	defaultAllowedOrigin = "http://localhost:3001"
+
+	// defaultRetentionDays bounds disk out of the box; minRetentionDays keeps the
+	// weekly digest's 14-day "vs last week" comparison window intact. A configured
+	// RETENTION_DAYS of 0 disables dropping (keep everything).
+	defaultRetentionDays = 30
+	minRetentionDays     = 14
 )
 
 type config struct {
 	databaseURL    string
 	allowedOrigins []string
 	cookieSecure   bool
+	retentionDays  int
 }
 
 func loadConfig() (config, error) {
@@ -44,11 +54,34 @@ func loadConfig() (config, error) {
 		origins = []string{defaultAllowedOrigin}
 	}
 
+	retentionDays, err := loadRetentionDays()
+	if err != nil {
+		return config{}, err
+	}
+
 	return config{
 		databaseURL:    databaseURL,
 		allowedOrigins: origins,
 		cookieSecure:   os.Getenv("COOKIE_SECURE") == "true",
+		retentionDays:  retentionDays,
 	}, nil
+}
+
+// loadRetentionDays reads RETENTION_DAYS, defaulting to 30. A value of 0 (or
+// less) disables dropping. The digest-floor clamp is applied later in run where
+// a logger is available to warn about it.
+func loadRetentionDays() (int, error) {
+	raw := os.Getenv("RETENTION_DAYS")
+	if raw == "" {
+		return defaultRetentionDays, nil
+	}
+
+	days, err := strconv.Atoi(raw)
+	if err != nil {
+		return 0, fmt.Errorf("RETENTION_DAYS must be an integer number of days: %w", err)
+	}
+
+	return days, nil
 }
 
 func splitAndTrim(raw string) []string {
@@ -87,6 +120,20 @@ func run(ctx context.Context, logger *slog.Logger) error {
 
 	queries := db.New(pool)
 	interceptors := connect.WithInterceptors(server.NewAuthInterceptor(queries))
+
+	retentionDays := cfg.retentionDays
+	if retentionDays > 0 && retentionDays < minRetentionDays {
+		logger.WarnContext(ctx, "RETENTION_DAYS below minimum; clamping up",
+			"requested", retentionDays, "minimum", minRetentionDays)
+		retentionDays = minRetentionDays
+	}
+
+	// Pre-create the current/upcoming partitions.
+	if ensureErr := retention.EnsurePartitions(ctx, pool, logger); ensureErr != nil {
+		logger.WarnContext(ctx, "initial partition ensure failed", "error", ensureErr)
+	}
+
+	go retention.Run(ctx, pool, retentionDays, logger)
 
 	notifier := alerts.NewNotifier(queries, logger)
 	go alerts.RunScheduler(ctx, queries, notifier, logger)
