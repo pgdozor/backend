@@ -42,8 +42,6 @@ type AlertDigestSummaryRow struct {
 	ErrorsPrevious int64
 }
 
-// Current vs previous 7-day window for the weekly digest trend
-// (log levels 5/7/8 = ERROR/FATAL/PANIC).
 func (q *Queries) AlertDigestSummary(ctx context.Context, serverName string) (AlertDigestSummaryRow, error) {
 	row := q.db.QueryRow(ctx, alertDigestSummary, serverName)
 	var i AlertDigestSummaryRow
@@ -252,7 +250,6 @@ type GetAlertEnabledParams struct {
 	AlertKey   string
 }
 
-// No row means the alert has never been overridden, so it is enabled by default.
 func (q *Queries) GetAlertEnabled(ctx context.Context, arg GetAlertEnabledParams) (bool, error) {
 	row := q.db.QueryRow(ctx, getAlertEnabled, arg.ServerName, arg.AlertKey)
 	var enabled bool
@@ -793,7 +790,6 @@ WHERE s.slack_webhook_url <> ''
 ORDER BY s.server_name
 `
 
-// Servers that have a Slack webhook and have not disabled the weekly digest.
 func (q *Queries) ListServersWithDigestEnabled(ctx context.Context, alertKey string) ([]string, error) {
 	rows, err := q.db.Query(ctx, listServersWithDigestEnabled, alertKey)
 	if err != nil {
@@ -822,8 +818,6 @@ WHERE collected_at < now() - $1::interval
 ORDER BY server_name
 `
 
-// Servers whose latest health report is older than the staleness cutoff but still
-// within retention, so a long-dead server stops re-alerting once it ages out.
 func (q *Queries) ListStaleServers(ctx context.Context, staleAfter pgtype.Interval) ([]string, error) {
 	rows, err := q.db.Query(ctx, listStaleServers, staleAfter)
 	if err != nil {
@@ -936,7 +930,6 @@ WITH per_statement AS (
     GROUP BY s.id
 ),
 statement_tags AS (
-    -- Per statement, reduce its samples' tags to one value per key: the shared value when every sample agrees, otherwise '*'.
     SELECT statement_id, jsonb_object_agg(key, value) AS tags
     FROM (
         SELECT
@@ -960,7 +953,6 @@ SELECT
     ps.calls,
     ps.rows,
     ps.total_exec_time,
-    -- Denominator spans every matching statement, computed before LIMIT.
     (coalesce(ps.total_exec_time / NULLIF(sum(ps.total_exec_time) OVER (), 0), 0) * 100)::double precision AS pct_of_total,
     coalesce(st.tags, '{}'::jsonb) AS tags
 FROM per_statement ps
@@ -1335,7 +1327,6 @@ type StatementMetricSeriesRow struct {
 	Spills        int64
 }
 
-// Each metric summed per time bucket across [since, until].
 func (q *Queries) StatementMetricSeries(ctx context.Context, arg StatementMetricSeriesParams) ([]StatementMetricSeriesRow, error) {
 	rows, err := q.db.Query(ctx, statementMetricSeries,
 		arg.Since,
@@ -1459,8 +1450,6 @@ type TryClaimAlertNotificationParams struct {
 	Cooldown   pgtype.Interval
 }
 
-// Atomically claims the right to fire (server_name, alert_key): returns a row only
-// when this is the first fire or the cooldown has elapsed; no row means suppressed.
 func (q *Queries) TryClaimAlertNotification(ctx context.Context, arg TryClaimAlertNotificationParams) (pgtype.Timestamptz, error) {
 	row := q.db.QueryRow(ctx, tryClaimAlertNotification, arg.ServerName, arg.AlertKey, arg.Cooldown)
 	var last_fired_at pgtype.Timestamptz

@@ -283,10 +283,6 @@ type RecordTransactionEventParams struct {
 	LockMode        string
 }
 
-// Upsert the transaction and its current query, then append one event row --
-// unless the latest event is byte-for-byte unchanged, in which case just extend
-// its last_seen_at. Every @arg is bound once in the params CTE so sqlc emits a
-// stable 18-field struct; downstream CTEs read from params/norm, never @args.
 func (q *Queries) RecordTransactionEvent(ctx context.Context, arg []RecordTransactionEventParams) *RecordTransactionEventBatchResults {
 	batch := &pgx.Batch{}
 	for _, a := range arg {
