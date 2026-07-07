@@ -1,0 +1,170 @@
+syntax = "proto3";
+
+package pgdozor.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/pgdozor/backend/gen/pgdozor/v1;pgdozorv1";
+
+service ActivityService {
+  rpc ReportActivity(ReportActivityRequest) returns (ReportActivityResponse) {}
+  rpc QueryTransactions(QueryTransactionsRequest) returns (QueryTransactionsResponse) {}
+  rpc QueryBlocking(QueryBlockingRequest) returns (QueryBlockingResponse) {}
+}
+
+message ReportActivityRequest {
+  google.protobuf.Timestamp collected_at = 1;
+  repeated ActivitySnapshot activity_snapshots = 2;
+}
+
+message ReportActivityResponse {}
+
+// One row from pg_stat_activity
+message ActivitySnapshot {
+  // Example: 15328
+  int32 pid = 1;
+
+  // Example: "2026-05-03T11:55:10Z"
+  google.protobuf.Timestamp backend_start = 2;
+
+  // Example: "app_prod"
+  string database_name = 3;
+
+  // Example: "app_user"
+  string user_name = 4;
+
+  // Example: "user-service"
+  string application_name = 5;
+
+  // Example: "active", "idle", "idle in transaction", "disabled"
+  string state = 6;
+
+  // Example: "Lock", "IO", "Client", "LWLock"
+  string wait_event_type = 7;
+
+  // Example: "transactionid", "DataFileRead", "ClientRead"
+  string wait_event = 8;
+
+  // Example: "2026-05-03T11:59:30Z"
+  google.protobuf.Timestamp xact_start = 9;
+
+  // Example: "2026-05-03T12:00:00Z"
+  google.protobuf.Timestamp query_start = 10;
+
+  // Example: 74381239123499122
+  int64 query_id = 11;
+
+  // Query text, with any leading tag comment stripped.
+  // Example: "SELECT * FROM users WHERE id = $1"
+  string query = 12;
+
+  // key=value tags parsed from the query's leading comment.
+  map<string, string> query_tags = 13;
+
+  // PID of the session most directly blocking this one — among all its blockers,
+  // the one highest in the blocking tree (shortest path to a root). 0 = not
+  // blocked. Derived by the collector from pg_blocking_pids.
+  int32 blocked_by_pid = 14;
+
+  // Time when this session started waiting for its current lock.
+  // PostgreSQL backend process can wait for at most one lock at a time.
+  // Example: "2026-05-03T12:00:03Z"
+  google.protobuf.Timestamp lock_wait_start = 15;
+
+  // Example: "AccessShareLock", "AccessExclusiveLock", "ShareLock"
+  string lock_mode = 16;
+}
+
+// Coarse status of a reconstructed transaction event.
+enum TransactionEventStatus {
+  TRANSACTION_EVENT_STATUS_UNSPECIFIED = 0;
+
+  TRANSACTION_EVENT_STATUS_ACTIVE = 1;
+  TRANSACTION_EVENT_STATUS_IDLE = 2;
+  TRANSACTION_EVENT_STATUS_ABORTED = 4;
+}
+
+message QueryTransactionsRequest {
+  string server_name = 1;
+  string database_name = 2;
+  google.protobuf.Timestamp from = 3;
+  google.protobuf.Timestamp to = 4;
+
+  // Defaults to 1000 when unset.
+  int32 limit = 5;
+}
+
+message QueryTransactionsResponse {
+  repeated Transaction transactions = 1;
+}
+
+// A reconstructed transaction from a series of activity snapshots.
+message Transaction {
+  int32 pid = 1;
+  string application_name = 2;
+
+  // xact_start — when the transaction began.
+  google.protobuf.Timestamp start = 3;
+
+  // The last time the transaction was observed in a snapshot (≈ its end).
+  google.protobuf.Timestamp end = 4;
+
+  repeated TransactionEvent events = 6;
+}
+
+// One continuous stretch of a transaction during which its activity attributes did not meaningfully change.
+message TransactionEvent {
+  google.protobuf.Timestamp from = 1;
+  google.protobuf.Timestamp to = 2;
+  TransactionEventStatus status = 3;
+
+  // The query running during the event.
+  string query = 5;
+
+  // Internal statement id (links to Query Detail view).
+  int64 statement_id = 6;
+
+  // pg_stat_activity wait fields describing what the backend is doing/waiting on.
+  string wait_event_type = 7;
+  string wait_event = 8;
+  string lock_mode = 9;
+
+  // The running query's tags (same shape as ActivitySnapshot.query_tags).
+  map<string, string> query_tags = 10;
+}
+
+message QueryBlockingRequest {
+  string server_name = 1;
+  string database_name = 2;
+  google.protobuf.Timestamp from = 3;
+  google.protobuf.Timestamp to = 4;
+}
+
+message QueryBlockingResponse {
+  repeated BlockingTree trees = 1;
+}
+
+message BlockingTree {
+  int32 root_pid = 1;
+  string root_application_name = 2;
+  google.protobuf.Timestamp root_started_blocking = 3;
+  repeated BlockedEvent blocked = 4;
+
+  // Far end of the pile-up: the latest a victim was still observed waiting.
+  // (root_last_blocking - root_started_blocking) is how long it actually held —
+  // independent of "now", so a pile-up that ended yesterday shows its real span.
+  google.protobuf.Timestamp root_last_blocking = 5;
+}
+
+message BlockedEvent {
+  int32 pid = 1;
+  string application_name = 2;
+  google.protobuf.Timestamp started_waiting = 3;
+  string query = 4;
+  string lock_mode = 5;
+  int32 blocked_by_pid = 6;
+
+  // Last time this wait was observed — ≈ when it ended, or the newest sample if
+  // still ongoing. (last_seen - started_waiting) is the actual wait duration.
+  google.protobuf.Timestamp last_seen = 7;
+}

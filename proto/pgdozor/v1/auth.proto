@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package pgdozor.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/pgdozor/backend/gen/pgdozor/v1;pgdozorv1";
+
+service AuthService {
+  rpc Login(LoginRequest) returns (LoginResponse) {}
+  rpc Logout(LogoutRequest) returns (LogoutResponse) {}
+  rpc CurrentUser(CurrentUserRequest) returns (CurrentUserResponse) {}
+}
+
+message User {
+  int64 id = 1;
+  string name = 2;
+  string email = 3;
+  bool is_super_admin = 4;
+  google.protobuf.Timestamp created_at = 5;
+  repeated string allowed_servers = 6;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  User user = 1;
+}
+
+message LogoutRequest {}
+
+message LogoutResponse {}
+
+message CurrentUserRequest {}
+
+message CurrentUserResponse {
+  User user = 1;
+}

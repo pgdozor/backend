@@ -1,0 +1,167 @@
+syntax = "proto3";
+
+package pgdozor.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/pgdozor/backend/gen/pgdozor/v1;pgdozorv1";
+
+service StatementService {
+  rpc ReportStatements(ReportStatementsRequest) returns (ReportStatementsResponse) {}
+  rpc QueryStatements(QueryStatementsRequest) returns (QueryStatementsResponse) {}
+  rpc QueryStatementDetail(QueryStatementDetailRequest) returns (QueryStatementDetailResponse) {}
+  rpc GetStatementSamplePlan(GetStatementSamplePlanRequest) returns (GetStatementSamplePlanResponse) {}
+}
+
+message ReportStatementsRequest {
+  google.protobuf.Timestamp collected_at = 1;
+  repeated StatementDelta statement_deltas = 2;
+}
+
+message ReportStatementsResponse {}
+
+message QueryStatementsRequest {
+  string server_name = 1;
+  string database_name = 2;
+  google.protobuf.Timestamp from = 3;
+  google.protobuf.Timestamp to = 4;
+
+  // Case-insensitive substring match against the normalized query text.
+  string filter = 5;
+
+  // Defaults to 1000 when unset.
+  int32 limit = 6;
+}
+
+message QueryStatementsResponse {
+  StatementMetrics metrics = 1;
+  repeated StatementStat statements = 2;
+}
+
+message QueryStatementDetailRequest {
+  // Internal statement id (statements.id), as returned in StatementStat.id.
+  int64 id = 1;
+  google.protobuf.Timestamp from = 2;
+  google.protobuf.Timestamp to = 3;
+}
+
+message QueryStatementDetailResponse {
+  // Full normalized query text.
+  string query = 1;
+
+  // Tags deduped across the statement's samples in the window: key=value when
+  // every sample agrees, key=* when the values differ (same logic as the
+  // QUERIES table).
+  map<string, string> tags = 2;
+
+  // Per-query metrics over the window, scoped to this statement.
+  StatementMetrics metrics = 3;
+
+  repeated StatementSample samples = 4;
+}
+
+// One captured execution of the statement (from statement_samples).
+message StatementSample {
+  // statement_samples.id, used to lazily fetch the Auto Explain plan.
+  int64 id = 1;
+
+  google.protobuf.Timestamp occurred_at = 2;
+
+  // The statement as executed, with actual parameter values substituted into
+  // the $N placeholders (not normalized).
+  string query = 3;
+
+  // All tags as captured, including high-cardinality values.
+  map<string, string> tags = 4;
+
+  // Whether an Auto Explain plan was captured for this sample.
+  bool has_plan = 5;
+
+  double duration_ms = 6;
+}
+
+message GetStatementSamplePlanRequest {
+  // statement_samples.id.
+  int64 sample_id = 1;
+}
+
+message GetStatementSamplePlanResponse {
+  // Concretized statement text (actual parameter values).
+  string query = 1;
+
+  // Raw Auto Explain plan as captured (JSON or text EXPLAIN output).
+  string plan_json = 2;
+}
+
+message StatementMetrics {
+  StatementMetric total = 1;
+  StatementMetric calls = 2;
+  StatementMetric avg = 3;
+  StatementMetric rows = 4;
+  StatementMetric reads = 5;
+  StatementMetric spills = 6;
+}
+
+// One metric over the selected range: its aggregate value, the percentage
+// change versus the preceding window of equal duration (0 when there is no
+// comparable baseline), and a bucketed time series for charting.
+message StatementMetric {
+  double value = 1;
+  double trend_pct = 2;
+  repeated MetricPoint series = 3;
+}
+
+message MetricPoint {
+  google.protobuf.Timestamp at = 1;
+  double value = 2;
+}
+
+message StatementStat {
+  // Internal statement id, for building Query Detail URLs.
+  int64 id = 1;
+
+  string query = 2;
+  string user_name = 3;
+  double total_exec_time = 4;
+
+  // Share of total execution time across all matching statements.
+  double pct_of_total = 5;
+
+  int64 calls = 6;
+  double avg_exec_time = 7;
+  int64 rows = 8;
+
+  // Tags collected from the statement's samples in the window: key=value
+  // when every sample agrees, key=* when the values differ.
+  map<string, string> tags = 9;
+}
+
+// Delta of one pg_stat_statements row since the previous collection.
+message StatementDelta {
+  // Example: "app_user"
+  string user_name = 1;
+
+  // Example: "app_prod"
+  string database_name = 2;
+
+  // Example: 74381239123499122
+  int64 query_id = 3;
+
+  // Example: "SELECT * FROM users WHERE id = $1"
+  string query = 4;
+
+  // Example: 12
+  int64 calls = 5;
+
+  // Example: 480
+  int64 rows = 6;
+
+  // Example: 35.7
+  double total_exec_time = 7;
+
+  // Example: 2048
+  int64 shared_blks_read = 8;
+
+  // Example: 512
+  int64 temp_blks_written = 9;
+}

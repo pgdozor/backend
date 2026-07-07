@@ -1,0 +1,10 @@
+version: v2
+modules:
+  - path: proto
+    name: buf.build/pgdozor/backend
+lint:
+  use:
+    - STANDARD
+breaking:
+  use:
+    - FILE

@@ -1,0 +1,254 @@
+syntax = "proto3";
+
+package pgdozor.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/pgdozor/backend/gen/pgdozor/v1;pgdozorv1";
+
+service LogService {
+  rpc ReportLogs(ReportLogsRequest) returns (ReportLogsResponse) {}
+  rpc QueryLogs(QueryLogsRequest) returns (QueryLogsResponse) {}
+}
+
+message ReportLogsRequest {
+  google.protobuf.Timestamp collected_at = 1;
+  repeated LogEvent log_events = 2;
+}
+
+message ReportLogsResponse {}
+
+message LogEvent {
+  enum LogLevel {
+    LOG_LEVEL_UNSPECIFIED = 0;
+
+    LOG_LEVEL_DEBUG = 1;
+    LOG_LEVEL_INFO = 2;
+    LOG_LEVEL_NOTICE = 3;
+    LOG_LEVEL_WARNING = 4;
+    LOG_LEVEL_ERROR = 5;
+    LOG_LEVEL_LOG = 6;
+    LOG_LEVEL_FATAL = 7;
+    LOG_LEVEL_PANIC = 8;
+  }
+
+  enum LogClassification {
+    LOG_CLASSIFICATION_UNSPECIFIED = 0;
+
+    LOG_CLASSIFICATION_SERVER_CRASHED = 1;
+    LOG_CLASSIFICATION_SERVER_START = 2;
+    LOG_CLASSIFICATION_SERVER_START_RECOVERING = 3;
+    LOG_CLASSIFICATION_SERVER_SHUTDOWN = 4;
+    LOG_CLASSIFICATION_SERVER_OUT_OF_MEMORY = 5;
+    LOG_CLASSIFICATION_SERVER_INVALID_CHECKSUM = 6;
+    LOG_CLASSIFICATION_SERVER_TEMP_FILE_CREATED = 7;
+    LOG_CLASSIFICATION_SERVER_MISC = 8;
+    LOG_CLASSIFICATION_SERVER_RELOAD = 9;
+    LOG_CLASSIFICATION_SERVER_PROCESS_EXITED = 10;
+    LOG_CLASSIFICATION_SERVER_STATS_COLLECTOR_TIMEOUT = 11;
+    LOG_CLASSIFICATION_CONNECTION_RECEIVED = 12;
+    LOG_CLASSIFICATION_CONNECTION_AUTHORIZED = 13;
+    LOG_CLASSIFICATION_CONNECTION_REJECTED = 14;
+    LOG_CLASSIFICATION_CONNECTION_DISCONNECTED = 15;
+    LOG_CLASSIFICATION_CONNECTION_CLIENT_FAILED_TO_CONNECT = 16;
+    LOG_CLASSIFICATION_CONNECTION_LOST = 17;
+    LOG_CLASSIFICATION_CONNECTION_LOST_OPEN_TX = 18;
+    LOG_CLASSIFICATION_CONNECTION_TERMINATED = 19;
+    LOG_CLASSIFICATION_OUT_OF_CONNECTIONS = 20;
+    LOG_CLASSIFICATION_TOO_MANY_CONNECTIONS_ROLE = 21;
+    LOG_CLASSIFICATION_COULD_NOT_ACCEPT_SSL_CONNECTION = 22;
+    LOG_CLASSIFICATION_PROTOCOL_ERROR_UNSUPPORTED_VERSION = 23;
+    LOG_CLASSIFICATION_PROTOCOL_ERROR_INCOMPLETE_MESSAGE = 24;
+    LOG_CLASSIFICATION_TOO_MANY_CONNECTIONS_DATABASE = 25;
+    LOG_CLASSIFICATION_CONNECTION_AUTHENTICATED = 26;
+    LOG_CLASSIFICATION_CHECKPOINT_STARTING = 27;
+    LOG_CLASSIFICATION_CHECKPOINT_COMPLETE = 28;
+    LOG_CLASSIFICATION_CHECKPOINT_TOO_FREQUENT = 29;
+    LOG_CLASSIFICATION_RESTARTPOINT_STARTING = 30;
+    LOG_CLASSIFICATION_RESTARTPOINT_COMPLETE = 31;
+    LOG_CLASSIFICATION_RESTARTPOINT_AT = 32;
+    LOG_CLASSIFICATION_WAL_INVALID_RECORD_LENGTH = 33;
+    LOG_CLASSIFICATION_WAL_REDO = 34;
+    LOG_CLASSIFICATION_WAL_ARCHIVE_COMMAND_FAILED = 35;
+    LOG_CLASSIFICATION_WAL_BASE_BACKUP_COMPLETE = 36;
+    LOG_CLASSIFICATION_AUTOVACUUM_CANCEL = 37;
+    LOG_CLASSIFICATION_TXID_WRAPAROUND_WARNING = 38;
+    LOG_CLASSIFICATION_TXID_WRAPAROUND_ERROR = 39;
+    LOG_CLASSIFICATION_AUTOVACUUM_LAUNCHER_STARTED = 40;
+    LOG_CLASSIFICATION_AUTOVACUUM_LAUNCHER_SHUTTING_DOWN = 41;
+    LOG_CLASSIFICATION_AUTOVACUUM_COMPLETED = 42;
+    LOG_CLASSIFICATION_AUTOANALYZE_COMPLETED = 43;
+    LOG_CLASSIFICATION_SKIPPING_VACUUM_LOCK_NOT_AVAILABLE = 44;
+    LOG_CLASSIFICATION_SKIPPING_ANALYZE_LOCK_NOT_AVAILABLE = 45;
+    LOG_CLASSIFICATION_LOCK_ACQUIRED = 46;
+    LOG_CLASSIFICATION_LOCK_WAITING = 47;
+    LOG_CLASSIFICATION_LOCK_TIMEOUT = 48;
+    LOG_CLASSIFICATION_LOCK_DEADLOCK_DETECTED = 49;
+    LOG_CLASSIFICATION_LOCK_DEADLOCK_AVOIDED = 50;
+    LOG_CLASSIFICATION_STATEMENT_DURATION = 51;
+    LOG_CLASSIFICATION_STATEMENT_CANCELED_TIMEOUT = 52;
+    LOG_CLASSIFICATION_STATEMENT_CANCELED_USER = 53;
+    LOG_CLASSIFICATION_STATEMENT_LOG = 54;
+    LOG_CLASSIFICATION_STATEMENT_AUTO_EXPLAIN = 55;
+    LOG_CLASSIFICATION_STANDBY_RESTORED_WAL_FROM_ARCHIVE = 56;
+    LOG_CLASSIFICATION_STANDBY_STARTED_STREAMING = 57;
+    LOG_CLASSIFICATION_STANDBY_STREAMING_INTERRUPTED = 58;
+    LOG_CLASSIFICATION_STANDBY_STOPPED_STREAMING = 59;
+    LOG_CLASSIFICATION_STANDBY_CONSISTENT_RECOVERY_STATE = 60;
+    LOG_CLASSIFICATION_STANDBY_STATEMENT_CANCELED = 61;
+    LOG_CLASSIFICATION_STANDBY_INVALID_TIMELINE = 62;
+    LOG_CLASSIFICATION_UNIQUE_CONSTRAINT_VIOLATION = 63;
+    LOG_CLASSIFICATION_FOREIGN_KEY_CONSTRAINT_VIOLATION = 64;
+    LOG_CLASSIFICATION_NOT_NULL_CONSTRAINT_VIOLATION = 65;
+    LOG_CLASSIFICATION_CHECK_CONSTRAINT_VIOLATION = 66;
+    LOG_CLASSIFICATION_EXCLUSION_CONSTRAINT_VIOLATION = 67;
+    LOG_CLASSIFICATION_SYNTAX_ERROR = 68;
+    LOG_CLASSIFICATION_INVALID_INPUT_SYNTAX = 69;
+    LOG_CLASSIFICATION_VALUE_TOO_LONG_FOR_TYPE = 70;
+    LOG_CLASSIFICATION_INVALID_VALUE = 71;
+    LOG_CLASSIFICATION_MALFORMED_ARRAY_LITERAL = 72;
+    LOG_CLASSIFICATION_SUBQUERY_MISSING_ALIAS = 73;
+    LOG_CLASSIFICATION_INSERT_TARGET_COLUMN_MISMATCH = 74;
+    LOG_CLASSIFICATION_ANY_ALL_REQUIRES_ARRAY = 75;
+    LOG_CLASSIFICATION_COLUMN_MISSING_FROM_GROUP_BY = 76;
+    LOG_CLASSIFICATION_RELATION_DOES_NOT_EXIST = 77;
+    LOG_CLASSIFICATION_COLUMN_DOES_NOT_EXIST = 78;
+    LOG_CLASSIFICATION_OPERATOR_DOES_NOT_EXIST = 79;
+    LOG_CLASSIFICATION_COLUMN_REFERENCE_AMBIGUOUS = 80;
+    LOG_CLASSIFICATION_PERMISSION_DENIED = 81;
+    LOG_CLASSIFICATION_TRANSACTION_IS_ABORTED = 82;
+    LOG_CLASSIFICATION_ON_CONFLICT_NO_CONSTRAINT_MATCH = 83;
+    LOG_CLASSIFICATION_ON_CONFLICT_ROW_AFFECTED_TWICE = 84;
+    LOG_CLASSIFICATION_COLUMN_CANNOT_BE_CAST = 85;
+    LOG_CLASSIFICATION_DIVISION_BY_ZERO = 86;
+    LOG_CLASSIFICATION_CANNOT_DROP = 87;
+    LOG_CLASSIFICATION_INTEGER_OUT_OF_RANGE = 88;
+    LOG_CLASSIFICATION_INVALID_REGEXP = 89;
+    LOG_CLASSIFICATION_PARAM_MISSING = 90;
+    LOG_CLASSIFICATION_FUNCTION_DOES_NOT_EXIST = 91;
+    LOG_CLASSIFICATION_NO_SUCH_SAVEPOINT = 92;
+    LOG_CLASSIFICATION_UNTERMINATED_QUOTED_STRING = 93;
+    LOG_CLASSIFICATION_UNTERMINATED_QUOTED_IDENTIFIER = 94;
+    LOG_CLASSIFICATION_INVALID_BYTE_SEQUENCE = 95;
+    LOG_CLASSIFICATION_COULD_NOT_SERIALIZE_REPEATABLE_READ = 96;
+    LOG_CLASSIFICATION_COULD_NOT_SERIALIZE_SERIALIZABLE = 97;
+    LOG_CLASSIFICATION_INCONSISTENT_RANGE_BOUNDS = 98;
+  }
+
+  // jsonlog 'timestamp'
+  google.protobuf.Timestamp occurred_at = 1;
+
+  // jsonlog 'error_severity'
+  LogLevel log_level = 2;
+
+  // jsonlog 'message'
+  string message = 3;
+
+  // jsonlog 'pid'
+  int32 pid = 4;
+
+  // jsonlog 'user'
+  string username = 5;
+
+  // jsonlog 'dbname'
+  string database_name = 6;
+
+  // jsonlog 'application_name'
+  string application_name = 7;
+
+  // jsonlog 'detail'
+  string detail = 8;
+
+  // jsonlog 'hint'
+  string hint = 9;
+
+  // jsonlog 'context'
+  string context = 10;
+
+  // jsonlog 'statement'
+  string statement = 11;
+
+  // jsonlog 'query_id'
+  int64 query_id = 12;
+
+  // jsonlog 'backend_type'
+  string backend_type = 13;
+
+  // jsonlog 'state_code'
+  string state_code = 14;
+
+  LogClassification classification = 15;
+
+  LogStatementSample statement_sample = 16;
+}
+
+message LogStatementSample {
+  google.protobuf.Timestamp occurred_at = 1;
+
+  // Example: "SELECT * FROM users WHERE id = $1"
+  string query = 2;
+
+  // Example: 1234.5
+  double duration_ms = 3;
+
+  // Example: ["42", "active"]
+  repeated string parameters = 4;
+
+  string explain_plan_json = 5;
+
+  map<string, string> tags = 6;
+}
+
+message QueryLogsRequest {
+  string server_name = 1;
+  google.protobuf.Timestamp from = 2;
+  google.protobuf.Timestamp to = 3;
+  string filter = 4;
+
+  // Empty means every level.
+  repeated LogEvent.LogLevel log_levels = 5;
+
+  // Empty means every classification.
+  repeated LogEvent.LogClassification classifications = 6;
+
+  // Defaults to 1000 when unset.
+  int32 limit = 7;
+}
+
+message QueryLogsResponse {
+  LogHistogram histogram = 1;
+  repeated LogRecord records = 2;
+}
+
+message LogHistogram {
+  repeated LogHistogramBucket buckets = 1;
+  repeated LogLevelCount level_totals = 2;
+}
+
+message LogHistogramBucket {
+  google.protobuf.Timestamp bucket_start = 1;
+  repeated LogLevelCount counts = 2;
+}
+
+message LogLevelCount {
+  LogEvent.LogLevel level = 1;
+  int64 count = 2;
+}
+
+message LogRecord {
+  int64 id = 1;
+  google.protobuf.Timestamp occurred_at = 2;
+  LogEvent.LogLevel log_level = 3;
+  LogEvent.LogClassification classification = 4;
+  int32 pid = 5;
+  string database_name = 6;
+  string username = 7;
+  string application_name = 8;
+  string backend_type = 9;
+  string message = 10;
+  string state_code = 11;
+  string detail = 12;
+  string hint = 13;
+  string context = 14;
+  string statement = 15;
+}

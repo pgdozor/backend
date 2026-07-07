@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package pgdozor.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/pgdozor/backend/gen/pgdozor/v1;pgdozorv1";
+
+service HealthService {
+  rpc ReportHealth(ReportHealthRequest) returns (ReportHealthResponse) {}
+  rpc QueryServers(QueryServersRequest) returns (QueryServersResponse) {}
+}
+
+message ReportHealthRequest {
+  google.protobuf.Timestamp collected_at = 1;
+  repeated string databases = 2;
+}
+
+message ReportHealthResponse {}
+
+message QueryServersRequest {}
+
+message QueryServersResponse {
+  repeated MonitoredServer servers = 1;
+}
+
+message MonitoredServer {
+  string server_name = 1;
+  google.protobuf.Timestamp collected_at = 2;
+  repeated string databases = 3;
+}

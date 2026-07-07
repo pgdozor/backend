@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package pgdozor.v1;
+
+option go_package = "github.com/pgdozor/backend/gen/pgdozor/v1;pgdozorv1";
+
+service AlertService {
+  rpc QueryAlerts(QueryAlertsRequest) returns (QueryAlertsResponse) {}
+  rpc UpdateAlertSettings(UpdateAlertSettingsRequest) returns (UpdateAlertSettingsResponse) {}
+}
+
+// Severity of an alert, mirroring the collector-independent design catalog.
+enum AlertLevel {
+  ALERT_LEVEL_UNSPECIFIED = 0;
+  ALERT_LEVEL_INFO = 1;
+  ALERT_LEVEL_WARNING = 2;
+  ALERT_LEVEL_CRITICAL = 3;
+}
+
+message QueryAlertsRequest {}
+
+message QueryAlertsResponse {
+  repeated ServerAlertSettings servers = 1;
+}
+
+// The alert configuration for one monitored server the caller may view.
+message ServerAlertSettings {
+  string server_name = 1;
+  string slack_webhook_url = 2;
+  repeated AlertSetting alerts = 3;
+}
+
+// One alert from the fixed catalog together with this server's enable state.
+message AlertSetting {
+  string key = 1;
+  string title = 2;
+  string description = 3;
+  AlertLevel level = 4;
+  bool enabled = 5;
+}
+
+message UpdateAlertSettingsRequest {
+  string server_name = 1;
+  string slack_webhook_url = 2;
+  repeated AlertToggle toggles = 3;
+}
+
+// A single alert's desired enable state for a server.
+message AlertToggle {
+  string key = 1;
+  bool enabled = 2;
+}
+
+message UpdateAlertSettingsResponse {}
