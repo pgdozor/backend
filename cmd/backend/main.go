@@ -51,11 +51,6 @@ func run(ctx context.Context, logger *slog.Logger) error {
 	queries := db.New(pool)
 	interceptors := connect.WithInterceptors(server.NewAuthInterceptor(queries))
 
-	// Pre-create the current/upcoming partitions.
-	if ensureErr := retention.EnsurePartitions(ctx, pool, logger); ensureErr != nil {
-		logger.WarnContext(ctx, "initial partition ensure failed", "error", ensureErr)
-	}
-
 	go retention.Run(ctx, pool, cfg.RetentionDays, logger)
 
 	notifier := alerts.NewNotifier(queries, logger)
@@ -93,7 +88,6 @@ func run(ctx context.Context, logger *slog.Logger) error {
 	alertPath, alertHandler := pgdozorv1connect.NewAlertServiceHandler(server.NewAlertServer(pool), interceptors)
 	mux.Handle(alertPath, alertHandler)
 
-	// HTTP/2 without TLS, so gRPC clients work too.
 	var protocols http.Protocols
 	protocols.SetHTTP1(true)
 	protocols.SetUnencryptedHTTP2(true)

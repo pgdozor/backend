@@ -163,45 +163,43 @@ func (*ReportActivityResponse) Descriptor() ([]byte, []int) {
 	return file_pgdozor_v1_activity_proto_rawDescGZIP(), []int{1}
 }
 
-// One row from pg_stat_activity
+// One row from pg_stat_activity.
 type ActivitySnapshot struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Example: 15328
+	// Example: 15328.
 	Pid int32 `protobuf:"varint,1,opt,name=pid,proto3" json:"pid,omitempty"`
-	// Example: "2026-05-03T11:55:10Z"
+	// Example: "2026-05-03T11:55:10Z".
 	BackendStart *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=backend_start,json=backendStart,proto3" json:"backend_start,omitempty"`
-	// Example: "app_prod"
+	// Example: "app_prod".
 	DatabaseName string `protobuf:"bytes,3,opt,name=database_name,json=databaseName,proto3" json:"database_name,omitempty"`
-	// Example: "app_user"
+	// Example: "app_user".
 	UserName string `protobuf:"bytes,4,opt,name=user_name,json=userName,proto3" json:"user_name,omitempty"`
-	// Example: "user-service"
+	// Example: "user-service".
 	ApplicationName string `protobuf:"bytes,5,opt,name=application_name,json=applicationName,proto3" json:"application_name,omitempty"`
-	// Example: "active", "idle", "idle in transaction", "disabled"
+	// Example: "active".
 	State string `protobuf:"bytes,6,opt,name=state,proto3" json:"state,omitempty"`
-	// Example: "Lock", "IO", "Client", "LWLock"
+	// Example: "Lock".
 	WaitEventType string `protobuf:"bytes,7,opt,name=wait_event_type,json=waitEventType,proto3" json:"wait_event_type,omitempty"`
-	// Example: "transactionid", "DataFileRead", "ClientRead"
+	// Example: "transactionid".
 	WaitEvent string `protobuf:"bytes,8,opt,name=wait_event,json=waitEvent,proto3" json:"wait_event,omitempty"`
-	// Example: "2026-05-03T11:59:30Z"
+	// Example: "2026-05-03T11:59:30Z".
 	XactStart *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=xact_start,json=xactStart,proto3" json:"xact_start,omitempty"`
-	// Example: "2026-05-03T12:00:00Z"
+	// Example: "2026-05-03T12:00:00Z".
 	QueryStart *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=query_start,json=queryStart,proto3" json:"query_start,omitempty"`
-	// Example: 74381239123499122
+	// Example: 74381239123499122.
 	QueryId int64 `protobuf:"varint,11,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
 	// Query text, with any leading tag comment stripped.
-	// Example: "SELECT * FROM users WHERE id = $1"
+	// Example: "SELECT * FROM users WHERE id = $1".
 	Query string `protobuf:"bytes,12,opt,name=query,proto3" json:"query,omitempty"`
 	// key=value tags parsed from the query's leading comment.
 	QueryTags map[string]string `protobuf:"bytes,13,rep,name=query_tags,json=queryTags,proto3" json:"query_tags,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	// PID of the session most directly blocking this one — among all its blockers,
-	// the one highest in the blocking tree (shortest path to a root). 0 = not
-	// blocked. Derived by the collector from pg_blocking_pids.
+	// PID of the session most directly blocking this one.
 	BlockedByPid int32 `protobuf:"varint,14,opt,name=blocked_by_pid,json=blockedByPid,proto3" json:"blocked_by_pid,omitempty"`
 	// Time when this session started waiting for its current lock.
 	// PostgreSQL backend process can wait for at most one lock at a time.
-	// Example: "2026-05-03T12:00:03Z"
+	// Example: "2026-05-03T12:00:03Z".
 	LockWaitStart *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=lock_wait_start,json=lockWaitStart,proto3" json:"lock_wait_start,omitempty"`
-	// Example: "AccessShareLock", "AccessExclusiveLock", "ShareLock"
+	// Example: "AccessShareLock".
 	LockMode      string `protobuf:"bytes,16,opt,name=lock_mode,json=lockMode,proto3" json:"lock_mode,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -558,12 +556,11 @@ type TransactionEvent struct {
 	// The query running during the event.
 	Query string `protobuf:"bytes,5,opt,name=query,proto3" json:"query,omitempty"`
 	// Internal statement id (links to Query Detail view).
-	StatementId int64 `protobuf:"varint,6,opt,name=statement_id,json=statementId,proto3" json:"statement_id,omitempty"`
-	// pg_stat_activity wait fields describing what the backend is doing/waiting on.
+	StatementId   int64  `protobuf:"varint,6,opt,name=statement_id,json=statementId,proto3" json:"statement_id,omitempty"`
 	WaitEventType string `protobuf:"bytes,7,opt,name=wait_event_type,json=waitEventType,proto3" json:"wait_event_type,omitempty"`
 	WaitEvent     string `protobuf:"bytes,8,opt,name=wait_event,json=waitEvent,proto3" json:"wait_event,omitempty"`
 	LockMode      string `protobuf:"bytes,9,opt,name=lock_mode,json=lockMode,proto3" json:"lock_mode,omitempty"`
-	// The running query's tags (same shape as ActivitySnapshot.query_tags).
+	// The running query's tags.
 	QueryTags     map[string]string `protobuf:"bytes,10,rep,name=query_tags,json=queryTags,proto3" json:"query_tags,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -780,12 +777,9 @@ type BlockingTree struct {
 	RootApplicationName string                 `protobuf:"bytes,2,opt,name=root_application_name,json=rootApplicationName,proto3" json:"root_application_name,omitempty"`
 	RootStartedBlocking *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=root_started_blocking,json=rootStartedBlocking,proto3" json:"root_started_blocking,omitempty"`
 	Blocked             []*BlockedEvent        `protobuf:"bytes,4,rep,name=blocked,proto3" json:"blocked,omitempty"`
-	// Far end of the pile-up: the latest a victim was still observed waiting.
-	// (root_last_blocking - root_started_blocking) is how long it actually held —
-	// independent of "now", so a pile-up that ended yesterday shows its real span.
-	RootLastBlocking *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=root_last_blocking,json=rootLastBlocking,proto3" json:"root_last_blocking,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	RootLastBlocking    *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=root_last_blocking,json=rootLastBlocking,proto3" json:"root_last_blocking,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *BlockingTree) Reset() {
@@ -861,8 +855,7 @@ type BlockedEvent struct {
 	Query           string                 `protobuf:"bytes,4,opt,name=query,proto3" json:"query,omitempty"`
 	LockMode        string                 `protobuf:"bytes,5,opt,name=lock_mode,json=lockMode,proto3" json:"lock_mode,omitempty"`
 	BlockedByPid    int32                  `protobuf:"varint,6,opt,name=blocked_by_pid,json=blockedByPid,proto3" json:"blocked_by_pid,omitempty"`
-	// Last time this wait was observed — ≈ when it ended, or the newest sample if
-	// still ongoing. (last_seen - started_waiting) is the actual wait duration.
+	// Last time this wait was observed (≈ when it ended).
 	LastSeen      *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

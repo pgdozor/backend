@@ -23,9 +23,6 @@ func NewAlertServer(pool *pgxpool.Pool) *AlertServer {
 	return &AlertServer{pool: pool, queries: db.New(pool)}
 }
 
-// QueryAlerts returns, for each monitored server the caller may view, its Slack
-// webhook and the fixed alert catalog annotated with this server's enable state
-// (an alert with no stored toggle defaults to enabled).
 func (s *AlertServer) QueryAlerts(
 	ctx context.Context,
 	_ *connect.Request[pgdozorv1.QueryAlertsRequest],
@@ -77,8 +74,6 @@ func (s *AlertServer) QueryAlerts(
 	return connect.NewResponse(&pgdozorv1.QueryAlertsResponse{Servers: result}), nil
 }
 
-// UpdateAlertSettings replaces a server's Slack webhook and applies the supplied
-// enable/disable toggles, in one transaction.
 func (s *AlertServer) UpdateAlertSettings(
 	ctx context.Context,
 	req *connect.Request[pgdozorv1.UpdateAlertSettingsRequest],
@@ -142,8 +137,6 @@ func (s *AlertServer) UpdateAlertSettings(
 	return connect.NewResponse(&pgdozorv1.UpdateAlertSettingsResponse{}), nil
 }
 
-// alertSettings annotates the fixed catalog with a server's overrides; a missing
-// override means the alert is enabled.
 func alertSettings(overrides map[string]bool) []*pgdozorv1.AlertSetting {
 	catalog := alerts.Catalog()
 	settings := make([]*pgdozorv1.AlertSetting, len(catalog))

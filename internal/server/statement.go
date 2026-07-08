@@ -18,13 +18,9 @@ import (
 )
 
 const (
-	percentScale = 100.0
-
-	metricSeriesPoints = 60
-	minMetricBucket    = time.Minute
-
-	// A first-seen statement raises new_slow_query only once it has been called at
-	// least slowQueryMinCalls times and averages more than slowQueryAvgThresholdMs.
+	percentScale            = 100.0
+	metricSeriesPoints      = 60
+	minMetricBucket         = time.Minute
 	slowQueryMinCalls       = 50
 	slowQueryAvgThresholdMs = 1000.0
 )
@@ -60,8 +56,6 @@ func (s *StatementServer) ReportStatements(
 
 	collectedAt := pgtype.Timestamptz{Time: msg.GetCollectedAt().AsTime(), Valid: true}
 
-	// Sampled before the upsert creates the rows, so a first-seen slow statement
-	// can be told apart from an existing one.
 	newSlowQuery := s.detectNewSlowQuery(ctx, serverName, deltas)
 
 	statementParams := make([]db.UpsertStatementsParams, len(deltas))
@@ -104,9 +98,6 @@ func (s *StatementServer) ReportStatements(
 	return connect.NewResponse(&pgdozorv1.ReportStatementsResponse{}), nil
 }
 
-// detectNewSlowQuery reports whether this report introduces a statement never seen
-// for the server whose per-call time reaches the slow threshold. Best-effort: any
-// lookup error simply suppresses the alert rather than failing ingest.
 func (s *StatementServer) detectNewSlowQuery(
 	ctx context.Context,
 	serverName string,
@@ -182,7 +173,6 @@ func (s *StatementServer) QueryStatements(
 		return nil, err
 	}
 
-	// No statement_id filter: metrics span every matching statement.
 	metrics, err := s.statementMetrics(
 		ctx, pgtype.Int8{}, serverName, databaseName, filter, from.AsTime(), to.AsTime(), allowedServers,
 	)
@@ -319,11 +309,6 @@ func (s *StatementServer) GetStatementSamplePlan(
 	}), nil
 }
 
-// concretizeStatement substitutes the logged parameter values into the $N
-// placeholders of a normalized statement so a sample reads as executed. Logged
-// params are already SQL-quoted, so they are inserted verbatim; a placeholder
-// with no matching parameter is left as-is. Best-effort: a $N inside a
-// dollar-quoted body could be substituted, which is acceptable for a sample view.
 func concretizeStatement(query string, params []string) string {
 	if len(params) == 0 {
 		return query
@@ -354,21 +339,16 @@ func concretizeStatement(query string, params []string) string {
 	return b.String()
 }
 
-// statementFilter is the QUERIES search box input parsed into its query-text and
-// tag components. A "key=value" term matches a tag exactly; a bare term matches
-// either a tag key or the normalized query text; an empty input matches all.
 type statementFilter struct {
-	text     pgtype.Text // substring match against query_text (bare term only)
-	tagKey   pgtype.Text // tag key that must be present
-	tagValue pgtype.Text // exact tag value (set only for "key=value")
+	text     pgtype.Text
+	tagKey   pgtype.Text
+	tagValue pgtype.Text
 }
 
 // parseStatementFilter interprets the raw search box term:
-//   - "app=demo" → the tag app must equal demo
-//   - "app"      → the tag key app is present, or the query text contains "app"
-//   - "SELECT"   → a tag key SELECT is present, or the query text contains "SELECT"
-//
-// An empty (or whitespace-only) term applies no filter.
+//   - "app=demo" -> the tag app must equal demo
+//   - "app"      -> the tag key app is present, or the query text contains "app"
+//   - "SELECT"   -> a tag key SELECT is present, or the query text contains "SELECT"
 func parseStatementFilter(raw string) statementFilter {
 	term := strings.TrimSpace(raw)
 	if term == "" {
@@ -378,14 +358,12 @@ func parseStatementFilter(raw string) statementFilter {
 	if key, value, ok := strings.Cut(term, "="); ok {
 		key = strings.TrimSpace(key)
 		if key == "" {
-			// Nothing before "=" — fall back to a plain query-text search.
 			return statementFilter{text: textFilter(term)}
 		}
 
 		return statementFilter{tagKey: textFilter(key), tagValue: textFilter(strings.TrimSpace(value))}
 	}
 
-	// A bare term matches either a tag key or a substring of the query text.
 	return statementFilter{text: textFilter(term), tagKey: textFilter(term)}
 }
 
@@ -434,10 +412,6 @@ func (s *StatementServer) listStatements(
 	return statements, nil
 }
 
-// statementMetrics aggregates each metric over [from, to] as a bucketed time
-// series and a total, plus its trend versus the preceding window of equal
-// duration. A valid statementID scopes every metric to a single statement
-// (the Query Detail chart); an invalid one spans all matching statements.
 func (s *StatementServer) statementMetrics(
 	ctx context.Context,
 	statementID pgtype.Int8,
@@ -516,8 +490,6 @@ func (s *StatementServer) statementMetrics(
 	}, nil
 }
 
-// metricBucket splits the range into metricSeriesPoints buckets, floored at one
-// minute so charts never sample finer than the collection cadence.
 func metricBucket(d time.Duration) time.Duration {
 	bucket := d / metricSeriesPoints
 	if bucket < minMetricBucket {
@@ -535,8 +507,6 @@ func avgExecTime(totalExecTime float64, calls int64) float64 {
 	return totalExecTime / float64(calls)
 }
 
-// statementMetric leaves trend_pct at 0 when the preceding window is a zero
-// baseline that would divide by zero.
 func statementMetric(value, previous float64, series []*pgdozorv1.MetricPoint) *pgdozorv1.StatementMetric {
 	metric := &pgdozorv1.StatementMetric{Value: value, Series: series}
 	if previous != 0 {

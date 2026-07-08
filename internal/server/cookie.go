@@ -7,9 +7,6 @@ import (
 
 const sessionTTL = 30 * 24 * time.Hour
 
-// sessionCookie builds the Set-Cookie for a fresh login. SameSite=Lax is enough
-// for a same-site frontend (different port is still the same site); a truly
-// cross-site deployment would need SameSite=None with Secure.
 func sessionCookie(token string, secure bool) *http.Cookie {
 	//nolint:gosec // Secure is deployment-configurable (COOKIE_SECURE); HttpOnly and SameSite are always set.
 	return &http.Cookie{
@@ -24,7 +21,6 @@ func sessionCookie(token string, secure bool) *http.Cookie {
 	}
 }
 
-// clearedSessionCookie expires the session cookie on logout.
 func clearedSessionCookie(secure bool) *http.Cookie {
 	//nolint:gosec // Secure is deployment-configurable (COOKIE_SECURE); HttpOnly and SameSite are always set.
 	return &http.Cookie{

@@ -10,11 +10,9 @@ import (
 
 const maintainEvery = 24 * time.Hour
 
-func EnsurePartitions(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger) error {
-	return ensurePartitions(ctx, pool, time.Now(), logger)
-}
-
 func Run(ctx context.Context, pool *pgxpool.Pool, retentionDays int, logger *slog.Logger) {
+	maintain(ctx, pool, retentionDays, logger)
+
 	ticker := time.NewTicker(maintainEvery)
 	defer ticker.Stop()
 

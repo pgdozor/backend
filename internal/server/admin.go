@@ -26,8 +26,6 @@ func NewAdminServer(pool *pgxpool.Pool) *AdminServer {
 	return &AdminServer{pool: pool, queries: db.New(pool)}
 }
 
-// ListCollectorTokens returns every collector token (metadata only; the secret
-// is never stored in the clear).
 func (s *AdminServer) ListCollectorTokens(
 	ctx context.Context,
 	_ *connect.Request[pgdozorv1.ListCollectorTokensRequest],
@@ -49,8 +47,6 @@ func (s *AdminServer) ListCollectorTokens(
 	return connect.NewResponse(&pgdozorv1.ListCollectorTokensResponse{Tokens: tokens}), nil
 }
 
-// CreateCollectorToken mints a token for a server and returns its plaintext
-// value once; only the hash is persisted.
 func (s *AdminServer) CreateCollectorToken(
 	ctx context.Context,
 	req *connect.Request[pgdozorv1.CreateCollectorTokenRequest],
@@ -83,9 +79,6 @@ func (s *AdminServer) CreateCollectorToken(
 	}), nil
 }
 
-// DeleteCollectorToken revokes a collector token. When it was the last token for
-// its server, that server is no longer monitored, so its name is also stripped
-// from every user's allowed servers.
 func (s *AdminServer) DeleteCollectorToken(
 	ctx context.Context,
 	req *connect.Request[pgdozorv1.DeleteCollectorTokenRequest],
@@ -133,7 +126,6 @@ func (s *AdminServer) DeleteCollectorToken(
 	return connect.NewResponse(&pgdozorv1.DeleteCollectorTokenResponse{}), nil
 }
 
-// ListUsers returns every user with their allowed servers.
 func (s *AdminServer) ListUsers(
 	ctx context.Context,
 	_ *connect.Request[pgdozorv1.ListUsersRequest],
@@ -158,7 +150,6 @@ func (s *AdminServer) ListUsers(
 	return connect.NewResponse(&pgdozorv1.ListUsersResponse{Users: users}), nil
 }
 
-// CreateUser adds a server-scoped viewer.
 func (s *AdminServer) CreateUser(
 	ctx context.Context,
 	req *connect.Request[pgdozorv1.CreateUserRequest],
@@ -202,8 +193,6 @@ func (s *AdminServer) CreateUser(
 	}), nil
 }
 
-// UpdateUser edits a user's profile, optionally their password, and replaces
-// their allowed servers.
 func (s *AdminServer) UpdateUser(
 	ctx context.Context,
 	req *connect.Request[pgdozorv1.UpdateUserRequest],
@@ -255,8 +244,6 @@ func (s *AdminServer) UpdateUser(
 	}), nil
 }
 
-// orEmptyStrings normalizes a nil slice to a non-nil empty one, so it stores as
-// an empty array in a NOT NULL text[] column rather than NULL.
 func orEmptyStrings(values []string) []string {
 	if values == nil {
 		return []string{}
@@ -265,7 +252,6 @@ func orEmptyStrings(values []string) []string {
 	return values
 }
 
-// DeleteUser removes a user. The super admin cannot be deleted.
 func (s *AdminServer) DeleteUser(
 	ctx context.Context,
 	req *connect.Request[pgdozorv1.DeleteUserRequest],

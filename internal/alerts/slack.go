@@ -11,7 +11,6 @@ import (
 
 const slackTimeout = 10 * time.Second
 
-// Design severity colors, reused for the Slack attachment bar.
 const (
 	colorCritical = "#8B1E1E"
 	colorWarning  = "#C7771A"
@@ -41,8 +40,7 @@ func slackColor(level Level) string {
 	}
 }
 
-// postToSlack delivers one alert to a Slack incoming webhook. The caller owns the
-// HTTP client so timeouts and connection reuse are shared across notifications.
+// postToSlack delivers one alert to a Slack incoming webhook.
 func postToSlack(ctx context.Context, client *http.Client, webhookURL string, def Def, text string) error {
 	body, err := json.Marshal(slackPayload{Attachments: []slackAttachment{{
 		Color: slackColor(def.Level),

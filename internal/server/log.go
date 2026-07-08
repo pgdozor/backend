@@ -60,8 +60,6 @@ func (s *LogServer) ReportLogs(
 	return connect.NewResponse(&pgdozorv1.ReportLogsResponse{}), nil
 }
 
-// evaluateAlerts raises the fatal/panic alert when a report contains a FATAL or
-// PANIC line, firing once per report on the first match.
 func (s *LogServer) evaluateAlerts(serverName string, events []*pgdozorv1.LogEvent) {
 	for _, event := range events {
 		level := event.GetLogLevel()
@@ -148,10 +146,6 @@ func (s *LogServer) QueryLogs(
 	}), nil
 }
 
-// logHistogram runs the per-level bucket query and densifies it into a bucket
-// per time slot across [from, to] plus a per-level total for the chips. It does
-// not apply the log-level filter, so the chips keep stable counts while the
-// chart hides deselected levels.
 func (s *LogServer) logHistogram(
 	ctx context.Context,
 	serverName string,
@@ -176,8 +170,6 @@ func (s *LogServer) logHistogram(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	// Match the SQL bucket width (truncated to microseconds via pgtype.Interval)
-	// so date_bin's aligned bucket_start maps cleanly to a slot index.
 	bucketDur := time.Duration(bucketWidth.Microseconds()) * time.Microsecond
 	slots := max(int((to.Sub(from)+bucketDur-1)/bucketDur), 1)
 
@@ -210,8 +202,6 @@ func (s *LogServer) logHistogram(
 	}, nil
 }
 
-// levelCounts turns a level→count map into LogLevelCounts ordered by level so
-// the response is deterministic.
 func levelCounts(counts map[int32]int64) []*pgdozorv1.LogLevelCount {
 	out := make([]*pgdozorv1.LogLevelCount, 0, len(counts))
 	for level, count := range counts {
@@ -245,9 +235,6 @@ func logRecordFromRow(row db.ListLogEventsRow) *pgdozorv1.LogRecord {
 	}
 }
 
-// enumValues converts a repeated proto enum field into the []int32 the enum
-// columns are stored and filtered as, returning nil for an empty selection so
-// the query's "IS NULL" branch keeps every value.
 func enumValues[E ~int32](values []E) []int32 {
 	if len(values) == 0 {
 		return nil
@@ -295,8 +282,6 @@ func (s *LogServer) insertLogEvents(
 	return ids, nil
 }
 
-// sampleEntry pairs a statement sample with its log event id and, when the event
-// carries a query_id, the index of its statement in the upsert batch.
 type sampleEntry struct {
 	sample         *pgdozorv1.LogStatementSample
 	logEventID     int64

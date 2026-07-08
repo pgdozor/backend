@@ -21,7 +21,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Severity of an alert, mirroring the collector-independent design catalog.
 type AlertLevel int32
 
 const (
@@ -154,7 +153,6 @@ func (x *QueryAlertsResponse) GetServers() []*ServerAlertSettings {
 	return nil
 }
 
-// The alert configuration for one monitored server the caller may view.
 type ServerAlertSettings struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	ServerName      string                 `protobuf:"bytes,1,opt,name=server_name,json=serverName,proto3" json:"server_name,omitempty"`
@@ -215,7 +213,6 @@ func (x *ServerAlertSettings) GetAlerts() []*AlertSetting {
 	return nil
 }
 
-// One alert from the fixed catalog together with this server's enable state.
 type AlertSetting struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
@@ -352,7 +349,6 @@ func (x *UpdateAlertSettingsRequest) GetToggles() []*AlertToggle {
 	return nil
 }
 
-// A single alert's desired enable state for a server.
 type AlertToggle struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`

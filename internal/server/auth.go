@@ -32,9 +32,6 @@ func NewAuthServer(pool *pgxpool.Pool, cookieSecure bool) *AuthServer {
 	return &AuthServer{queries: db.New(pool), cookieSecure: cookieSecure}
 }
 
-// Login authenticates by email and password, bootstrapping the super admin the
-// first time anyone signs in against an empty users table, then issues a session
-// cookie.
 func (s *AuthServer) Login(
 	ctx context.Context,
 	req *connect.Request[pgdozorv1.LoginRequest],
@@ -70,7 +67,6 @@ func (s *AuthServer) Login(
 	return resp, nil
 }
 
-// Logout deletes the current session and clears the cookie.
 func (s *AuthServer) Logout(
 	ctx context.Context,
 	req *connect.Request[pgdozorv1.LogoutRequest],
@@ -87,8 +83,6 @@ func (s *AuthServer) Logout(
 	return resp, nil
 }
 
-// CurrentUser returns the signed-in user, for the dashboard to render identity
-// and gate the admin section.
 func (s *AuthServer) CurrentUser(
 	ctx context.Context,
 	_ *connect.Request[pgdozorv1.CurrentUserRequest],
@@ -124,9 +118,6 @@ func (s *AuthServer) authenticate(ctx context.Context, email, password string) (
 	}, nil
 }
 
-// bootstrapSuperAdmin creates the first user as super admin. A partial unique
-// index guarantees only one super admin ever exists, so a lost race surfaces as
-// invalid credentials rather than a second admin.
 func (s *AuthServer) bootstrapSuperAdmin(ctx context.Context, email, password string) (*auth.Principal, error) {
 	count, err := s.queries.CountUsers(ctx)
 	if err != nil {

@@ -135,46 +135,46 @@ message LogEvent {
     LOG_CLASSIFICATION_INCONSISTENT_RANGE_BOUNDS = 98;
   }
 
-  // jsonlog 'timestamp'
+  // jsonlog 'timestamp'.
   google.protobuf.Timestamp occurred_at = 1;
 
-  // jsonlog 'error_severity'
+  // jsonlog 'error_severity'.
   LogLevel log_level = 2;
 
-  // jsonlog 'message'
+  // jsonlog 'message'.
   string message = 3;
 
-  // jsonlog 'pid'
+  // jsonlog 'pid'.
   int32 pid = 4;
 
-  // jsonlog 'user'
+  // jsonlog 'user'.
   string username = 5;
 
-  // jsonlog 'dbname'
+  // jsonlog 'dbname'.
   string database_name = 6;
 
-  // jsonlog 'application_name'
+  // jsonlog 'application_name'.
   string application_name = 7;
 
-  // jsonlog 'detail'
+  // jsonlog 'detail'.
   string detail = 8;
 
-  // jsonlog 'hint'
+  // jsonlog 'hint'.
   string hint = 9;
 
-  // jsonlog 'context'
+  // jsonlog 'context'.
   string context = 10;
 
-  // jsonlog 'statement'
+  // jsonlog 'statement'.
   string statement = 11;
 
-  // jsonlog 'query_id'
+  // jsonlog 'query_id'.
   int64 query_id = 12;
 
-  // jsonlog 'backend_type'
+  // jsonlog 'backend_type'.
   string backend_type = 13;
 
-  // jsonlog 'state_code'
+  // jsonlog 'state_code'.
   string state_code = 14;
 
   LogClassification classification = 15;
@@ -185,13 +185,13 @@ message LogEvent {
 message LogStatementSample {
   google.protobuf.Timestamp occurred_at = 1;
 
-  // Example: "SELECT * FROM users WHERE id = $1"
+  // Example: "SELECT * FROM users WHERE id = $1".
   string query = 2;
 
-  // Example: 1234.5
+  // Example: 1234.5.
   double duration_ms = 3;
 
-  // Example: ["42", "active"]
+  // Example: ["42", "active"].
   repeated string parameters = 4;
 
   string explain_plan_json = 5;

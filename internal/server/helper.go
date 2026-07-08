@@ -8,12 +8,10 @@ import (
 	"github.com/pgdozor/backend/internal/db"
 )
 
-// statementIDBatch is the shared shape of the statements upsert batch results.
 type statementIDBatch interface {
 	QueryRow(f func(int, int64, error))
 }
 
-// collectStatementIDs drains a statements upsert batch into ids ordered by param.
 func collectStatementIDs(n int, batch statementIDBatch) ([]int64, error) {
 	ids := make([]int64, n)
 
@@ -38,8 +36,6 @@ func collectStatementIDs(n int, batch statementIDBatch) ([]int64, error) {
 	return ids, nil
 }
 
-// upsertStatements upserts the normalized statements and returns their ids in
-// the same order as params, overwriting each statement's query text.
 func upsertStatements(
 	ctx context.Context,
 	queries *db.Queries,
@@ -48,8 +44,6 @@ func upsertStatements(
 	return collectStatementIDs(len(params), queries.UpsertStatements(ctx, params))
 }
 
-// ensureStatements find-or-creates the statements and returns their ids in the
-// same order as params, leaving any existing query text untouched.
 func ensureStatements(
 	ctx context.Context,
 	queries *db.Queries,

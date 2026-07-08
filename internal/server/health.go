@@ -18,8 +18,6 @@ func NewHealthServer(queries *db.Queries) *HealthServer {
 	return &HealthServer{queries: queries}
 }
 
-// ReportHealth persists the latest health check for a server, overwriting the
-// previous one: the collector ships its full current status on every report.
 func (s *HealthServer) ReportHealth(
 	ctx context.Context,
 	req *connect.Request[pgdozorv1.ReportHealthRequest],

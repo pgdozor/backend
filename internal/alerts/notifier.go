@@ -13,13 +13,8 @@ import (
 	"github.com/pgdozor/backend/internal/db"
 )
 
-// fireTimeout bounds the whole background delivery (DB gates + Slack POST) so a
-// wedged webhook can never leak goroutines.
 const fireTimeout = 15 * time.Second
 
-// Notifier decides whether an alert should reach a server's Slack webhook and, if
-// so, delivers it. Delivery is best-effort and fully detached from the caller:
-// Fire returns immediately and never affects collector-report ingest.
 type Notifier struct {
 	queries *db.Queries
 	client  *http.Client
@@ -34,9 +29,6 @@ func NewNotifier(queries *db.Queries, logger *slog.Logger) *Notifier {
 	}
 }
 
-// Fire delivers the alert for a server in the background when it is configured,
-// enabled, and outside its cooldown. Callers should invoke it at most once per
-// alert per report so a single event does not spawn redundant goroutines.
 func (n *Notifier) Fire(serverName, alertKey, text string) {
 	def, ok := defByKey(alertKey)
 	if !ok {
@@ -75,8 +67,7 @@ func (n *Notifier) deliver(def Def, serverName, text string) {
 	}
 }
 
-// enabled reports whether the alert is on for the server. A missing toggle row is
-// the default-on state, so only an explicit false disables it.
+// enabled reports whether the alert is on for the server.
 func (n *Notifier) enabled(ctx context.Context, serverName, alertKey string) bool {
 	on, err := n.queries.GetAlertEnabled(ctx, db.GetAlertEnabledParams{ServerName: serverName, AlertKey: alertKey})
 	if errors.Is(err, pgx.ErrNoRows) {

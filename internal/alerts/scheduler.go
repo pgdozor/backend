@@ -11,22 +11,14 @@ import (
 )
 
 const (
-	// offlineScanEvery is how often we check for missing heartbeats; offlineAfter
-	// is the staleness that counts a collector as offline.
 	offlineScanEvery = time.Minute
 	offlineAfter     = 10 * time.Minute
-
-	// digestScanEvery bounds how often digests are rebuilt; the 7-day claim in the
-	// catalog is what actually paces them to once per week per server.
-	digestScanEvery = time.Hour
-
-	maxQueryPreview = 80
-	pctScale        = 100.0
+	digestScanEvery  = time.Hour
+	maxQueryPreview  = 80
+	pctScale         = 100.0
 )
 
-// RunScheduler drives the time-based alerts that no collector report can trigger —
-// collector-offline (a missing heartbeat) and the weekly digest — until ctx is
-// cancelled.
+// RunScheduler drives the time-based alerts that no collector report can trigger.
 func RunScheduler(ctx context.Context, queries *db.Queries, notifier *Notifier, logger *slog.Logger) {
 	offlineTicker := time.NewTicker(offlineScanEvery)
 	defer offlineTicker.Stop()
@@ -107,8 +99,7 @@ func buildDigest(ctx context.Context, queries *db.Queries, server string) (strin
 	return b.String(), nil
 }
 
-// pctTrend describes a metric's percent change versus the previous week; a zero
-// prior week reads as "new" rather than an infinite jump.
+// pctTrend describes a metric's percent change versus the previous week.
 func pctTrend(current, previous float64) string {
 	if previous == 0 {
 		if current == 0 {
@@ -138,8 +129,7 @@ func countTrend(current, previous int64) string {
 	}
 }
 
-// previewQuery collapses whitespace and truncates a statement so it fits in a
-// Slack line.
+// previewQuery collapses whitespace and truncates a statement so it fits in a Slack line.
 func previewQuery(query string) string {
 	query = strings.Join(strings.Fields(query), " ")
 	if len(query) > maxQueryPreview {

@@ -516,33 +516,33 @@ func (*ReportLogsResponse) Descriptor() ([]byte, []int) {
 
 type LogEvent struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// jsonlog 'timestamp'
+	// jsonlog 'timestamp'.
 	OccurredAt *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	// jsonlog 'error_severity'
+	// jsonlog 'error_severity'.
 	LogLevel LogEvent_LogLevel `protobuf:"varint,2,opt,name=log_level,json=logLevel,proto3,enum=pgdozor.v1.LogEvent_LogLevel" json:"log_level,omitempty"`
-	// jsonlog 'message'
+	// jsonlog 'message'.
 	Message string `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
-	// jsonlog 'pid'
+	// jsonlog 'pid'.
 	Pid int32 `protobuf:"varint,4,opt,name=pid,proto3" json:"pid,omitempty"`
-	// jsonlog 'user'
+	// jsonlog 'user'.
 	Username string `protobuf:"bytes,5,opt,name=username,proto3" json:"username,omitempty"`
-	// jsonlog 'dbname'
+	// jsonlog 'dbname'.
 	DatabaseName string `protobuf:"bytes,6,opt,name=database_name,json=databaseName,proto3" json:"database_name,omitempty"`
-	// jsonlog 'application_name'
+	// jsonlog 'application_name'.
 	ApplicationName string `protobuf:"bytes,7,opt,name=application_name,json=applicationName,proto3" json:"application_name,omitempty"`
-	// jsonlog 'detail'
+	// jsonlog 'detail'.
 	Detail string `protobuf:"bytes,8,opt,name=detail,proto3" json:"detail,omitempty"`
-	// jsonlog 'hint'
+	// jsonlog 'hint'.
 	Hint string `protobuf:"bytes,9,opt,name=hint,proto3" json:"hint,omitempty"`
-	// jsonlog 'context'
+	// jsonlog 'context'.
 	Context string `protobuf:"bytes,10,opt,name=context,proto3" json:"context,omitempty"`
-	// jsonlog 'statement'
+	// jsonlog 'statement'.
 	Statement string `protobuf:"bytes,11,opt,name=statement,proto3" json:"statement,omitempty"`
-	// jsonlog 'query_id'
+	// jsonlog 'query_id'.
 	QueryId int64 `protobuf:"varint,12,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
-	// jsonlog 'backend_type'
+	// jsonlog 'backend_type'.
 	BackendType string `protobuf:"bytes,13,opt,name=backend_type,json=backendType,proto3" json:"backend_type,omitempty"`
-	// jsonlog 'state_code'
+	// jsonlog 'state_code'.
 	StateCode       string                     `protobuf:"bytes,14,opt,name=state_code,json=stateCode,proto3" json:"state_code,omitempty"`
 	Classification  LogEvent_LogClassification `protobuf:"varint,15,opt,name=classification,proto3,enum=pgdozor.v1.LogEvent_LogClassification" json:"classification,omitempty"`
 	StatementSample *LogStatementSample        `protobuf:"bytes,16,opt,name=statement_sample,json=statementSample,proto3" json:"statement_sample,omitempty"`
@@ -695,11 +695,11 @@ func (x *LogEvent) GetStatementSample() *LogStatementSample {
 type LogStatementSample struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	OccurredAt *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	// Example: "SELECT * FROM users WHERE id = $1"
+	// Example: "SELECT * FROM users WHERE id = $1".
 	Query string `protobuf:"bytes,2,opt,name=query,proto3" json:"query,omitempty"`
-	// Example: 1234.5
+	// Example: 1234.5.
 	DurationMs float64 `protobuf:"fixed64,3,opt,name=duration_ms,json=durationMs,proto3" json:"duration_ms,omitempty"`
-	// Example: ["42", "active"]
+	// Example: ["42", "active"].
 	Parameters      []string          `protobuf:"bytes,4,rep,name=parameters,proto3" json:"parameters,omitempty"`
 	ExplainPlanJson string            `protobuf:"bytes,5,opt,name=explain_plan_json,json=explainPlanJson,proto3" json:"explain_plan_json,omitempty"`
 	Tags            map[string]string `protobuf:"bytes,6,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`

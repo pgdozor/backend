@@ -11,8 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// dbPool connects to DATABASE_URL, skipping the test when it is unset so the
-// unit suite still runs without a database. The schema must already be migrated.
+// dbPool connects to DATABASE_URL, skipping the test when it is unset.
 func dbPool(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 
@@ -46,8 +45,7 @@ func partitionSet(ctx context.Context, t *testing.T, pool *pgxpool.Pool, parent 
 	return set
 }
 
-// dropDatedPartitions removes every dated (non-default) partition so the test is
-// self-cleaning and idempotent, leaving the DB with only the default partitions.
+// dropDatedPartitions removes every dated (non-default) partition.
 func dropDatedPartitions(ctx context.Context, t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
 
@@ -121,10 +119,6 @@ RETURNING tableoid::regclass::text`,
 	}
 }
 
-// TestTransactionSubtreeDropsAligned proves the core of the aligned design: a
-// transaction, its query, and its event — inserted with the parent's xact_start
-// copied down — all land in the same weekly partition and drop together.
-//
 //nolint:paralleltest // mutates shared partition DDL in a real database; must run serially.
 func TestTransactionSubtreeDropsAligned(t *testing.T) {
 	pool := dbPool(t)
@@ -166,7 +160,7 @@ RETURNING tableoid::regclass::text`, queryID, xactStart).Scan(&eventPart); err !
 		t.Fatalf("insert transaction_event: %v", err)
 	}
 
-	// All three land in the same-week partition for their table — the alignment.
+	// All three land in the same-week partition for their table.
 	subtree := []struct{ table, wantPart, gotPart string }{
 		{"transactions", "transactions_20260330", txPart},
 		{"transaction_queries", "transaction_queries_20260330", queryPart},
@@ -178,7 +172,7 @@ RETURNING tableoid::regclass::text`, queryID, xactStart).Scan(&eventPart); err !
 		}
 	}
 
-	// Retention past April drops the whole subtree in one aligned pass.
+	// Retention past April drops the whole subtree.
 	july := time.Date(2026, time.July, 7, 0, 0, 0, 0, time.UTC)
 	if err := dropOldPartitions(ctx, pool, july, 14, logger); err != nil {
 		t.Fatalf("drop: %v", err)

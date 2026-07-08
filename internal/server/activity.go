@@ -15,12 +15,9 @@ import (
 )
 
 const (
-	activeState = "active"
-	// longQueryThreshold: an active query older than this fires the long-query warning.
+	activeState        = "active"
 	longQueryThreshold = time.Minute
-	// blockingThreshold: a blocked session must have waited at least this long
-	// before the blocking-transaction alert fires.
-	blockingThreshold = 30 * time.Second
+	blockingThreshold  = 30 * time.Second
 )
 
 type ActivityServer struct {
@@ -33,11 +30,6 @@ func NewActivityServer(pool *pgxpool.Pool, notifier *alerts.Notifier) *ActivityS
 	return &ActivityServer{pool: pool, queries: db.New(pool), notifier: notifier}
 }
 
-// ReportActivity reconstructs each per-second activity snapshot into transactions
-// and transaction_events. Only snapshots observed inside a transaction (xact_start
-// set) are persisted; truly idle backends are dropped. Statement resolution and
-// the event writes share one database transaction so a created statement commits
-// with the event that references it.
 func (s *ActivityServer) ReportActivity(
 	ctx context.Context,
 	req *connect.Request[pgdozorv1.ReportActivityRequest],
@@ -48,8 +40,6 @@ func (s *ActivityServer) ReportActivity(
 		return nil, err
 	}
 
-	// Identity requires both xact_start and backend_start; skip anything missing
-	// either rather than letting a NOT NULL insert fail.
 	txnSnapshots := make([]*pgdozorv1.ActivitySnapshot, 0, len(msg.GetActivitySnapshots()))
 	for _, snap := range msg.GetActivitySnapshots() {
 		if snap.GetXactStart() != nil && snap.GetBackendStart() != nil {
@@ -104,8 +94,7 @@ func (s *ActivityServer) ReportActivity(
 	return connect.NewResponse(&pgdozorv1.ReportActivityResponse{}), nil
 }
 
-// evaluateAlerts raises the blocking-transaction and long-running-query alerts,
-// each at most once per report, from the persisted snapshots.
+// evaluateAlerts raises the blocking-transaction and long-running-query alerts.
 func (s *ActivityServer) evaluateAlerts(
 	serverName string,
 	collectedAt time.Time,
@@ -140,8 +129,6 @@ func (s *ActivityServer) evaluateAlerts(
 	}
 }
 
-// QueryTransactions returns transactions overlapping [from, to], longest first,
-// each with its reconstructed event timeline and derived severity tags.
 func (s *ActivityServer) QueryTransactions(
 	ctx context.Context,
 	req *connect.Request[pgdozorv1.QueryTransactionsRequest],
@@ -217,9 +204,6 @@ func (s *ActivityServer) QueryTransactions(
 	return connect.NewResponse(&pgdozorv1.QueryTransactionsResponse{Transactions: transactions}), nil
 }
 
-// QueryBlocking returns lock pile-ups overlapping [from, to]: each root blocker
-// with the tree of transactions waiting behind it, ordered by total blocking
-// span descending.
 func (s *ActivityServer) QueryBlocking(
 	ctx context.Context,
 	req *connect.Request[pgdozorv1.QueryBlockingRequest],
@@ -254,8 +238,6 @@ func (s *ActivityServer) QueryBlocking(
 	return connect.NewResponse(&pgdozorv1.QueryBlockingResponse{Trees: buildBlockingTrees(rows)}), nil
 }
 
-// resolveStatements find-or-creates a statement for every snapshot that carries a
-// query_id and returns the statement id per snapshot, 0 where the snapshot has none.
 func resolveStatements(
 	ctx context.Context,
 	queries *db.Queries,
@@ -329,8 +311,6 @@ func transactionEventParams(
 	}, nil
 }
 
-// drainRecordBatch reads every result of the reconstruction batch, surfacing the
-// first error so a single failed snapshot rolls the whole report back.
 func drainRecordBatch(results *db.RecordTransactionEventBatchResults) error {
 	var execErr error
 

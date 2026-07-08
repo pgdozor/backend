@@ -10,14 +10,12 @@ import (
 	"github.com/pgdozor/backend/internal/db"
 )
 
-// blockedEvent is one stored blocked transaction_events row reduced to the
-// fields the blocking-tree response needs.
 type blockedEvent struct {
 	pid          int32
 	app          string
 	blockedByPid int32
 	blockerApp   string
-	startedWait  time.Time // lock_wait_start, or first_seen_at when unset.
+	startedWait  time.Time
 	lastSeen     time.Time
 	query        string
 	lockMode     string
@@ -41,12 +39,11 @@ func blockedEventFromRow(row db.ListBlockedEventsRow) blockedEvent {
 	}
 }
 
-// victimAgg reduces a victim's many blocked intervals to a single entry.
 type victimAgg struct {
-	rep      blockedEvent  // longest-lived interval — the true blocker/lock/query.
-	repDur   time.Duration // duration of rep, so a longer interval can replace it.
-	minStart time.Time     // earliest the victim began waiting.
-	maxSeen  time.Time     // latest the victim was seen waiting.
+	rep      blockedEvent
+	repDur   time.Duration
+	minStart time.Time
+	maxSeen  time.Time
 }
 
 func (a *victimAgg) add(e blockedEvent) {
@@ -61,12 +58,6 @@ func (a *victimAgg) add(e blockedEvent) {
 	}
 }
 
-// collapseByVictim reduces a victim's many blocked intervals to one entry.
-// Postgres re-derives blocked_by_pid every snapshot; as a pile-up unwinds it
-// briefly reports a different (often deeper) blocker for a sub-second window — a
-// transient edge that, taken at face value, fabricates a bogus chain (A→B→C→root)
-// and a ~0s wait. We keep the longest-lived interval as the true blocker/lock and
-// span the wait across all of the victim's intervals (earliest start, latest seen).
 func collapseByVictim(rows []db.ListBlockedEventsRow) []blockedEvent {
 	byPid := make(map[int32]*victimAgg, len(rows))
 	order := make([]int32, 0, len(rows))
@@ -96,12 +87,11 @@ func collapseByVictim(rows []db.ListBlockedEventsRow) []blockedEvent {
 	return events
 }
 
-// blockingGroup accumulates one root blocker's pile-up while its span is derived.
 type blockingGroup struct {
 	root    int32
 	events  []blockedEvent
-	minWait time.Time // earliest victim wait — when the root started blocking.
-	maxSeen time.Time // latest victim observation — the far end of the span.
+	minWait time.Time
+	maxSeen time.Time
 }
 
 func (g *blockingGroup) span() time.Duration { return g.maxSeen.Sub(g.minWait) }
@@ -116,10 +106,6 @@ func (g *blockingGroup) add(e blockedEvent) {
 	}
 }
 
-// indexBlockedEvents builds the victim→blocker chain and a pid→application-name
-// lookup from the collapsed events. A victim's own app is authoritative; resolved
-// blocker apps fill in only pids that never appear as a victim (the pure roots at
-// the top of each tree).
 func indexBlockedEvents(events []blockedEvent) (map[int32]int32, map[int32]string) {
 	blockerOf := make(map[int32]int32, len(events))
 	appOf := make(map[int32]string, len(events))
@@ -136,9 +122,6 @@ func indexBlockedEvents(events []blockedEvent) (map[int32]int32, map[int32]strin
 	return blockerOf, appOf
 }
 
-// rootPID climbs the blocker chain to the top of the tree. The walk is bounded by
-// the number of blocked PIDs so a waits-for cycle (a resolved deadlock caught
-// mid-flight) can't spin forever.
 func rootPID(blockerOf map[int32]int32, start int32) int32 {
 	cur := start
 	for range blockerOf {
@@ -152,8 +135,6 @@ func rootPID(blockerOf map[int32]int32, start int32) int32 {
 	return cur
 }
 
-// groupByRoot buckets blocked events under their root blocker, returning the
-// groups ordered by total blocking span descending.
 func groupByRoot(events []blockedEvent, blockerOf map[int32]int32) []*blockingGroup {
 	groups := make(map[int32]*blockingGroup)
 	order := make([]*blockingGroup, 0)
@@ -173,9 +154,6 @@ func groupByRoot(events []blockedEvent, blockerOf map[int32]int32) []*blockingGr
 	return order
 }
 
-// buildBlockingTrees groups blocked events into waits-for trees, each headed by a
-// root blocker (a PID that blocks others but is not itself blocked) and carrying
-// the flat list of transactions stuck behind it, ordered by blocking span desc.
 func buildBlockingTrees(rows []db.ListBlockedEventsRow) []*pgdozorv1.BlockingTree {
 	if len(rows) == 0 {
 		return nil

@@ -9,7 +9,6 @@ import (
 	"github.com/pgdozor/backend/internal/db"
 )
 
-// pg_stat_activity state values the reconstruction reasons about.
 const (
 	stateActive                   = "active"
 	stateIdleInTransaction        = "idle in transaction"
@@ -22,14 +21,12 @@ const (
 	statusAborted = pgdozorv1.TransactionEventStatus_TRANSACTION_EVENT_STATUS_ABORTED
 )
 
-// reconstructedEvent is one stored transaction_events row reduced to the fields
-// the response derivation needs.
 type reconstructedEvent struct {
 	state         string
 	waitEventType string
 	waitEvent     string
 	lockMode      string
-	statementID   int64 // 0 = no tracked statement.
+	statementID   int64
 	query         string
 	queryTags     map[string]string
 	firstSeen     time.Time
@@ -55,16 +52,10 @@ func reconstructedEventFromRow(row db.ListTransactionEventsRow) (reconstructedEv
 	}, nil
 }
 
-// buildTransactionEvents renders the stored events into a contiguous timeline:
-// the first event begins at the transaction start (xact_start), each event runs
-// until the next one begins, the last until it was last seen.
 func buildTransactionEvents(start time.Time, events []reconstructedEvent) []*pgdozorv1.TransactionEvent {
 	out := make([]*pgdozorv1.TransactionEvent, len(events))
 	for i, e := range events {
 		from := e.firstSeen
-		// The first sample lands after the transaction actually began, so anchor
-		// the opening event to xact_start; otherwise the timeline starts late
-		// (e.g. 0:02 instead of 0:00).
 		if i == 0 && start.Before(from) {
 			from = start
 		}
@@ -84,9 +75,6 @@ func buildTransactionEvents(start time.Time, events []reconstructedEvent) []*pgd
 			LockMode:      e.lockMode,
 		}
 
-		// The stored query (and its tags) lingers while idle-in-transaction; only
-		// surface it, its statement link, and tags while a statement is actually
-		// running. Empty query / 0 statement id mean "none".
 		if isRunningStatus(status) {
 			event.Query = e.query
 			event.StatementId = e.statementID
@@ -99,9 +87,6 @@ func buildTransactionEvents(start time.Time, events []reconstructedEvent) []*pgd
 	return out
 }
 
-// eventStatus maps a pg_stat_activity state to the coarse event status, 1:1 with
-// the state column. A blocked backend is still "active" in Postgres, so blocking
-// is surfaced via the wait fields (wait_event_type / lock_mode), not a status.
 func eventStatus(state string) pgdozorv1.TransactionEventStatus {
 	switch state {
 	case stateIdleInTransactionAborted:
