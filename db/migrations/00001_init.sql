@@ -163,6 +163,12 @@ CREATE TABLE alert_notifications (
     PRIMARY KEY (server_name, alert_key)
 );
 
+CREATE INDEX ON transaction_events (transaction_query_id, first_seen_at DESC);
+CREATE INDEX ON log_events (server_name, occurred_at DESC);
+CREATE INDEX ON statement_samples (statement_id, collected_at);
+CREATE INDEX ON statement_deltas (statement_id, collected_at);
+CREATE INDEX ON transactions (server_name, last_seen_at);
+
 -- +goose Down
 
 DROP TABLE alert_notifications;

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"connectrpc.com/connect"
@@ -13,6 +14,8 @@ import (
 	"github.com/pgdozor/backend/internal/alerts"
 	"github.com/pgdozor/backend/internal/db"
 )
+
+const slackWebhookHost = "hooks.slack.com"
 
 type AlertServer struct {
 	pool    *pgxpool.Pool
@@ -93,6 +96,11 @@ func (s *AlertServer) UpdateAlertSettings(
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("access to that server is not allowed"))
 	}
 
+	webhookURL, err := validateWebhookURL(msg.GetSlackWebhookUrl())
+	if err != nil {
+		return nil, err
+	}
+
 	toggleParams := make([]db.UpsertAlertToggleParams, 0, len(msg.GetToggles()))
 	for _, toggle := range msg.GetToggles() {
 		if !alerts.IsKnownKey(toggle.GetKey()) {
@@ -119,7 +127,7 @@ func (s *AlertServer) UpdateAlertSettings(
 
 	if err = q.UpsertAlertWebhook(ctx, db.UpsertAlertWebhookParams{
 		ServerName:      serverName,
-		SlackWebhookUrl: strings.TrimSpace(msg.GetSlackWebhookUrl()),
+		SlackWebhookUrl: webhookURL,
 	}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
@@ -135,6 +143,27 @@ func (s *AlertServer) UpdateAlertSettings(
 	}
 
 	return connect.NewResponse(&pgdozorv1.UpdateAlertSettingsResponse{}), nil
+}
+
+func validateWebhookURL(raw string) (string, error) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return "", nil
+	}
+
+	parsed, err := url.Parse(trimmed)
+	if err != nil {
+		return "", connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid slack_webhook_url: %w", err))
+	}
+
+	if parsed.Scheme != "https" || parsed.Host != slackWebhookHost {
+		return "", connect.NewError(
+			connect.CodeInvalidArgument,
+			fmt.Errorf("slack_webhook_url must be an https://%s URL", slackWebhookHost),
+		)
+	}
+
+	return trimmed, nil
 }
 
 func alertSettings(overrides map[string]bool) []*pgdozorv1.AlertSetting {

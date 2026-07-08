@@ -144,7 +144,7 @@ RETURNING id;
 INSERT INTO statements (server_name, database_name, user_name, query_id, query_text)
 VALUES ($1, $2, $3, $4, '')
 ON CONFLICT (server_name, database_name, user_name, query_id)
-DO UPDATE SET query_text = EXCLUDED.query_text
+DO UPDATE SET query_text = statements.query_text
 RETURNING id;
 
 -- name: InsertStatementDeltas :copyfrom
@@ -340,6 +340,7 @@ WHERE server_name = sqlc.arg('server_name')
   AND (sqlc.narg('allowed_servers')::text[] IS NULL OR server_name = ANY(sqlc.narg('allowed_servers')::text[]))
   AND (sqlc.narg('since')::timestamptz IS NULL OR occurred_at >= sqlc.narg('since'))
   AND (sqlc.narg('until')::timestamptz IS NULL OR occurred_at <= sqlc.narg('until'))
+  AND (sqlc.narg('since')::timestamptz IS NULL OR collected_at >= sqlc.narg('since'))
   AND (sqlc.narg('levels')::int[] IS NULL OR log_level = ANY(sqlc.narg('levels')::int[]))
   AND (sqlc.narg('classifications')::int[] IS NULL OR classification = ANY(sqlc.narg('classifications')::int[]))
   AND (sqlc.narg('search')::text IS NULL
@@ -359,6 +360,7 @@ WHERE server_name = sqlc.arg('server_name')
   AND occurred_at IS NOT NULL
   AND occurred_at >= sqlc.arg('since')::timestamptz
   AND occurred_at <= sqlc.arg('until')::timestamptz
+  AND collected_at >= sqlc.arg('since')::timestamptz
   AND (sqlc.narg('allowed_servers')::text[] IS NULL OR server_name = ANY(sqlc.narg('allowed_servers')::text[]))
   AND (sqlc.narg('classifications')::int[] IS NULL OR classification = ANY(sqlc.narg('classifications')::int[]))
   AND (sqlc.narg('search')::text IS NULL

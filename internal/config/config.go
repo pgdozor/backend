@@ -71,8 +71,13 @@ func parseRetentionDays(raw string) (int, error) {
 		return 0, fmt.Errorf("RETENTION_DAYS must be an integer number of days: %w", err)
 	}
 
-	if days < minRetentionDays {
-		return 0, fmt.Errorf("RETENTION_DAYS must be at least %d days", minRetentionDays)
+	if days < 0 {
+		return 0, fmt.Errorf("RETENTION_DAYS must not be negative, got %d", days)
+	}
+
+	// 0 disables partition dropping; a positive value below the floor clamps up to it.
+	if days > 0 && days < minRetentionDays {
+		return minRetentionDays, nil
 	}
 
 	return days, nil

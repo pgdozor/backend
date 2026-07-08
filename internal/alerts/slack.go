@@ -9,7 +9,11 @@ import (
 	"time"
 )
 
-const slackTimeout = 10 * time.Second
+const (
+	slackTimeout      = 10 * time.Second
+	slackMaxAttempts  = 3
+	slackRetryBackoff = 500 * time.Millisecond
+)
 
 const (
 	colorCritical = "#8B1E1E"
@@ -40,7 +44,6 @@ func slackColor(level Level) string {
 	}
 }
 
-// postToSlack delivers one alert to a Slack incoming webhook.
 func postToSlack(ctx context.Context, client *http.Client, webhookURL string, def Def, text string) error {
 	body, err := json.Marshal(slackPayload{Attachments: []slackAttachment{{
 		Color: slackColor(def.Level),
@@ -51,6 +54,25 @@ func postToSlack(ctx context.Context, client *http.Client, webhookURL string, de
 		return err
 	}
 
+	var lastErr error
+	for attempt := range slackMaxAttempts {
+		if attempt > 0 {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(slackRetryBackoff):
+			}
+		}
+
+		if lastErr = sendSlackRequest(ctx, client, webhookURL, body); lastErr == nil {
+			return nil
+		}
+	}
+
+	return lastErr
+}
+
+func sendSlackRequest(ctx context.Context, client *http.Client, webhookURL string, body []byte) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, webhookURL, bytes.NewReader(body))
 	if err != nil {
 		return err

@@ -33,6 +33,10 @@ func maintain(ctx context.Context, pool *pgxpool.Pool, retentionDays int, logger
 		logger.ErrorContext(ctx, "partition create failed", "error", err)
 	}
 
+	if retentionDays <= 0 {
+		return // retention disabled; keep every partition.
+	}
+
 	if err := dropOldPartitions(ctx, pool, now, retentionDays, logger); err != nil {
 		logger.ErrorContext(ctx, "partition drop failed", "error", err)
 	}

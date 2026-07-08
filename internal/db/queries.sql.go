@@ -667,6 +667,7 @@ WHERE server_name = $1
   AND ($2::text[] IS NULL OR server_name = ANY($2::text[]))
   AND ($3::timestamptz IS NULL OR occurred_at >= $3)
   AND ($4::timestamptz IS NULL OR occurred_at <= $4)
+  AND ($3::timestamptz IS NULL OR collected_at >= $3)
   AND ($5::int[] IS NULL OR log_level = ANY($5::int[]))
   AND ($6::int[] IS NULL OR classification = ANY($6::int[]))
   AND ($7::text IS NULL
@@ -1197,6 +1198,7 @@ WHERE server_name = $3
   AND occurred_at IS NOT NULL
   AND occurred_at >= $2::timestamptz
   AND occurred_at <= $4::timestamptz
+  AND collected_at >= $2::timestamptz
   AND ($5::text[] IS NULL OR server_name = ANY($5::text[]))
   AND ($6::int[] IS NULL OR classification = ANY($6::int[]))
   AND ($7::text IS NULL

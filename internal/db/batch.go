@@ -21,7 +21,7 @@ const ensureStatements = `-- name: EnsureStatements :batchone
 INSERT INTO statements (server_name, database_name, user_name, query_id, query_text)
 VALUES ($1, $2, $3, $4, '')
 ON CONFLICT (server_name, database_name, user_name, query_id)
-DO UPDATE SET query_text = EXCLUDED.query_text
+DO UPDATE SET query_text = statements.query_text
 RETURNING id
 `
 

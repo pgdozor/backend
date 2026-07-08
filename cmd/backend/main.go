@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"connectrpc.com/connect"
@@ -23,6 +26,7 @@ import (
 const (
 	readHeaderTimeout = 10 * time.Second
 	connectTimeout    = 10 * time.Second
+	shutdownTimeout   = 10 * time.Second
 )
 
 func main() {
@@ -30,13 +34,16 @@ func main() {
 		Level: slog.LevelInfo,
 	}))
 
-	if err := run(context.Background(), logger); err != nil {
+	if err := run(logger); err != nil {
 		logger.Error("server failed", "error", err)
 		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context, logger *slog.Logger) error {
+func run(logger *slog.Logger) error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	cfg, err := config.Load()
 	if err != nil {
 		return err
@@ -101,7 +108,24 @@ func run(ctx context.Context, logger *slog.Logger) error {
 
 	logger.InfoContext(ctx, "pgdozor backend listening", "addr", cfg.ListenAddr)
 
-	return httpServer.ListenAndServe()
+	serveErr := make(chan error, 1)
+	go func() { serveErr <- httpServer.ListenAndServe() }()
+
+	select {
+	case serveError := <-serveErr:
+		if errors.Is(serveError, http.ErrServerClosed) {
+			return nil
+		}
+
+		return serveError
+	case <-ctx.Done():
+		logger.InfoContext(ctx, "shutdown signal received, draining connections")
+
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		defer cancel()
+
+		return httpServer.Shutdown(shutdownCtx)
+	}
 }
 
 func connectPool(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {

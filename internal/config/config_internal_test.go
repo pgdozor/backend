@@ -49,8 +49,8 @@ func TestParseRetentionDays(t *testing.T) {
 		{"empty defaults", "", defaultRetentionDays, false},
 		{"at minimum", "14", minRetentionDays, false},
 		{"above minimum", "45", 45, false},
-		{"below minimum", "7", 0, true},
-		{"zero rejected", "0", 0, true},
+		{"below minimum clamps up", "7", minRetentionDays, false},
+		{"zero disables", "0", 0, false},
 		{"negative rejected", "-1", 0, true},
 		{"not a number", "soon", 0, true},
 	}
