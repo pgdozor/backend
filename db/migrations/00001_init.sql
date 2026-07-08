@@ -168,6 +168,7 @@ CREATE INDEX ON log_events (server_name, occurred_at DESC);
 CREATE INDEX ON statement_samples (statement_id, collected_at);
 CREATE INDEX ON statement_deltas (statement_id, collected_at);
 CREATE INDEX ON transactions (server_name, last_seen_at);
+CREATE INDEX ON transaction_events (last_seen_at) WHERE blocked_by_pid IS NOT NULL;
 
 -- +goose Down
 
