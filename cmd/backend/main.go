@@ -27,6 +27,7 @@ const (
 	readHeaderTimeout = 10 * time.Second
 	connectTimeout    = 10 * time.Second
 	shutdownTimeout   = 10 * time.Second
+	readyzTimeout     = 2 * time.Second
 )
 
 func main() {
@@ -64,6 +65,8 @@ func run(logger *slog.Logger) error {
 	go alerts.RunScheduler(ctx, queries, notifier, logger)
 
 	mux := http.NewServeMux()
+
+	registerHealthEndpoints(mux, pool)
 
 	activityPath, activityHandler := pgdozorv1connect.NewActivityServiceHandler(
 		server.NewActivityServer(pool, notifier),
@@ -126,6 +129,25 @@ func run(logger *slog.Logger) error {
 
 		return httpServer.Shutdown(shutdownCtx)
 	}
+}
+
+func registerHealthEndpoints(mux *http.ServeMux, pool *pgxpool.Pool) {
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) {
+		pingCtx, cancel := context.WithTimeout(r.Context(), readyzTimeout)
+		defer cancel()
+
+		if pingErr := pool.Ping(pingCtx); pingErr != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	})
 }
 
 func connectPool(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
