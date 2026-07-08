@@ -28,10 +28,6 @@ const (
 	readHeaderTimeout    = 10 * time.Second
 	connectTimeout       = 10 * time.Second
 	defaultAllowedOrigin = "http://localhost:3001"
-
-	// defaultRetentionDays bounds disk out of the box; minRetentionDays keeps the
-	// weekly digest's 14-day "vs last week" comparison window intact. A configured
-	// RETENTION_DAYS of 0 disables dropping (keep everything).
 	defaultRetentionDays = 30
 	minRetentionDays     = 14
 )
@@ -187,7 +183,6 @@ func run(ctx context.Context, logger *slog.Logger) error {
 	return httpServer.ListenAndServe()
 }
 
-// connectPool opens a connection pool and verifies it is reachable.
 func connectPool(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
 	pool, err := pgxpool.New(ctx, databaseURL)
 	if err != nil {
@@ -206,9 +201,6 @@ func connectPool(ctx context.Context, databaseURL string) (*pgxpool.Pool, error)
 	return pool, nil
 }
 
-// withCORS lets browser-based frontends call the Connect API cross-origin.
-// Credentials are allowed so the session cookie flows, which requires an explicit
-// origin allow-list ("*" is invalid with credentials).
 func withCORS(handler http.Handler, allowedOrigins []string) http.Handler {
 	middleware := cors.New(cors.Options{
 		AllowedOrigins:   allowedOrigins,

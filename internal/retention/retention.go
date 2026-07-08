@@ -8,7 +8,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// maintainEvery is how often the maintenance loop runs.
 const maintainEvery = 24 * time.Hour
 
 func EnsurePartitions(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger) error {
