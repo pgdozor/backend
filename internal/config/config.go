@@ -1,0 +1,99 @@
+package config
+
+import (
+	"errors"
+	"fmt"
+	"net"
+	"os"
+	"strconv"
+	"strings"
+)
+
+const (
+	defaultListenAddr    = "localhost:3000"
+	defaultAllowedOrigin = "http://localhost:3001"
+	defaultRetentionDays = 30
+	minRetentionDays     = 14
+)
+
+type Config struct {
+	DatabaseURL    string
+	ListenAddr     string
+	AllowedOrigins []string
+	CookieSecure   bool
+	RetentionDays  int
+}
+
+func Load() (Config, error) {
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL == "" {
+		return Config{}, errors.New("DATABASE_URL is not set")
+	}
+
+	listenAddr, err := parseListenAddr(os.Getenv("LISTEN_ADDR"))
+	if err != nil {
+		return Config{}, err
+	}
+
+	retentionDays, err := parseRetentionDays(os.Getenv("RETENTION_DAYS"))
+	if err != nil {
+		return Config{}, err
+	}
+
+	return Config{
+		DatabaseURL:    databaseURL,
+		ListenAddr:     listenAddr,
+		AllowedOrigins: parseAllowedOrigins(os.Getenv("CORS_ALLOWED_ORIGINS")),
+		CookieSecure:   os.Getenv("COOKIE_SECURE") == "true",
+		RetentionDays:  retentionDays,
+	}, nil
+}
+
+func parseListenAddr(raw string) (string, error) {
+	if raw == "" {
+		raw = defaultListenAddr
+	}
+
+	if _, _, err := net.SplitHostPort(raw); err != nil {
+		return "", fmt.Errorf("LISTEN_ADDR must be a host:port address (e.g. 0.0.0.0:3000): %w", err)
+	}
+
+	return raw, nil
+}
+
+func parseRetentionDays(raw string) (int, error) {
+	if raw == "" {
+		return defaultRetentionDays, nil
+	}
+
+	days, err := strconv.Atoi(raw)
+	if err != nil {
+		return 0, fmt.Errorf("RETENTION_DAYS must be an integer number of days: %w", err)
+	}
+
+	if days < minRetentionDays {
+		return 0, fmt.Errorf("RETENTION_DAYS must be at least %d days", minRetentionDays)
+	}
+
+	return days, nil
+}
+
+func parseAllowedOrigins(raw string) []string {
+	origins := splitAndTrim(raw)
+	if len(origins) == 0 {
+		return []string{defaultAllowedOrigin}
+	}
+
+	return origins
+}
+
+func splitAndTrim(raw string) []string {
+	var values []string
+	for part := range strings.SplitSeq(raw, ",") {
+		if trimmed := strings.TrimSpace(part); trimmed != "" {
+			values = append(values, trimmed)
+		}
+	}
+
+	return values
+}

@@ -86,8 +86,11 @@ func dropOldPartitions(
 	retentionDays int,
 	logger *slog.Logger,
 ) error {
+	// config.Load guarantees a positive floor; guard anyway, because a non-positive
+	// value would push the cutoff into the future and expire every partition,
+	// including live data. Refuse rather than silently disabling or dropping everything.
 	if retentionDays <= 0 {
-		return nil
+		return fmt.Errorf("retentionDays must be positive, got %d", retentionDays)
 	}
 
 	cutoff := now.UTC().AddDate(0, 0, -retentionDays)

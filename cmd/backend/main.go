@@ -2,13 +2,9 @@ package main
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
-	"strconv"
-	"strings"
 	"time"
 
 	"connectrpc.com/connect"
@@ -18,78 +14,16 @@ import (
 
 	"github.com/pgdozor/backend/gen/pgdozor/v1/pgdozorv1connect"
 	"github.com/pgdozor/backend/internal/alerts"
+	"github.com/pgdozor/backend/internal/config"
 	"github.com/pgdozor/backend/internal/db"
 	"github.com/pgdozor/backend/internal/retention"
 	"github.com/pgdozor/backend/internal/server"
 )
 
 const (
-	listenAddr           = "localhost:3000"
-	readHeaderTimeout    = 10 * time.Second
-	connectTimeout       = 10 * time.Second
-	defaultAllowedOrigin = "http://localhost:3001"
-	defaultRetentionDays = 30
-	minRetentionDays     = 14
+	readHeaderTimeout = 10 * time.Second
+	connectTimeout    = 10 * time.Second
 )
-
-type config struct {
-	databaseURL    string
-	allowedOrigins []string
-	cookieSecure   bool
-	retentionDays  int
-}
-
-func loadConfig() (config, error) {
-	databaseURL := os.Getenv("DATABASE_URL")
-	if databaseURL == "" {
-		return config{}, errors.New("DATABASE_URL is not set")
-	}
-
-	origins := splitAndTrim(os.Getenv("CORS_ALLOWED_ORIGINS"))
-	if len(origins) == 0 {
-		origins = []string{defaultAllowedOrigin}
-	}
-
-	retentionDays, err := loadRetentionDays()
-	if err != nil {
-		return config{}, err
-	}
-
-	return config{
-		databaseURL:    databaseURL,
-		allowedOrigins: origins,
-		cookieSecure:   os.Getenv("COOKIE_SECURE") == "true",
-		retentionDays:  retentionDays,
-	}, nil
-}
-
-// loadRetentionDays reads RETENTION_DAYS, defaulting to 30. A value of 0 (or
-// less) disables dropping. The digest-floor clamp is applied later in run where
-// a logger is available to warn about it.
-func loadRetentionDays() (int, error) {
-	raw := os.Getenv("RETENTION_DAYS")
-	if raw == "" {
-		return defaultRetentionDays, nil
-	}
-
-	days, err := strconv.Atoi(raw)
-	if err != nil {
-		return 0, fmt.Errorf("RETENTION_DAYS must be an integer number of days: %w", err)
-	}
-
-	return days, nil
-}
-
-func splitAndTrim(raw string) []string {
-	var values []string
-	for part := range strings.SplitSeq(raw, ",") {
-		if trimmed := strings.TrimSpace(part); trimmed != "" {
-			values = append(values, trimmed)
-		}
-	}
-
-	return values
-}
 
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
@@ -103,12 +37,12 @@ func main() {
 }
 
 func run(ctx context.Context, logger *slog.Logger) error {
-	cfg, err := loadConfig()
+	cfg, err := config.Load()
 	if err != nil {
 		return err
 	}
 
-	pool, err := connectPool(ctx, cfg.databaseURL)
+	pool, err := connectPool(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return err
 	}
@@ -117,19 +51,12 @@ func run(ctx context.Context, logger *slog.Logger) error {
 	queries := db.New(pool)
 	interceptors := connect.WithInterceptors(server.NewAuthInterceptor(queries))
 
-	retentionDays := cfg.retentionDays
-	if retentionDays > 0 && retentionDays < minRetentionDays {
-		logger.WarnContext(ctx, "RETENTION_DAYS below minimum; clamping up",
-			"requested", retentionDays, "minimum", minRetentionDays)
-		retentionDays = minRetentionDays
-	}
-
 	// Pre-create the current/upcoming partitions.
 	if ensureErr := retention.EnsurePartitions(ctx, pool, logger); ensureErr != nil {
 		logger.WarnContext(ctx, "initial partition ensure failed", "error", ensureErr)
 	}
 
-	go retention.Run(ctx, pool, retentionDays, logger)
+	go retention.Run(ctx, pool, cfg.RetentionDays, logger)
 
 	notifier := alerts.NewNotifier(queries, logger)
 	go alerts.RunScheduler(ctx, queries, notifier, logger)
@@ -155,7 +82,7 @@ func run(ctx context.Context, logger *slog.Logger) error {
 	mux.Handle(healthPath, healthHandler)
 
 	authPath, authHandler := pgdozorv1connect.NewAuthServiceHandler(
-		server.NewAuthServer(pool, cfg.cookieSecure),
+		server.NewAuthServer(pool, cfg.CookieSecure),
 		interceptors,
 	)
 	mux.Handle(authPath, authHandler)
@@ -172,13 +99,13 @@ func run(ctx context.Context, logger *slog.Logger) error {
 	protocols.SetUnencryptedHTTP2(true)
 
 	httpServer := &http.Server{
-		Addr:              listenAddr,
-		Handler:           withCORS(mux, cfg.allowedOrigins),
+		Addr:              cfg.ListenAddr,
+		Handler:           withCORS(mux, cfg.AllowedOrigins),
 		ReadHeaderTimeout: readHeaderTimeout,
 		Protocols:         &protocols,
 	}
 
-	logger.InfoContext(ctx, "pgdozor backend listening", "addr", listenAddr)
+	logger.InfoContext(ctx, "pgdozor backend listening", "addr", cfg.ListenAddr)
 
 	return httpServer.ListenAndServe()
 }
