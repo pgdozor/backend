@@ -1264,34 +1264,23 @@ func (q *Queries) RemoveServerFromUsers(ctx context.Context, serverName string) 
 }
 
 const statementMetricSeries = `-- name: StatementMetricSeries :many
-SELECT
-    b.bucket_start::timestamptz AS bucket_start,
-    coalesce(a.total_exec_time, 0)::double precision AS total_exec_time,
-    coalesce(a.calls, 0)::bigint                     AS calls,
-    coalesce(a.rows, 0)::bigint                       AS rows,
-    coalesce(a.reads, 0)::bigint                       AS reads,
-    coalesce(a.spills, 0)::bigint                      AS spills
-FROM generate_series(
-        $1::timestamptz,
-        $2::timestamptz,
-        $3::interval
-     ) AS b(bucket_start)
-LEFT JOIN (
+SELECT b.bucket_start, b.total_exec_time, b.calls, b.rows, b.reads, b.spills
+FROM (
     SELECT
-        date_bin($3::interval, d.collected_at, $1::timestamptz) AS bucket_start,
-        sum(d.total_exec_time)   AS total_exec_time,
-        sum(d.calls)             AS calls,
-        sum(d.rows)              AS rows,
-        sum(d.shared_blks_read)  AS reads,
-        sum(d.temp_blks_written) AS spills
+        date_bin($1::interval, d.collected_at, date_trunc('minute', $2::timestamptz))::timestamptz AS bucket_start,
+        sum(d.total_exec_time)::double precision AS total_exec_time,
+        sum(d.calls)::bigint                     AS calls,
+        sum(d.rows)::bigint                      AS rows,
+        sum(d.shared_blks_read)::bigint          AS reads,
+        sum(d.temp_blks_written)::bigint         AS spills
     FROM statement_deltas d
     JOIN statements s ON s.id = d.statement_id
-    WHERE ($4::text IS NULL OR s.server_name = $4)
-      AND ($5::text IS NULL OR s.database_name = $5)
-      AND ($6::text[] IS NULL OR s.server_name = ANY($6::text[]))
-      AND ($7::bigint IS NULL OR d.statement_id = $7)
-      AND d.collected_at >= $1::timestamptz
-      AND d.collected_at <= $2::timestamptz
+    WHERE ($3::text IS NULL OR s.server_name = $3)
+      AND ($4::text IS NULL OR s.database_name = $4)
+      AND ($5::text[] IS NULL OR s.server_name = ANY($5::text[]))
+      AND ($6::bigint IS NULL OR d.statement_id = $6)
+      AND d.collected_at >= $2::timestamptz
+      AND d.collected_at <= $7::timestamptz
       AND (
           ($8::text IS NULL AND $9::text IS NULL)
           OR s.query_text ILIKE '%' || $8::text || '%'
@@ -1303,18 +1292,20 @@ LEFT JOIN (
           )
       )
     GROUP BY 1
-) a ON a.bucket_start = b.bucket_start
+) b
+WHERE b.bucket_start + $1::interval <= $7::timestamptz
+   OR $1::interval <= interval '1 minute'
 ORDER BY b.bucket_start
 `
 
 type StatementMetricSeriesParams struct {
-	Since          pgtype.Timestamptz
-	Until          pgtype.Timestamptz
 	Bucket         pgtype.Interval
+	Since          pgtype.Timestamptz
 	ServerName     pgtype.Text
 	DatabaseName   pgtype.Text
 	AllowedServers []string
 	StatementID    pgtype.Int8
+	Until          pgtype.Timestamptz
 	TextFilter     pgtype.Text
 	TagKey         pgtype.Text
 	TagValue       pgtype.Text
@@ -1331,13 +1322,13 @@ type StatementMetricSeriesRow struct {
 
 func (q *Queries) StatementMetricSeries(ctx context.Context, arg StatementMetricSeriesParams) ([]StatementMetricSeriesRow, error) {
 	rows, err := q.db.Query(ctx, statementMetricSeries,
-		arg.Since,
-		arg.Until,
 		arg.Bucket,
+		arg.Since,
 		arg.ServerName,
 		arg.DatabaseName,
 		arg.AllowedServers,
 		arg.StatementID,
+		arg.Until,
 		arg.TextFilter,
 		arg.TagKey,
 		arg.TagValue,

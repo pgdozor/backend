@@ -181,26 +181,15 @@ WHERE (sqlc.narg('server_name')::text IS NULL OR s.server_name = sqlc.narg('serv
   );
 
 -- name: StatementMetricSeries :many
-SELECT
-    b.bucket_start::timestamptz AS bucket_start,
-    coalesce(a.total_exec_time, 0)::double precision AS total_exec_time,
-    coalesce(a.calls, 0)::bigint                     AS calls,
-    coalesce(a.rows, 0)::bigint                       AS rows,
-    coalesce(a.reads, 0)::bigint                       AS reads,
-    coalesce(a.spills, 0)::bigint                      AS spills
-FROM generate_series(
-        sqlc.arg('since')::timestamptz,
-        sqlc.arg('until')::timestamptz,
-        sqlc.arg('bucket')::interval
-     ) AS b(bucket_start)
-LEFT JOIN (
+SELECT b.bucket_start, b.total_exec_time, b.calls, b.rows, b.reads, b.spills
+FROM (
     SELECT
-        date_bin(sqlc.arg('bucket')::interval, d.collected_at, sqlc.arg('since')::timestamptz) AS bucket_start,
-        sum(d.total_exec_time)   AS total_exec_time,
-        sum(d.calls)             AS calls,
-        sum(d.rows)              AS rows,
-        sum(d.shared_blks_read)  AS reads,
-        sum(d.temp_blks_written) AS spills
+        date_bin(sqlc.arg('bucket')::interval, d.collected_at, date_trunc('minute', sqlc.arg('since')::timestamptz))::timestamptz AS bucket_start,
+        sum(d.total_exec_time)::double precision AS total_exec_time,
+        sum(d.calls)::bigint                     AS calls,
+        sum(d.rows)::bigint                      AS rows,
+        sum(d.shared_blks_read)::bigint          AS reads,
+        sum(d.temp_blks_written)::bigint         AS spills
     FROM statement_deltas d
     JOIN statements s ON s.id = d.statement_id
     WHERE (sqlc.narg('server_name')::text IS NULL OR s.server_name = sqlc.narg('server_name'))
@@ -220,7 +209,9 @@ LEFT JOIN (
           )
       )
     GROUP BY 1
-) a ON a.bucket_start = b.bucket_start
+) b
+WHERE b.bucket_start + sqlc.arg('bucket')::interval <= sqlc.arg('until')::timestamptz
+   OR sqlc.arg('bucket')::interval <= interval '1 minute'
 ORDER BY b.bucket_start;
 
 -- name: ListStatementStats :many

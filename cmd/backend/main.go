@@ -13,6 +13,7 @@ import (
 	"connectrpc.com/connect"
 	connectcors "connectrpc.com/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 
 	"github.com/pgdozor/backend/gen/pgdozor/v1/pgdozorv1connect"
@@ -44,6 +45,8 @@ func main() {
 func run(logger *slog.Logger) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	_ = godotenv.Load()
 
 	cfg, err := config.Load()
 	if err != nil {
