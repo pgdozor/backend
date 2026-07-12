@@ -182,41 +182,47 @@ WHERE (sqlc.narg('server_name')::text IS NULL OR s.server_name = sqlc.narg('serv
 
 -- name: StatementMetricSeries :many
 SELECT
-    (date_bin(
-        sqlc.arg('bucket')::interval,
-        d.collected_at,
-        date_trunc('minute', least(sqlc.arg('until')::timestamptz, now()))
-    ) + sqlc.arg('bucket')::interval)::timestamptz AS bucket_start,
-    sum(d.total_exec_time)::double precision AS total_exec_time,
-    sum(d.calls)::bigint                     AS calls,
-    sum(d.rows)::bigint                      AS rows,
-    sum(d.shared_blks_read)::bigint          AS reads,
-    sum(d.temp_blks_written)::bigint         AS spills
-FROM statement_deltas d
-JOIN statements s ON s.id = d.statement_id
-WHERE (sqlc.narg('server_name')::text IS NULL OR s.server_name = sqlc.narg('server_name'))
-  AND (sqlc.narg('database_name')::text IS NULL OR s.database_name = sqlc.narg('database_name'))
-  AND (sqlc.narg('allowed_servers')::text[] IS NULL OR s.server_name = ANY(sqlc.narg('allowed_servers')::text[]))
-  AND (sqlc.narg('statement_id')::bigint IS NULL OR d.statement_id = sqlc.narg('statement_id'))
-  AND d.collected_at >= sqlc.arg('since')::timestamptz
-  AND d.collected_at <= sqlc.arg('until')::timestamptz
-  AND (
-      (sqlc.narg('text_filter')::text IS NULL AND sqlc.narg('tag_key')::text IS NULL)
-      OR s.query_text ILIKE '%' || sqlc.narg('text_filter')::text || '%'
-      OR EXISTS (
-          SELECT 1 FROM statement_samples ss
-          WHERE ss.statement_id = s.id
-            AND jsonb_exists(ss.tags, sqlc.narg('tag_key')::text)
-            AND (sqlc.narg('tag_value')::text IS NULL OR ss.tags ->> sqlc.narg('tag_key')::text = sqlc.narg('tag_value')::text)
+    (b.bin + sqlc.arg('bucket')::interval)::timestamptz AS bucket_start,
+    sum(b.total_exec_time)::double precision AS total_exec_time,
+    sum(b.calls)::bigint                     AS calls,
+    sum(b.rows)::bigint                      AS rows,
+    sum(b.reads)::bigint                     AS reads,
+    sum(b.spills)::bigint                    AS spills
+FROM (
+    SELECT
+        date_bin(
+            sqlc.arg('bucket')::interval,
+            d.collected_at,
+            date_trunc('minute', least(sqlc.arg('until')::timestamptz, now()))
+        )                        AS bin,
+        d.total_exec_time,
+        d.calls,
+        d.rows,
+        d.shared_blks_read  AS reads,
+        d.temp_blks_written AS spills
+    FROM statement_deltas d
+    JOIN statements s ON s.id = d.statement_id
+    WHERE (sqlc.narg('server_name')::text IS NULL OR s.server_name = sqlc.narg('server_name'))
+      AND (sqlc.narg('database_name')::text IS NULL OR s.database_name = sqlc.narg('database_name'))
+      AND (sqlc.narg('allowed_servers')::text[] IS NULL OR s.server_name = ANY(sqlc.narg('allowed_servers')::text[]))
+      AND (sqlc.narg('statement_id')::bigint IS NULL OR d.statement_id = sqlc.narg('statement_id'))
+      AND d.collected_at >= sqlc.arg('since')::timestamptz
+      AND d.collected_at <= sqlc.arg('until')::timestamptz
+      AND (
+          (sqlc.narg('text_filter')::text IS NULL AND sqlc.narg('tag_key')::text IS NULL)
+          OR s.query_text ILIKE '%' || sqlc.narg('text_filter')::text || '%'
+          OR EXISTS (
+              SELECT 1 FROM statement_samples ss
+              WHERE ss.statement_id = s.id
+                AND jsonb_exists(ss.tags, sqlc.narg('tag_key')::text)
+                AND (sqlc.narg('tag_value')::text IS NULL OR ss.tags ->> sqlc.narg('tag_key')::text = sqlc.narg('tag_value')::text)
+          )
       )
-  )
-  AND date_bin(
-          sqlc.arg('bucket')::interval,
-          d.collected_at,
-          date_trunc('minute', least(sqlc.arg('until')::timestamptz, now()))
-      ) + sqlc.arg('bucket')::interval <= least(sqlc.arg('until')::timestamptz, now())
-GROUP BY 1
-ORDER BY 1;
+) b
+WHERE b.bin >= sqlc.arg('since')::timestamptz
+  AND b.bin + sqlc.arg('bucket')::interval <= least(sqlc.arg('until')::timestamptz, now())
+GROUP BY b.bin
+ORDER BY b.bin;
 
 -- name: ListStatementStats :many
 WITH per_statement AS (

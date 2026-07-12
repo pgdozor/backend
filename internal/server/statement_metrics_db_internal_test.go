@@ -66,8 +66,11 @@ func TestStatementSeriesTotalMatchesTable(t *testing.T) {
 	}
 
 	if seriesTotal > tableTotal*(1+1e-6)+1 {
-		t.Fatalf("series total %.3fms exceeds table total %.3fms — the chart series must be a subset (only the in-progress bucket is omitted)",
-			seriesTotal, tableTotal)
+		t.Fatalf(
+			"series total %.3fms exceeds table total %.3fms — the chart series must be a subset (only the in-progress bucket is omitted)",
+			seriesTotal,
+			tableTotal,
+		)
 	}
 
 	t.Logf("series total %.3fms <= table total %.3fms across %d buckets, %d statements",

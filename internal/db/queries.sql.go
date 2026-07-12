@@ -1265,41 +1265,47 @@ func (q *Queries) RemoveServerFromUsers(ctx context.Context, serverName string) 
 
 const statementMetricSeries = `-- name: StatementMetricSeries :many
 SELECT
-    (date_bin(
-        $1::interval,
-        d.collected_at,
-        date_trunc('minute', least($2::timestamptz, now()))
-    ) + $1::interval)::timestamptz AS bucket_start,
-    sum(d.total_exec_time)::double precision AS total_exec_time,
-    sum(d.calls)::bigint                     AS calls,
-    sum(d.rows)::bigint                      AS rows,
-    sum(d.shared_blks_read)::bigint          AS reads,
-    sum(d.temp_blks_written)::bigint         AS spills
-FROM statement_deltas d
-JOIN statements s ON s.id = d.statement_id
-WHERE ($3::text IS NULL OR s.server_name = $3)
-  AND ($4::text IS NULL OR s.database_name = $4)
-  AND ($5::text[] IS NULL OR s.server_name = ANY($5::text[]))
-  AND ($6::bigint IS NULL OR d.statement_id = $6)
-  AND d.collected_at >= $7::timestamptz
-  AND d.collected_at <= $2::timestamptz
-  AND (
-      ($8::text IS NULL AND $9::text IS NULL)
-      OR s.query_text ILIKE '%' || $8::text || '%'
-      OR EXISTS (
-          SELECT 1 FROM statement_samples ss
-          WHERE ss.statement_id = s.id
-            AND jsonb_exists(ss.tags, $9::text)
-            AND ($10::text IS NULL OR ss.tags ->> $9::text = $10::text)
+    (b.bin + $1::interval)::timestamptz AS bucket_start,
+    sum(b.total_exec_time)::double precision AS total_exec_time,
+    sum(b.calls)::bigint                     AS calls,
+    sum(b.rows)::bigint                      AS rows,
+    sum(b.reads)::bigint                     AS reads,
+    sum(b.spills)::bigint                    AS spills
+FROM (
+    SELECT
+        date_bin(
+            $1::interval,
+            d.collected_at,
+            date_trunc('minute', least($2::timestamptz, now()))
+        )                        AS bin,
+        d.total_exec_time,
+        d.calls,
+        d.rows,
+        d.shared_blks_read  AS reads,
+        d.temp_blks_written AS spills
+    FROM statement_deltas d
+    JOIN statements s ON s.id = d.statement_id
+    WHERE ($3::text IS NULL OR s.server_name = $3)
+      AND ($4::text IS NULL OR s.database_name = $4)
+      AND ($5::text[] IS NULL OR s.server_name = ANY($5::text[]))
+      AND ($6::bigint IS NULL OR d.statement_id = $6)
+      AND d.collected_at >= $7::timestamptz
+      AND d.collected_at <= $2::timestamptz
+      AND (
+          ($8::text IS NULL AND $9::text IS NULL)
+          OR s.query_text ILIKE '%' || $8::text || '%'
+          OR EXISTS (
+              SELECT 1 FROM statement_samples ss
+              WHERE ss.statement_id = s.id
+                AND jsonb_exists(ss.tags, $9::text)
+                AND ($10::text IS NULL OR ss.tags ->> $9::text = $10::text)
+          )
       )
-  )
-  AND date_bin(
-          $1::interval,
-          d.collected_at,
-          date_trunc('minute', least($2::timestamptz, now()))
-      ) + $1::interval <= least($2::timestamptz, now())
-GROUP BY 1
-ORDER BY 1
+) b
+WHERE b.bin >= $7::timestamptz
+  AND b.bin + $1::interval <= least($2::timestamptz, now())
+GROUP BY b.bin
+ORDER BY b.bin
 `
 
 type StatementMetricSeriesParams struct {
