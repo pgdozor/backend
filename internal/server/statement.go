@@ -496,7 +496,7 @@ func metricBucket(d time.Duration) time.Duration {
 		return minMetricBucket
 	}
 
-	return bucket
+	return bucket.Round(time.Minute)
 }
 
 func avgExecTime(totalExecTime float64, calls int64) float64 {

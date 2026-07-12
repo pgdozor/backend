@@ -1264,23 +1264,24 @@ func (q *Queries) RemoveServerFromUsers(ctx context.Context, serverName string) 
 }
 
 const statementMetricSeries = `-- name: StatementMetricSeries :many
-SELECT b.bucket_start, b.total_exec_time, b.calls, b.rows, b.reads, b.spills
-FROM (
+WITH buckets AS (
     SELECT
-        date_bin($1::interval, d.collected_at, date_trunc('minute', $2::timestamptz))::timestamptz AS bucket_start,
+        date_bin($1::interval, d.collected_at, least($2::timestamptz, now()))::timestamptz AS bucket_start,
         sum(d.total_exec_time)::double precision AS total_exec_time,
         sum(d.calls)::bigint                     AS calls,
         sum(d.rows)::bigint                      AS rows,
         sum(d.shared_blks_read)::bigint          AS reads,
-        sum(d.temp_blks_written)::bigint         AS spills
+        sum(d.temp_blks_written)::bigint         AS spills,
+        min(d.collected_at)::timestamptz         AS first_at,
+        max(d.collected_at)::timestamptz         AS last_at
     FROM statement_deltas d
     JOIN statements s ON s.id = d.statement_id
     WHERE ($3::text IS NULL OR s.server_name = $3)
       AND ($4::text IS NULL OR s.database_name = $4)
       AND ($5::text[] IS NULL OR s.server_name = ANY($5::text[]))
       AND ($6::bigint IS NULL OR d.statement_id = $6)
-      AND d.collected_at >= $2::timestamptz
-      AND d.collected_at <= $7::timestamptz
+      AND d.collected_at >= $7::timestamptz
+      AND d.collected_at <= $2::timestamptz
       AND (
           ($8::text IS NULL AND $9::text IS NULL)
           OR s.query_text ILIKE '%' || $8::text || '%'
@@ -1292,20 +1293,41 @@ FROM (
           )
       )
     GROUP BY 1
-) b
-WHERE b.bucket_start + $1::interval <= $7::timestamptz
-   OR $1::interval <= interval '1 minute'
-ORDER BY b.bucket_start
+),
+flagged AS (
+    SELECT b.bucket_start, b.total_exec_time, b.calls, b.rows, b.reads, b.spills, b.first_at, b.last_at, lead(b.bucket_start) OVER (ORDER BY b.bucket_start) AS next_start
+    FROM buckets b
+),
+kept AS (
+    SELECT f.bucket_start, f.total_exec_time, f.calls, f.rows, f.reads, f.spills, f.first_at, f.last_at, f.next_start,
+        (
+            $1::interval <= interval '1 minute'
+            OR (
+                f.bucket_start + $1::interval <= least($2::timestamptz, now())
+                AND (
+                    f.first_at - f.bucket_start <= greatest($1::interval / 10, interval '2 minutes')
+                    OR f.next_start IS DISTINCT FROM f.bucket_start + $1::interval
+                )
+            )
+        ) AS is_kept
+    FROM flagged f
+)
+SELECT k.last_at AS bucket_start,
+       k.total_exec_time, k.calls, k.rows, k.reads, k.spills
+FROM kept k
+WHERE k.is_kept
+   OR NOT EXISTS (SELECT 1 FROM kept WHERE is_kept)
+ORDER BY k.last_at
 `
 
 type StatementMetricSeriesParams struct {
 	Bucket         pgtype.Interval
-	Since          pgtype.Timestamptz
+	Until          pgtype.Timestamptz
 	ServerName     pgtype.Text
 	DatabaseName   pgtype.Text
 	AllowedServers []string
 	StatementID    pgtype.Int8
-	Until          pgtype.Timestamptz
+	Since          pgtype.Timestamptz
 	TextFilter     pgtype.Text
 	TagKey         pgtype.Text
 	TagValue       pgtype.Text
@@ -1323,12 +1345,12 @@ type StatementMetricSeriesRow struct {
 func (q *Queries) StatementMetricSeries(ctx context.Context, arg StatementMetricSeriesParams) ([]StatementMetricSeriesRow, error) {
 	rows, err := q.db.Query(ctx, statementMetricSeries,
 		arg.Bucket,
-		arg.Since,
+		arg.Until,
 		arg.ServerName,
 		arg.DatabaseName,
 		arg.AllowedServers,
 		arg.StatementID,
-		arg.Until,
+		arg.Since,
 		arg.TextFilter,
 		arg.TagKey,
 		arg.TagValue,
