@@ -100,6 +100,9 @@ message StatementMetrics {
   StatementMetric rows = 4;
   StatementMetric reads = 5;
   StatementMetric spills = 6;
+  // Width of each series bucket, so the chart never re-derives it and drifts
+  // from the server's bucketing.
+  int64 bucket_ms = 7;
 }
 
 // One metric over the selected range: its aggregate value, the percentage

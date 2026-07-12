@@ -572,13 +572,16 @@ func (x *GetStatementSamplePlanResponse) GetPlanJson() string {
 }
 
 type StatementMetrics struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Total         *StatementMetric       `protobuf:"bytes,1,opt,name=total,proto3" json:"total,omitempty"`
-	Calls         *StatementMetric       `protobuf:"bytes,2,opt,name=calls,proto3" json:"calls,omitempty"`
-	Avg           *StatementMetric       `protobuf:"bytes,3,opt,name=avg,proto3" json:"avg,omitempty"`
-	Rows          *StatementMetric       `protobuf:"bytes,4,opt,name=rows,proto3" json:"rows,omitempty"`
-	Reads         *StatementMetric       `protobuf:"bytes,5,opt,name=reads,proto3" json:"reads,omitempty"`
-	Spills        *StatementMetric       `protobuf:"bytes,6,opt,name=spills,proto3" json:"spills,omitempty"`
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	Total  *StatementMetric       `protobuf:"bytes,1,opt,name=total,proto3" json:"total,omitempty"`
+	Calls  *StatementMetric       `protobuf:"bytes,2,opt,name=calls,proto3" json:"calls,omitempty"`
+	Avg    *StatementMetric       `protobuf:"bytes,3,opt,name=avg,proto3" json:"avg,omitempty"`
+	Rows   *StatementMetric       `protobuf:"bytes,4,opt,name=rows,proto3" json:"rows,omitempty"`
+	Reads  *StatementMetric       `protobuf:"bytes,5,opt,name=reads,proto3" json:"reads,omitempty"`
+	Spills *StatementMetric       `protobuf:"bytes,6,opt,name=spills,proto3" json:"spills,omitempty"`
+	// Width of each series bucket, so the chart never re-derives it and drifts
+	// from the server's bucketing.
+	BucketMs      int64 `protobuf:"varint,7,opt,name=bucket_ms,json=bucketMs,proto3" json:"bucket_ms,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -653,6 +656,13 @@ func (x *StatementMetrics) GetSpills() *StatementMetric {
 		return x.Spills
 	}
 	return nil
+}
+
+func (x *StatementMetrics) GetBucketMs() int64 {
+	if x != nil {
+		return x.BucketMs
+	}
+	return 0
 }
 
 // One metric over the selected range: its aggregate value, the percentage
@@ -1051,14 +1061,15 @@ const file_pgdozor_v1_statement_proto_rawDesc = "" +
 	"\tsample_id\x18\x01 \x01(\x03R\bsampleId\"S\n" +
 	"\x1eGetStatementSamplePlanResponse\x12\x14\n" +
 	"\x05query\x18\x01 \x01(\tR\x05query\x12\x1b\n" +
-	"\tplan_json\x18\x02 \x01(\tR\bplanJson\"\xc0\x02\n" +
+	"\tplan_json\x18\x02 \x01(\tR\bplanJson\"\xdd\x02\n" +
 	"\x10StatementMetrics\x121\n" +
 	"\x05total\x18\x01 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x05total\x121\n" +
 	"\x05calls\x18\x02 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x05calls\x12-\n" +
 	"\x03avg\x18\x03 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x03avg\x12/\n" +
 	"\x04rows\x18\x04 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x04rows\x121\n" +
 	"\x05reads\x18\x05 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x05reads\x123\n" +
-	"\x06spills\x18\x06 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x06spills\"u\n" +
+	"\x06spills\x18\x06 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x06spills\x12\x1b\n" +
+	"\tbucket_ms\x18\a \x01(\x03R\bbucketMs\"u\n" +
 	"\x0fStatementMetric\x12\x14\n" +
 	"\x05value\x18\x01 \x01(\x01R\x05value\x12\x1b\n" +
 	"\ttrend_pct\x18\x02 \x01(\x01R\btrendPct\x12/\n" +

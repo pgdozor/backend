@@ -181,60 +181,42 @@ WHERE (sqlc.narg('server_name')::text IS NULL OR s.server_name = sqlc.narg('serv
   );
 
 -- name: StatementMetricSeries :many
-WITH buckets AS (
-    SELECT
-        date_bin(sqlc.arg('bucket')::interval, d.collected_at, least(sqlc.arg('until')::timestamptz, now()))::timestamptz AS bucket_start,
-        sum(d.total_exec_time)::double precision AS total_exec_time,
-        sum(d.calls)::bigint                     AS calls,
-        sum(d.rows)::bigint                      AS rows,
-        sum(d.shared_blks_read)::bigint          AS reads,
-        sum(d.temp_blks_written)::bigint         AS spills,
-        min(d.collected_at)::timestamptz         AS first_at,
-        max(d.collected_at)::timestamptz         AS last_at
-    FROM statement_deltas d
-    JOIN statements s ON s.id = d.statement_id
-    WHERE (sqlc.narg('server_name')::text IS NULL OR s.server_name = sqlc.narg('server_name'))
-      AND (sqlc.narg('database_name')::text IS NULL OR s.database_name = sqlc.narg('database_name'))
-      AND (sqlc.narg('allowed_servers')::text[] IS NULL OR s.server_name = ANY(sqlc.narg('allowed_servers')::text[]))
-      AND (sqlc.narg('statement_id')::bigint IS NULL OR d.statement_id = sqlc.narg('statement_id'))
-      AND d.collected_at >= sqlc.arg('since')::timestamptz
-      AND d.collected_at <= sqlc.arg('until')::timestamptz
-      AND (
-          (sqlc.narg('text_filter')::text IS NULL AND sqlc.narg('tag_key')::text IS NULL)
-          OR s.query_text ILIKE '%' || sqlc.narg('text_filter')::text || '%'
-          OR EXISTS (
-              SELECT 1 FROM statement_samples ss
-              WHERE ss.statement_id = s.id
-                AND jsonb_exists(ss.tags, sqlc.narg('tag_key')::text)
-                AND (sqlc.narg('tag_value')::text IS NULL OR ss.tags ->> sqlc.narg('tag_key')::text = sqlc.narg('tag_value')::text)
-          )
+SELECT
+    (date_bin(
+        sqlc.arg('bucket')::interval,
+        d.collected_at,
+        date_trunc('minute', least(sqlc.arg('until')::timestamptz, now()))
+    ) + sqlc.arg('bucket')::interval)::timestamptz AS bucket_start,
+    sum(d.total_exec_time)::double precision AS total_exec_time,
+    sum(d.calls)::bigint                     AS calls,
+    sum(d.rows)::bigint                      AS rows,
+    sum(d.shared_blks_read)::bigint          AS reads,
+    sum(d.temp_blks_written)::bigint         AS spills
+FROM statement_deltas d
+JOIN statements s ON s.id = d.statement_id
+WHERE (sqlc.narg('server_name')::text IS NULL OR s.server_name = sqlc.narg('server_name'))
+  AND (sqlc.narg('database_name')::text IS NULL OR s.database_name = sqlc.narg('database_name'))
+  AND (sqlc.narg('allowed_servers')::text[] IS NULL OR s.server_name = ANY(sqlc.narg('allowed_servers')::text[]))
+  AND (sqlc.narg('statement_id')::bigint IS NULL OR d.statement_id = sqlc.narg('statement_id'))
+  AND d.collected_at >= sqlc.arg('since')::timestamptz
+  AND d.collected_at <= sqlc.arg('until')::timestamptz
+  AND (
+      (sqlc.narg('text_filter')::text IS NULL AND sqlc.narg('tag_key')::text IS NULL)
+      OR s.query_text ILIKE '%' || sqlc.narg('text_filter')::text || '%'
+      OR EXISTS (
+          SELECT 1 FROM statement_samples ss
+          WHERE ss.statement_id = s.id
+            AND jsonb_exists(ss.tags, sqlc.narg('tag_key')::text)
+            AND (sqlc.narg('tag_value')::text IS NULL OR ss.tags ->> sqlc.narg('tag_key')::text = sqlc.narg('tag_value')::text)
       )
-    GROUP BY 1
-),
-flagged AS (
-    SELECT b.*, lead(b.bucket_start) OVER (ORDER BY b.bucket_start) AS next_start
-    FROM buckets b
-),
-kept AS (
-    SELECT f.*,
-        (
-            sqlc.arg('bucket')::interval <= interval '1 minute'
-            OR (
-                f.bucket_start + sqlc.arg('bucket')::interval <= least(sqlc.arg('until')::timestamptz, now())
-                AND (
-                    f.first_at - f.bucket_start <= greatest(sqlc.arg('bucket')::interval / 10, interval '2 minutes')
-                    OR f.next_start IS DISTINCT FROM f.bucket_start + sqlc.arg('bucket')::interval
-                )
-            )
-        ) AS is_kept
-    FROM flagged f
-)
-SELECT k.last_at AS bucket_start,
-       k.total_exec_time, k.calls, k.rows, k.reads, k.spills
-FROM kept k
-WHERE k.is_kept
-   OR NOT EXISTS (SELECT 1 FROM kept WHERE is_kept)
-ORDER BY k.last_at;
+  )
+  AND date_bin(
+          sqlc.arg('bucket')::interval,
+          d.collected_at,
+          date_trunc('minute', least(sqlc.arg('until')::timestamptz, now()))
+      ) + sqlc.arg('bucket')::interval <= least(sqlc.arg('until')::timestamptz, now())
+GROUP BY 1
+ORDER BY 1;
 
 -- name: ListStatementStats :many
 WITH per_statement AS (

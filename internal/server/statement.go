@@ -439,6 +439,21 @@ func (s *StatementServer) statementMetrics(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
+	cur, err := s.queries.StatementMetricTotals(ctx, db.StatementMetricTotalsParams{
+		ServerName:     serverName,
+		DatabaseName:   databaseName,
+		AllowedServers: allowedServers,
+		TextFilter:     filter.text,
+		TagKey:         filter.tagKey,
+		TagValue:       filter.tagValue,
+		StatementID:    statementID,
+		Since:          pgtype.Timestamptz{Time: from, Valid: true},
+		Until:          pgtype.Timestamptz{Time: to, Valid: true},
+	})
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
 	prev, err := s.queries.StatementMetricTotals(ctx, db.StatementMetricTotalsParams{
 		ServerName:     serverName,
 		DatabaseName:   databaseName,
@@ -462,8 +477,6 @@ func (s *StatementServer) statementMetrics(
 	reads := make([]*pgdozorv1.MetricPoint, n)
 	spills := make([]*pgdozorv1.MetricPoint, n)
 
-	var curTotal float64
-	var curCalls, curRows, curReads, curSpills int64
 	for i, b := range buckets {
 		at := protoFromTimestamptz(b.BucketStart)
 		total[i] = &pgdozorv1.MetricPoint{At: at, Value: b.TotalExecTime}
@@ -472,21 +485,20 @@ func (s *StatementServer) statementMetrics(
 		rows[i] = &pgdozorv1.MetricPoint{At: at, Value: float64(b.Rows)}
 		reads[i] = &pgdozorv1.MetricPoint{At: at, Value: float64(b.Reads)}
 		spills[i] = &pgdozorv1.MetricPoint{At: at, Value: float64(b.Spills)}
-
-		curTotal += b.TotalExecTime
-		curCalls += b.Calls
-		curRows += b.Rows
-		curReads += b.Reads
-		curSpills += b.Spills
 	}
 
 	return &pgdozorv1.StatementMetrics{
-		Total:  statementMetric(curTotal, prev.TotalExecTime, total),
-		Calls:  statementMetric(float64(curCalls), float64(prev.Calls), calls),
-		Avg:    statementMetric(avgExecTime(curTotal, curCalls), avgExecTime(prev.TotalExecTime, prev.Calls), avg),
-		Rows:   statementMetric(float64(curRows), float64(prev.Rows), rows),
-		Reads:  statementMetric(float64(curReads), float64(prev.Reads), reads),
-		Spills: statementMetric(float64(curSpills), float64(prev.Spills), spills),
+		Total: statementMetric(cur.TotalExecTime, prev.TotalExecTime, total),
+		Calls: statementMetric(float64(cur.Calls), float64(prev.Calls), calls),
+		Avg: statementMetric(
+			avgExecTime(cur.TotalExecTime, cur.Calls),
+			avgExecTime(prev.TotalExecTime, prev.Calls),
+			avg,
+		),
+		Rows:     statementMetric(float64(cur.Rows), float64(prev.Rows), rows),
+		Reads:    statementMetric(float64(cur.Reads), float64(prev.Reads), reads),
+		Spills:   statementMetric(float64(cur.Spills), float64(prev.Spills), spills),
+		BucketMs: bucket.Milliseconds(),
 	}, nil
 }
 
