@@ -1265,7 +1265,7 @@ func (q *Queries) RemoveServerFromUsers(ctx context.Context, serverName string) 
 
 const statementMetricSeries = `-- name: StatementMetricSeries :many
 SELECT
-    (b.bin + $1::interval)::timestamptz AS bucket_start,
+    b.bucket_end::timestamptz AS bucket_start,
     sum(b.total_exec_time)::double precision AS total_exec_time,
     sum(b.calls)::bigint                     AS calls,
     sum(b.rows)::bigint                      AS rows,
@@ -1275,9 +1275,9 @@ FROM (
     SELECT
         date_bin(
             $1::interval,
-            d.collected_at,
+            d.collected_at - interval '1 microsecond',
             date_trunc('minute', least($2::timestamptz, now()))
-        )                        AS bin,
+        ) + $1::interval AS bucket_end,
         d.total_exec_time,
         d.calls,
         d.rows,
@@ -1302,10 +1302,10 @@ FROM (
           )
       )
 ) b
-WHERE b.bin >= $7::timestamptz
-  AND b.bin + $1::interval <= least($2::timestamptz, now())
-GROUP BY b.bin
-ORDER BY b.bin
+WHERE b.bucket_end > $7::timestamptz
+  AND b.bucket_end <= least($2::timestamptz, now())
+GROUP BY b.bucket_end
+ORDER BY b.bucket_end
 `
 
 type StatementMetricSeriesParams struct {

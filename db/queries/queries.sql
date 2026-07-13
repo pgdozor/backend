@@ -182,7 +182,7 @@ WHERE (sqlc.narg('server_name')::text IS NULL OR s.server_name = sqlc.narg('serv
 
 -- name: StatementMetricSeries :many
 SELECT
-    (b.bin + sqlc.arg('bucket')::interval)::timestamptz AS bucket_start,
+    b.bucket_end::timestamptz AS bucket_start,
     sum(b.total_exec_time)::double precision AS total_exec_time,
     sum(b.calls)::bigint                     AS calls,
     sum(b.rows)::bigint                      AS rows,
@@ -192,9 +192,9 @@ FROM (
     SELECT
         date_bin(
             sqlc.arg('bucket')::interval,
-            d.collected_at,
+            d.collected_at - interval '1 microsecond',
             date_trunc('minute', least(sqlc.arg('until')::timestamptz, now()))
-        )                        AS bin,
+        ) + sqlc.arg('bucket')::interval AS bucket_end,
         d.total_exec_time,
         d.calls,
         d.rows,
@@ -219,10 +219,10 @@ FROM (
           )
       )
 ) b
-WHERE b.bin >= sqlc.arg('since')::timestamptz
-  AND b.bin + sqlc.arg('bucket')::interval <= least(sqlc.arg('until')::timestamptz, now())
-GROUP BY b.bin
-ORDER BY b.bin;
+WHERE b.bucket_end > sqlc.arg('since')::timestamptz
+  AND b.bucket_end <= least(sqlc.arg('until')::timestamptz, now())
+GROUP BY b.bucket_end
+ORDER BY b.bucket_end;
 
 -- name: ListStatementStats :many
 WITH per_statement AS (
