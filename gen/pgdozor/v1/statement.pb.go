@@ -572,13 +572,16 @@ func (x *GetStatementSamplePlanResponse) GetPlanJson() string {
 }
 
 type StatementMetrics struct {
-	state  protoimpl.MessageState `protogen:"open.v1"`
-	Total  *StatementMetric       `protobuf:"bytes,1,opt,name=total,proto3" json:"total,omitempty"`
-	Calls  *StatementMetric       `protobuf:"bytes,2,opt,name=calls,proto3" json:"calls,omitempty"`
-	Avg    *StatementMetric       `protobuf:"bytes,3,opt,name=avg,proto3" json:"avg,omitempty"`
-	Rows   *StatementMetric       `protobuf:"bytes,4,opt,name=rows,proto3" json:"rows,omitempty"`
-	Reads  *StatementMetric       `protobuf:"bytes,5,opt,name=reads,proto3" json:"reads,omitempty"`
-	Spills *StatementMetric       `protobuf:"bytes,6,opt,name=spills,proto3" json:"spills,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Calls per bucket. Bars in both the QUERIES list and the detail view.
+	Calls *StatementMetric `protobuf:"bytes,1,opt,name=calls,proto3" json:"calls,omitempty"`
+	// Detail view only: this statement's avg total time and avg IO time per bucket.
+	Avg   *StatementMetric `protobuf:"bytes,2,opt,name=avg,proto3" json:"avg,omitempty"`
+	AvgIo *StatementMetric `protobuf:"bytes,3,opt,name=avg_io,json=avgIo,proto3" json:"avg_io,omitempty"`
+	// QUERIES list only: call-weighted latency percentiles of query time per bucket.
+	P90 *StatementMetric `protobuf:"bytes,4,opt,name=p90,proto3" json:"p90,omitempty"`
+	P95 *StatementMetric `protobuf:"bytes,5,opt,name=p95,proto3" json:"p95,omitempty"`
+	P99 *StatementMetric `protobuf:"bytes,6,opt,name=p99,proto3" json:"p99,omitempty"`
 	// Width of each series bucket, so the chart never re-derives it and drifts
 	// from the server's bucketing.
 	BucketMs      int64 `protobuf:"varint,7,opt,name=bucket_ms,json=bucketMs,proto3" json:"bucket_ms,omitempty"`
@@ -616,13 +619,6 @@ func (*StatementMetrics) Descriptor() ([]byte, []int) {
 	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *StatementMetrics) GetTotal() *StatementMetric {
-	if x != nil {
-		return x.Total
-	}
-	return nil
-}
-
 func (x *StatementMetrics) GetCalls() *StatementMetric {
 	if x != nil {
 		return x.Calls
@@ -637,23 +633,30 @@ func (x *StatementMetrics) GetAvg() *StatementMetric {
 	return nil
 }
 
-func (x *StatementMetrics) GetRows() *StatementMetric {
+func (x *StatementMetrics) GetAvgIo() *StatementMetric {
 	if x != nil {
-		return x.Rows
+		return x.AvgIo
 	}
 	return nil
 }
 
-func (x *StatementMetrics) GetReads() *StatementMetric {
+func (x *StatementMetrics) GetP90() *StatementMetric {
 	if x != nil {
-		return x.Reads
+		return x.P90
 	}
 	return nil
 }
 
-func (x *StatementMetrics) GetSpills() *StatementMetric {
+func (x *StatementMetrics) GetP95() *StatementMetric {
 	if x != nil {
-		return x.Spills
+		return x.P95
+	}
+	return nil
+}
+
+func (x *StatementMetrics) GetP99() *StatementMetric {
+	if x != nil {
+		return x.P99
 	}
 	return nil
 }
@@ -665,14 +668,10 @@ func (x *StatementMetrics) GetBucketMs() int64 {
 	return 0
 }
 
-// One metric over the selected range: its aggregate value, the percentage
-// change versus the preceding window of equal duration (0 when there is no
-// comparable baseline), and a bucketed time series for charting.
+// One metric over the selected range as a bucketed time series for charting.
 type StatementMetric struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Value         float64                `protobuf:"fixed64,1,opt,name=value,proto3" json:"value,omitempty"`
-	TrendPct      float64                `protobuf:"fixed64,2,opt,name=trend_pct,json=trendPct,proto3" json:"trend_pct,omitempty"`
-	Series        []*MetricPoint         `protobuf:"bytes,3,rep,name=series,proto3" json:"series,omitempty"`
+	Series        []*MetricPoint         `protobuf:"bytes,1,rep,name=series,proto3" json:"series,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -705,20 +704,6 @@ func (x *StatementMetric) ProtoReflect() protoreflect.Message {
 // Deprecated: Use StatementMetric.ProtoReflect.Descriptor instead.
 func (*StatementMetric) Descriptor() ([]byte, []int) {
 	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *StatementMetric) GetValue() float64 {
-	if x != nil {
-		return x.Value
-	}
-	return 0
-}
-
-func (x *StatementMetric) GetTrendPct() float64 {
-	if x != nil {
-		return x.TrendPct
-	}
-	return 0
 }
 
 func (x *StatementMetric) GetSeries() []*MetricPoint {
@@ -794,7 +779,9 @@ type StatementStat struct {
 	Rows        int64   `protobuf:"varint,8,opt,name=rows,proto3" json:"rows,omitempty"`
 	// Tags collected from the statement's samples in the window: key=value
 	// when every sample agrees, key=* when the values differ.
-	Tags          map[string]string `protobuf:"bytes,9,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Tags map[string]string `protobuf:"bytes,9,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Share of total IO time across all matching statements.
+	PctIo         float64 `protobuf:"fixed64,10,opt,name=pct_io,json=pctIo,proto3" json:"pct_io,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -892,6 +879,13 @@ func (x *StatementStat) GetTags() map[string]string {
 	return nil
 }
 
+func (x *StatementStat) GetPctIo() float64 {
+	if x != nil {
+		return x.PctIo
+	}
+	return 0
+}
+
 // Delta of one pg_stat_statements row since the previous collection.
 type StatementDelta struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -909,12 +903,10 @@ type StatementDelta struct {
 	Rows int64 `protobuf:"varint,6,opt,name=rows,proto3" json:"rows,omitempty"`
 	// Example: 35.7
 	TotalExecTime float64 `protobuf:"fixed64,7,opt,name=total_exec_time,json=totalExecTime,proto3" json:"total_exec_time,omitempty"`
-	// Example: 2048
-	SharedBlksRead int64 `protobuf:"varint,8,opt,name=shared_blks_read,json=sharedBlksRead,proto3" json:"shared_blks_read,omitempty"`
-	// Example: 512
-	TempBlksWritten int64 `protobuf:"varint,9,opt,name=temp_blks_written,json=tempBlksWritten,proto3" json:"temp_blks_written,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	// Total block-IO time (ms) summed across all IO-timing columns. Example: 4.2
+	TotalIoTime   float64 `protobuf:"fixed64,8,opt,name=total_io_time,json=totalIoTime,proto3" json:"total_io_time,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *StatementDelta) Reset() {
@@ -996,16 +988,9 @@ func (x *StatementDelta) GetTotalExecTime() float64 {
 	return 0
 }
 
-func (x *StatementDelta) GetSharedBlksRead() int64 {
+func (x *StatementDelta) GetTotalIoTime() float64 {
 	if x != nil {
-		return x.SharedBlksRead
-	}
-	return 0
-}
-
-func (x *StatementDelta) GetTempBlksWritten() int64 {
-	if x != nil {
-		return x.TempBlksWritten
+		return x.TotalIoTime
 	}
 	return 0
 }
@@ -1061,22 +1046,20 @@ const file_pgdozor_v1_statement_proto_rawDesc = "" +
 	"\tsample_id\x18\x01 \x01(\x03R\bsampleId\"S\n" +
 	"\x1eGetStatementSamplePlanResponse\x12\x14\n" +
 	"\x05query\x18\x01 \x01(\tR\x05query\x12\x1b\n" +
-	"\tplan_json\x18\x02 \x01(\tR\bplanJson\"\xdd\x02\n" +
+	"\tplan_json\x18\x02 \x01(\tR\bplanJson\"\xd2\x02\n" +
 	"\x10StatementMetrics\x121\n" +
-	"\x05total\x18\x01 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x05total\x121\n" +
-	"\x05calls\x18\x02 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x05calls\x12-\n" +
-	"\x03avg\x18\x03 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x03avg\x12/\n" +
-	"\x04rows\x18\x04 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x04rows\x121\n" +
-	"\x05reads\x18\x05 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x05reads\x123\n" +
-	"\x06spills\x18\x06 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x06spills\x12\x1b\n" +
-	"\tbucket_ms\x18\a \x01(\x03R\bbucketMs\"u\n" +
-	"\x0fStatementMetric\x12\x14\n" +
-	"\x05value\x18\x01 \x01(\x01R\x05value\x12\x1b\n" +
-	"\ttrend_pct\x18\x02 \x01(\x01R\btrendPct\x12/\n" +
-	"\x06series\x18\x03 \x03(\v2\x17.pgdozor.v1.MetricPointR\x06series\"O\n" +
+	"\x05calls\x18\x01 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x05calls\x12-\n" +
+	"\x03avg\x18\x02 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x03avg\x122\n" +
+	"\x06avg_io\x18\x03 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x05avgIo\x12-\n" +
+	"\x03p90\x18\x04 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x03p90\x12-\n" +
+	"\x03p95\x18\x05 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x03p95\x12-\n" +
+	"\x03p99\x18\x06 \x01(\v2\x1b.pgdozor.v1.StatementMetricR\x03p99\x12\x1b\n" +
+	"\tbucket_ms\x18\a \x01(\x03R\bbucketMs\"B\n" +
+	"\x0fStatementMetric\x12/\n" +
+	"\x06series\x18\x01 \x03(\v2\x17.pgdozor.v1.MetricPointR\x06series\"O\n" +
 	"\vMetricPoint\x12*\n" +
 	"\x02at\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\x02at\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\x01R\x05value\"\xdc\x02\n" +
+	"\x05value\x18\x02 \x01(\x01R\x05value\"\xf3\x02\n" +
 	"\rStatementStat\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x14\n" +
 	"\x05query\x18\x02 \x01(\tR\x05query\x12\x1b\n" +
@@ -1087,10 +1070,12 @@ const file_pgdozor_v1_statement_proto_rawDesc = "" +
 	"\x05calls\x18\x06 \x01(\x03R\x05calls\x12\"\n" +
 	"\ravg_exec_time\x18\a \x01(\x01R\vavgExecTime\x12\x12\n" +
 	"\x04rows\x18\b \x01(\x03R\x04rows\x127\n" +
-	"\x04tags\x18\t \x03(\v2#.pgdozor.v1.StatementStat.TagsEntryR\x04tags\x1a7\n" +
+	"\x04tags\x18\t \x03(\v2#.pgdozor.v1.StatementStat.TagsEntryR\x04tags\x12\x15\n" +
+	"\x06pct_io\x18\n" +
+	" \x01(\x01R\x05pctIo\x1a7\n" +
 	"\tTagsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xab\x02\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xf9\x01\n" +
 	"\x0eStatementDelta\x12\x1b\n" +
 	"\tuser_name\x18\x01 \x01(\tR\buserName\x12#\n" +
 	"\rdatabase_name\x18\x02 \x01(\tR\fdatabaseName\x12\x19\n" +
@@ -1098,9 +1083,8 @@ const file_pgdozor_v1_statement_proto_rawDesc = "" +
 	"\x05query\x18\x04 \x01(\tR\x05query\x12\x14\n" +
 	"\x05calls\x18\x05 \x01(\x03R\x05calls\x12\x12\n" +
 	"\x04rows\x18\x06 \x01(\x03R\x04rows\x12&\n" +
-	"\x0ftotal_exec_time\x18\a \x01(\x01R\rtotalExecTime\x12(\n" +
-	"\x10shared_blks_read\x18\b \x01(\x03R\x0esharedBlksRead\x12*\n" +
-	"\x11temp_blks_written\x18\t \x01(\x03R\x0ftempBlksWritten2\xb1\x03\n" +
+	"\x0ftotal_exec_time\x18\a \x01(\x01R\rtotalExecTime\x12\"\n" +
+	"\rtotal_io_time\x18\b \x01(\x01R\vtotalIoTime2\xb1\x03\n" +
 	"\x10StatementService\x12_\n" +
 	"\x10ReportStatements\x12#.pgdozor.v1.ReportStatementsRequest\x1a$.pgdozor.v1.ReportStatementsResponse\"\x00\x12\\\n" +
 	"\x0fQueryStatements\x12\".pgdozor.v1.QueryStatementsRequest\x1a#.pgdozor.v1.QueryStatementsResponse\"\x00\x12k\n" +
@@ -1154,12 +1138,12 @@ var file_pgdozor_v1_statement_proto_depIdxs = []int32{
 	6,  // 10: pgdozor.v1.QueryStatementDetailResponse.samples:type_name -> pgdozor.v1.StatementSample
 	17, // 11: pgdozor.v1.StatementSample.occurred_at:type_name -> google.protobuf.Timestamp
 	15, // 12: pgdozor.v1.StatementSample.tags:type_name -> pgdozor.v1.StatementSample.TagsEntry
-	10, // 13: pgdozor.v1.StatementMetrics.total:type_name -> pgdozor.v1.StatementMetric
-	10, // 14: pgdozor.v1.StatementMetrics.calls:type_name -> pgdozor.v1.StatementMetric
-	10, // 15: pgdozor.v1.StatementMetrics.avg:type_name -> pgdozor.v1.StatementMetric
-	10, // 16: pgdozor.v1.StatementMetrics.rows:type_name -> pgdozor.v1.StatementMetric
-	10, // 17: pgdozor.v1.StatementMetrics.reads:type_name -> pgdozor.v1.StatementMetric
-	10, // 18: pgdozor.v1.StatementMetrics.spills:type_name -> pgdozor.v1.StatementMetric
+	10, // 13: pgdozor.v1.StatementMetrics.calls:type_name -> pgdozor.v1.StatementMetric
+	10, // 14: pgdozor.v1.StatementMetrics.avg:type_name -> pgdozor.v1.StatementMetric
+	10, // 15: pgdozor.v1.StatementMetrics.avg_io:type_name -> pgdozor.v1.StatementMetric
+	10, // 16: pgdozor.v1.StatementMetrics.p90:type_name -> pgdozor.v1.StatementMetric
+	10, // 17: pgdozor.v1.StatementMetrics.p95:type_name -> pgdozor.v1.StatementMetric
+	10, // 18: pgdozor.v1.StatementMetrics.p99:type_name -> pgdozor.v1.StatementMetric
 	11, // 19: pgdozor.v1.StatementMetric.series:type_name -> pgdozor.v1.MetricPoint
 	17, // 20: pgdozor.v1.MetricPoint.at:type_name -> google.protobuf.Timestamp
 	16, // 21: pgdozor.v1.StatementStat.tags:type_name -> pgdozor.v1.StatementStat.TagsEntry

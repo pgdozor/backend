@@ -149,45 +149,17 @@ RETURNING id;
 
 -- name: InsertStatementDeltas :copyfrom
 INSERT INTO statement_deltas (
-    statement_id, collected_at, calls, rows, total_exec_time, shared_blks_read, temp_blks_written
+    statement_id, collected_at, calls, rows, total_exec_time, total_io_time
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
+    $1, $2, $3, $4, $5, $6
 );
-
--- name: StatementMetricTotals :one
-SELECT
-    coalesce(sum(d.total_exec_time), 0)::double precision AS total_exec_time,
-    coalesce(sum(d.calls), 0)::bigint                     AS calls,
-    coalesce(sum(d.rows), 0)::bigint                       AS rows,
-    coalesce(sum(d.shared_blks_read), 0)::bigint           AS reads,
-    coalesce(sum(d.temp_blks_written), 0)::bigint          AS spills
-FROM statement_deltas d
-JOIN statements s ON s.id = d.statement_id
-WHERE (sqlc.narg('server_name')::text IS NULL OR s.server_name = sqlc.narg('server_name'))
-  AND (sqlc.narg('database_name')::text IS NULL OR s.database_name = sqlc.narg('database_name'))
-  AND (sqlc.narg('allowed_servers')::text[] IS NULL OR s.server_name = ANY(sqlc.narg('allowed_servers')::text[]))
-  AND (sqlc.narg('statement_id')::bigint IS NULL OR d.statement_id = sqlc.narg('statement_id'))
-  AND (sqlc.narg('since')::timestamptz IS NULL OR d.collected_at >= sqlc.narg('since'))
-  AND (sqlc.narg('until')::timestamptz IS NULL OR d.collected_at <= sqlc.narg('until'))
-  AND (
-      (sqlc.narg('text_filter')::text IS NULL AND sqlc.narg('tag_key')::text IS NULL)
-      OR s.query_text ILIKE '%' || sqlc.narg('text_filter')::text || '%'
-      OR EXISTS (
-          SELECT 1 FROM statement_samples ss
-          WHERE ss.statement_id = s.id
-            AND jsonb_exists(ss.tags, sqlc.narg('tag_key')::text)
-            AND (sqlc.narg('tag_value')::text IS NULL OR ss.tags ->> sqlc.narg('tag_key')::text = sqlc.narg('tag_value')::text)
-      )
-  );
 
 -- name: StatementMetricSeries :many
 SELECT
     b.bucket_end::timestamptz AS bucket_start,
     sum(b.total_exec_time)::double precision AS total_exec_time,
-    sum(b.calls)::bigint                     AS calls,
-    sum(b.rows)::bigint                      AS rows,
-    sum(b.reads)::bigint                     AS reads,
-    sum(b.spills)::bigint                    AS spills
+    sum(b.total_io_time)::double precision    AS total_io_time,
+    sum(b.calls)::bigint                      AS calls
 FROM (
     SELECT
         date_bin(
@@ -196,10 +168,8 @@ FROM (
             date_trunc('minute', least(sqlc.arg('until')::timestamptz, now()))
         ) + sqlc.arg('bucket')::interval AS bucket_end,
         d.total_exec_time,
-        d.calls,
-        d.rows,
-        d.shared_blks_read  AS reads,
-        d.temp_blks_written AS spills
+        d.total_io_time,
+        d.calls
     FROM statement_deltas d
     JOIN statements s ON s.id = d.statement_id
     WHERE (sqlc.narg('server_name')::text IS NULL OR s.server_name = sqlc.narg('server_name'))
@@ -224,6 +194,56 @@ WHERE b.bucket_end > sqlc.arg('since')::timestamptz
 GROUP BY b.bucket_end
 ORDER BY b.bucket_end;
 
+-- name: StatementPercentileSeries :many
+WITH pts AS (
+    SELECT
+        date_bin(
+            sqlc.arg('bucket')::interval,
+            d.collected_at - interval '1 microsecond',
+            date_trunc('minute', least(sqlc.arg('until')::timestamptz, now()))
+        ) + sqlc.arg('bucket')::interval AS bucket_end,
+        (d.total_exec_time / d.calls)::double precision AS mean_ms,
+        d.calls AS weight
+    FROM statement_deltas d
+    JOIN statements s ON s.id = d.statement_id
+    WHERE (sqlc.narg('server_name')::text IS NULL OR s.server_name = sqlc.narg('server_name'))
+      AND (sqlc.narg('database_name')::text IS NULL OR s.database_name = sqlc.narg('database_name'))
+      AND (sqlc.narg('allowed_servers')::text[] IS NULL OR s.server_name = ANY(sqlc.narg('allowed_servers')::text[]))
+      AND (sqlc.narg('statement_id')::bigint IS NULL OR d.statement_id = sqlc.narg('statement_id'))
+      AND d.collected_at >= sqlc.arg('since')::timestamptz
+      AND d.collected_at <= sqlc.arg('until')::timestamptz
+      AND d.calls > 0
+      AND (
+          (sqlc.narg('text_filter')::text IS NULL AND sqlc.narg('tag_key')::text IS NULL)
+          OR s.query_text ILIKE '%' || sqlc.narg('text_filter')::text || '%'
+          OR EXISTS (
+              SELECT 1 FROM statement_samples ss
+              WHERE ss.statement_id = s.id
+                AND jsonb_exists(ss.tags, sqlc.narg('tag_key')::text)
+                AND (sqlc.narg('tag_value')::text IS NULL OR ss.tags ->> sqlc.narg('tag_key')::text = sqlc.narg('tag_value')::text)
+          )
+      )
+),
+ordered AS (
+    SELECT
+        bucket_end,
+        mean_ms,
+        sum(weight) OVER (PARTITION BY bucket_end ORDER BY mean_ms
+                          ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS cum_weight,
+        sum(weight) OVER (PARTITION BY bucket_end) AS total_weight
+    FROM pts
+)
+SELECT
+    bucket_end::timestamptz AS bucket_start,
+    coalesce(min(mean_ms) FILTER (WHERE cum_weight >= 0.90 * total_weight), 0)::double precision AS p90,
+    coalesce(min(mean_ms) FILTER (WHERE cum_weight >= 0.95 * total_weight), 0)::double precision AS p95,
+    coalesce(min(mean_ms) FILTER (WHERE cum_weight >= 0.99 * total_weight), 0)::double precision AS p99
+FROM ordered
+WHERE bucket_end > sqlc.arg('since')::timestamptz
+  AND bucket_end <= least(sqlc.arg('until')::timestamptz, now())
+GROUP BY bucket_end
+ORDER BY bucket_end;
+
 -- name: ListStatementStats :many
 WITH per_statement AS (
     SELECT
@@ -232,7 +252,8 @@ WITH per_statement AS (
         s.user_name,
         sum(d.calls)::bigint                     AS calls,
         sum(d.rows)::bigint                      AS rows,
-        sum(d.total_exec_time)::double precision AS total_exec_time
+        sum(d.total_exec_time)::double precision AS total_exec_time,
+        sum(d.total_io_time)::double precision   AS total_io_time
     FROM statement_deltas d
     JOIN statements s ON s.id = d.statement_id
     WHERE (sqlc.narg('server_name')::text IS NULL OR s.server_name = sqlc.narg('server_name'))
@@ -277,6 +298,7 @@ SELECT
     ps.rows,
     ps.total_exec_time,
     (coalesce(ps.total_exec_time / NULLIF(sum(ps.total_exec_time) OVER (), 0), 0) * 100)::double precision AS pct_of_total,
+    (coalesce(ps.total_io_time / NULLIF(sum(ps.total_io_time) OVER (), 0), 0) * 100)::double precision AS pct_io,
     coalesce(st.tags, '{}'::jsonb) AS tags
 FROM per_statement ps
 LEFT JOIN statement_tags st ON st.statement_id = ps.id

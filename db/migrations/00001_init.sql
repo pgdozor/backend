@@ -40,8 +40,7 @@ CREATE TABLE statement_deltas (
     calls             BIGINT           NOT NULL,
     rows              BIGINT           NOT NULL,
     total_exec_time   DOUBLE PRECISION NOT NULL,
-    shared_blks_read  BIGINT           NOT NULL,
-    temp_blks_written BIGINT           NOT NULL,
+    total_io_time     DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (id, collected_at)
 ) PARTITION BY RANGE (collected_at);
 

@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"math"
 	"os"
 	"testing"
 	"time"
@@ -75,25 +74,4 @@ func TestStatementSeriesTotalMatchesTable(t *testing.T) {
 
 	t.Logf("series total %.3fms <= table total %.3fms across %d buckets, %d statements",
 		seriesTotal, tableTotal, len(buckets), len(rows))
-
-	srv := &StatementServer{queries: q}
-	metrics, err := srv.statementMetrics(
-		ctx,
-		pgtype.Int8{},
-		pgtype.Text{},
-		pgtype.Text{},
-		statementFilter{},
-		from,
-		to,
-		nil,
-	)
-	if err != nil {
-		t.Fatalf("statementMetrics: %v", err)
-	}
-	headline := metrics.GetTotal().GetValue()
-	if diff := math.Abs(headline - tableTotal); diff > 1e-6*math.Max(1, tableTotal) {
-		t.Fatalf("headline total %.3fms != table total %.3fms — chart/table inconsistency", headline, tableTotal)
-	}
-	sec := int(headline / 1000)
-	t.Logf("handler headline total %.3fms (%dm%02ds) == table total", headline, sec/60, sec%60)
 }

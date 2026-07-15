@@ -88,25 +88,23 @@ type Statement struct {
 }
 
 type StatementDelta struct {
-	ID              int64
-	CollectedAt     pgtype.Timestamptz
-	StatementID     int64
-	Calls           int64
-	Rows            int64
-	TotalExecTime   float64
-	SharedBlksRead  int64
-	TempBlksWritten int64
+	ID            int64
+	CollectedAt   pgtype.Timestamptz
+	StatementID   int64
+	Calls         int64
+	Rows          int64
+	TotalExecTime float64
+	TotalIoTime   float64
 }
 
 type StatementDeltasDefault struct {
-	ID              int64
-	CollectedAt     pgtype.Timestamptz
-	StatementID     int64
-	Calls           int64
-	Rows            int64
-	TotalExecTime   float64
-	SharedBlksRead  int64
-	TempBlksWritten int64
+	ID            int64
+	CollectedAt   pgtype.Timestamptz
+	StatementID   int64
+	Calls         int64
+	Rows          int64
+	TotalExecTime float64
+	TotalIoTime   float64
 }
 
 type StatementSample struct {

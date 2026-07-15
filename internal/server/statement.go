@@ -18,7 +18,6 @@ import (
 )
 
 const (
-	percentScale            = 100.0
 	metricSeriesPoints      = 60
 	minMetricBucket         = time.Minute
 	slowQueryMinCalls       = 50
@@ -77,13 +76,12 @@ func (s *StatementServer) ReportStatements(
 	deltaParams := make([]db.InsertStatementDeltasParams, len(deltas))
 	for i, delta := range deltas {
 		deltaParams[i] = db.InsertStatementDeltasParams{
-			StatementID:     statementIDs[i],
-			CollectedAt:     collectedAt,
-			Calls:           delta.GetCalls(),
-			Rows:            delta.GetRows(),
-			TotalExecTime:   delta.GetTotalExecTime(),
-			SharedBlksRead:  delta.GetSharedBlksRead(),
-			TempBlksWritten: delta.GetTempBlksWritten(),
+			StatementID:   statementIDs[i],
+			CollectedAt:   collectedAt,
+			Calls:         delta.GetCalls(),
+			Rows:          delta.GetRows(),
+			TotalExecTime: delta.GetTotalExecTime(),
+			TotalIoTime:   delta.GetTotalIoTime(),
 		}
 	}
 
@@ -175,6 +173,13 @@ func (s *StatementServer) QueryStatements(
 
 	metrics, err := s.statementMetrics(
 		ctx, pgtype.Int8{}, serverName, databaseName, filter, from.AsTime(), to.AsTime(), allowedServers,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	metrics.P90, metrics.P95, metrics.P99, err = s.statementPercentiles(
+		ctx, serverName, databaseName, filter, from.AsTime(), to.AsTime(), allowedServers,
 	)
 	if err != nil {
 		return nil, err
@@ -406,6 +411,7 @@ func (s *StatementServer) listStatements(
 			AvgExecTime:   avgExecTime(row.TotalExecTime, row.Calls),
 			Rows:          row.Rows,
 			Tags:          tags,
+			PctIo:         row.PctIo,
 		}
 	}
 
@@ -439,67 +445,64 @@ func (s *StatementServer) statementMetrics(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	cur, err := s.queries.StatementMetricTotals(ctx, db.StatementMetricTotalsParams{
-		ServerName:     serverName,
-		DatabaseName:   databaseName,
-		AllowedServers: allowedServers,
-		TextFilter:     filter.text,
-		TagKey:         filter.tagKey,
-		TagValue:       filter.tagValue,
-		StatementID:    statementID,
-		Since:          pgtype.Timestamptz{Time: from, Valid: true},
-		Until:          pgtype.Timestamptz{Time: to, Valid: true},
-	})
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
-	}
-
-	prev, err := s.queries.StatementMetricTotals(ctx, db.StatementMetricTotalsParams{
-		ServerName:     serverName,
-		DatabaseName:   databaseName,
-		AllowedServers: allowedServers,
-		TextFilter:     filter.text,
-		TagKey:         filter.tagKey,
-		TagValue:       filter.tagValue,
-		StatementID:    statementID,
-		Since:          pgtype.Timestamptz{Time: from.Add(-duration), Valid: true},
-		Until:          pgtype.Timestamptz{Time: from, Valid: true},
-	})
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
-	}
-
 	n := len(buckets)
-	total := make([]*pgdozorv1.MetricPoint, n)
 	calls := make([]*pgdozorv1.MetricPoint, n)
 	avg := make([]*pgdozorv1.MetricPoint, n)
-	rows := make([]*pgdozorv1.MetricPoint, n)
-	reads := make([]*pgdozorv1.MetricPoint, n)
-	spills := make([]*pgdozorv1.MetricPoint, n)
+	avgIo := make([]*pgdozorv1.MetricPoint, n)
 
 	for i, b := range buckets {
 		at := protoFromTimestamptz(b.BucketStart)
-		total[i] = &pgdozorv1.MetricPoint{At: at, Value: b.TotalExecTime}
 		calls[i] = &pgdozorv1.MetricPoint{At: at, Value: float64(b.Calls)}
 		avg[i] = &pgdozorv1.MetricPoint{At: at, Value: avgExecTime(b.TotalExecTime, b.Calls)}
-		rows[i] = &pgdozorv1.MetricPoint{At: at, Value: float64(b.Rows)}
-		reads[i] = &pgdozorv1.MetricPoint{At: at, Value: float64(b.Reads)}
-		spills[i] = &pgdozorv1.MetricPoint{At: at, Value: float64(b.Spills)}
+		avgIo[i] = &pgdozorv1.MetricPoint{At: at, Value: avgExecTime(b.TotalIoTime, b.Calls)}
 	}
 
 	return &pgdozorv1.StatementMetrics{
-		Total: statementMetric(cur.TotalExecTime, prev.TotalExecTime, total),
-		Calls: statementMetric(float64(cur.Calls), float64(prev.Calls), calls),
-		Avg: statementMetric(
-			avgExecTime(cur.TotalExecTime, cur.Calls),
-			avgExecTime(prev.TotalExecTime, prev.Calls),
-			avg,
-		),
-		Rows:     statementMetric(float64(cur.Rows), float64(prev.Rows), rows),
-		Reads:    statementMetric(float64(cur.Reads), float64(prev.Reads), reads),
-		Spills:   statementMetric(float64(cur.Spills), float64(prev.Spills), spills),
+		Calls:    statementMetric(calls),
+		Avg:      statementMetric(avg),
+		AvgIo:    statementMetric(avgIo),
 		BucketMs: bucket.Milliseconds(),
 	}, nil
+}
+
+func (s *StatementServer) statementPercentiles(
+	ctx context.Context,
+	serverName, databaseName pgtype.Text,
+	filter statementFilter,
+	from, to time.Time,
+	allowedServers []string,
+) (*pgdozorv1.StatementMetric, *pgdozorv1.StatementMetric, *pgdozorv1.StatementMetric, error) {
+	bucket := metricBucket(to.Sub(from))
+
+	rows, err := s.queries.StatementPercentileSeries(ctx, db.StatementPercentileSeriesParams{
+		Since:          pgtype.Timestamptz{Time: from, Valid: true},
+		Until:          pgtype.Timestamptz{Time: to, Valid: true},
+		Bucket:         pgtype.Interval{Microseconds: bucket.Microseconds(), Valid: true},
+		ServerName:     serverName,
+		DatabaseName:   databaseName,
+		AllowedServers: allowedServers,
+		TextFilter:     filter.text,
+		TagKey:         filter.tagKey,
+		TagValue:       filter.tagValue,
+		StatementID:    pgtype.Int8{},
+	})
+	if err != nil {
+		return nil, nil, nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	n := len(rows)
+	s90 := make([]*pgdozorv1.MetricPoint, n)
+	s95 := make([]*pgdozorv1.MetricPoint, n)
+	s99 := make([]*pgdozorv1.MetricPoint, n)
+
+	for i, r := range rows {
+		at := protoFromTimestamptz(r.BucketStart)
+		s90[i] = &pgdozorv1.MetricPoint{At: at, Value: r.P90}
+		s95[i] = &pgdozorv1.MetricPoint{At: at, Value: r.P95}
+		s99[i] = &pgdozorv1.MetricPoint{At: at, Value: r.P99}
+	}
+
+	return statementMetric(s90), statementMetric(s95), statementMetric(s99), nil
 }
 
 func metricBucket(d time.Duration) time.Duration {
@@ -519,11 +522,6 @@ func avgExecTime(totalExecTime float64, calls int64) float64 {
 	return totalExecTime / float64(calls)
 }
 
-func statementMetric(value, previous float64, series []*pgdozorv1.MetricPoint) *pgdozorv1.StatementMetric {
-	metric := &pgdozorv1.StatementMetric{Value: value, Series: series}
-	if previous != 0 {
-		metric.TrendPct = (value - previous) / previous * percentScale
-	}
-
-	return metric
+func statementMetric(series []*pgdozorv1.MetricPoint) *pgdozorv1.StatementMetric {
+	return &pgdozorv1.StatementMetric{Series: series}
 }

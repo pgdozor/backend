@@ -94,24 +94,17 @@ message GetStatementSamplePlanResponse {
 }
 
 message StatementMetrics {
-  StatementMetric total = 1;
-  StatementMetric calls = 2;
-  StatementMetric avg = 3;
-  StatementMetric rows = 4;
-  StatementMetric reads = 5;
-  StatementMetric spills = 6;
-  // Width of each series bucket, so the chart never re-derives it and drifts
-  // from the server's bucketing.
+  StatementMetric calls = 1;
+  StatementMetric avg = 2;
+  StatementMetric avg_io = 3;
+  StatementMetric p90 = 4;
+  StatementMetric p95 = 5;
+  StatementMetric p99 = 6;
   int64 bucket_ms = 7;
 }
 
-// One metric over the selected range: its aggregate value, the percentage
-// change versus the preceding window of equal duration (0 when there is no
-// comparable baseline), and a bucketed time series for charting.
 message StatementMetric {
-  double value = 1;
-  double trend_pct = 2;
-  repeated MetricPoint series = 3;
+  repeated MetricPoint series = 1;
 }
 
 message MetricPoint {
@@ -137,6 +130,9 @@ message StatementStat {
   // Tags collected from the statement's samples in the window: key=value
   // when every sample agrees, key=* when the values differ.
   map<string, string> tags = 9;
+
+  // Share of total IO time across all matching statements.
+  double pct_io = 10;
 }
 
 // Delta of one pg_stat_statements row since the previous collection.
@@ -162,9 +158,6 @@ message StatementDelta {
   // Example: 35.7
   double total_exec_time = 7;
 
-  // Example: 2048
-  int64 shared_blks_read = 8;
-
-  // Example: 512
-  int64 temp_blks_written = 9;
+  // Total block-IO time (ms) summed across all IO-timing columns. Example: 4.2
+  double total_io_time = 8;
 }

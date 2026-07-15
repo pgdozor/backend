@@ -445,13 +445,12 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, er
 }
 
 type InsertStatementDeltasParams struct {
-	StatementID     int64
-	CollectedAt     pgtype.Timestamptz
-	Calls           int64
-	Rows            int64
-	TotalExecTime   float64
-	SharedBlksRead  int64
-	TempBlksWritten int64
+	StatementID   int64
+	CollectedAt   pgtype.Timestamptz
+	Calls         int64
+	Rows          int64
+	TotalExecTime float64
+	TotalIoTime   float64
 }
 
 type InsertStatementSamplesParams struct {
@@ -910,7 +909,8 @@ WITH per_statement AS (
         s.user_name,
         sum(d.calls)::bigint                     AS calls,
         sum(d.rows)::bigint                      AS rows,
-        sum(d.total_exec_time)::double precision AS total_exec_time
+        sum(d.total_exec_time)::double precision AS total_exec_time,
+        sum(d.total_io_time)::double precision   AS total_io_time
     FROM statement_deltas d
     JOIN statements s ON s.id = d.statement_id
     WHERE ($2::text IS NULL OR s.server_name = $2)
@@ -955,6 +955,7 @@ SELECT
     ps.rows,
     ps.total_exec_time,
     (coalesce(ps.total_exec_time / NULLIF(sum(ps.total_exec_time) OVER (), 0), 0) * 100)::double precision AS pct_of_total,
+    (coalesce(ps.total_io_time / NULLIF(sum(ps.total_io_time) OVER (), 0), 0) * 100)::double precision AS pct_io,
     coalesce(st.tags, '{}'::jsonb) AS tags
 FROM per_statement ps
 LEFT JOIN statement_tags st ON st.statement_id = ps.id
@@ -982,6 +983,7 @@ type ListStatementStatsRow struct {
 	Rows          int64
 	TotalExecTime float64
 	PctOfTotal    float64
+	PctIo         float64
 	Tags          []byte
 }
 
@@ -1012,6 +1014,7 @@ func (q *Queries) ListStatementStats(ctx context.Context, arg ListStatementStats
 			&i.Rows,
 			&i.TotalExecTime,
 			&i.PctOfTotal,
+			&i.PctIo,
 			&i.Tags,
 		); err != nil {
 			return nil, err
@@ -1267,10 +1270,8 @@ const statementMetricSeries = `-- name: StatementMetricSeries :many
 SELECT
     b.bucket_end::timestamptz AS bucket_start,
     sum(b.total_exec_time)::double precision AS total_exec_time,
-    sum(b.calls)::bigint                     AS calls,
-    sum(b.rows)::bigint                      AS rows,
-    sum(b.reads)::bigint                     AS reads,
-    sum(b.spills)::bigint                    AS spills
+    sum(b.total_io_time)::double precision    AS total_io_time,
+    sum(b.calls)::bigint                      AS calls
 FROM (
     SELECT
         date_bin(
@@ -1279,10 +1280,8 @@ FROM (
             date_trunc('minute', least($2::timestamptz, now()))
         ) + $1::interval AS bucket_end,
         d.total_exec_time,
-        d.calls,
-        d.rows,
-        d.shared_blks_read  AS reads,
-        d.temp_blks_written AS spills
+        d.total_io_time,
+        d.calls
     FROM statement_deltas d
     JOIN statements s ON s.id = d.statement_id
     WHERE ($3::text IS NULL OR s.server_name = $3)
@@ -1324,10 +1323,8 @@ type StatementMetricSeriesParams struct {
 type StatementMetricSeriesRow struct {
 	BucketStart   pgtype.Timestamptz
 	TotalExecTime float64
+	TotalIoTime   float64
 	Calls         int64
-	Rows          int64
-	Reads         int64
-	Spills        int64
 }
 
 func (q *Queries) StatementMetricSeries(ctx context.Context, arg StatementMetricSeriesParams) ([]StatementMetricSeriesRow, error) {
@@ -1353,10 +1350,8 @@ func (q *Queries) StatementMetricSeries(ctx context.Context, arg StatementMetric
 		if err := rows.Scan(
 			&i.BucketStart,
 			&i.TotalExecTime,
+			&i.TotalIoTime,
 			&i.Calls,
-			&i.Rows,
-			&i.Reads,
-			&i.Spills,
 		); err != nil {
 			return nil, err
 		}
@@ -1368,74 +1363,111 @@ func (q *Queries) StatementMetricSeries(ctx context.Context, arg StatementMetric
 	return items, nil
 }
 
-const statementMetricTotals = `-- name: StatementMetricTotals :one
-SELECT
-    coalesce(sum(d.total_exec_time), 0)::double precision AS total_exec_time,
-    coalesce(sum(d.calls), 0)::bigint                     AS calls,
-    coalesce(sum(d.rows), 0)::bigint                       AS rows,
-    coalesce(sum(d.shared_blks_read), 0)::bigint           AS reads,
-    coalesce(sum(d.temp_blks_written), 0)::bigint          AS spills
-FROM statement_deltas d
-JOIN statements s ON s.id = d.statement_id
-WHERE ($1::text IS NULL OR s.server_name = $1)
-  AND ($2::text IS NULL OR s.database_name = $2)
-  AND ($3::text[] IS NULL OR s.server_name = ANY($3::text[]))
-  AND ($4::bigint IS NULL OR d.statement_id = $4)
-  AND ($5::timestamptz IS NULL OR d.collected_at >= $5)
-  AND ($6::timestamptz IS NULL OR d.collected_at <= $6)
-  AND (
-      ($7::text IS NULL AND $8::text IS NULL)
-      OR s.query_text ILIKE '%' || $7::text || '%'
-      OR EXISTS (
-          SELECT 1 FROM statement_samples ss
-          WHERE ss.statement_id = s.id
-            AND jsonb_exists(ss.tags, $8::text)
-            AND ($9::text IS NULL OR ss.tags ->> $8::text = $9::text)
+const statementPercentileSeries = `-- name: StatementPercentileSeries :many
+WITH pts AS (
+    SELECT
+        date_bin(
+            $3::interval,
+            d.collected_at - interval '1 microsecond',
+            date_trunc('minute', least($2::timestamptz, now()))
+        ) + $3::interval AS bucket_end,
+        (d.total_exec_time / d.calls)::double precision AS mean_ms,
+        d.calls AS weight
+    FROM statement_deltas d
+    JOIN statements s ON s.id = d.statement_id
+    WHERE ($4::text IS NULL OR s.server_name = $4)
+      AND ($5::text IS NULL OR s.database_name = $5)
+      AND ($6::text[] IS NULL OR s.server_name = ANY($6::text[]))
+      AND ($7::bigint IS NULL OR d.statement_id = $7)
+      AND d.collected_at >= $1::timestamptz
+      AND d.collected_at <= $2::timestamptz
+      AND d.calls > 0
+      AND (
+          ($8::text IS NULL AND $9::text IS NULL)
+          OR s.query_text ILIKE '%' || $8::text || '%'
+          OR EXISTS (
+              SELECT 1 FROM statement_samples ss
+              WHERE ss.statement_id = s.id
+                AND jsonb_exists(ss.tags, $9::text)
+                AND ($10::text IS NULL OR ss.tags ->> $9::text = $10::text)
+          )
       )
-  )
+),
+ordered AS (
+    SELECT
+        bucket_end,
+        mean_ms,
+        sum(weight) OVER (PARTITION BY bucket_end ORDER BY mean_ms
+                          ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS cum_weight,
+        sum(weight) OVER (PARTITION BY bucket_end) AS total_weight
+    FROM pts
+)
+SELECT
+    bucket_end::timestamptz AS bucket_start,
+    coalesce(min(mean_ms) FILTER (WHERE cum_weight >= 0.90 * total_weight), 0)::double precision AS p90,
+    coalesce(min(mean_ms) FILTER (WHERE cum_weight >= 0.95 * total_weight), 0)::double precision AS p95,
+    coalesce(min(mean_ms) FILTER (WHERE cum_weight >= 0.99 * total_weight), 0)::double precision AS p99
+FROM ordered
+WHERE bucket_end > $1::timestamptz
+  AND bucket_end <= least($2::timestamptz, now())
+GROUP BY bucket_end
+ORDER BY bucket_end
 `
 
-type StatementMetricTotalsParams struct {
+type StatementPercentileSeriesParams struct {
+	Since          pgtype.Timestamptz
+	Until          pgtype.Timestamptz
+	Bucket         pgtype.Interval
 	ServerName     pgtype.Text
 	DatabaseName   pgtype.Text
 	AllowedServers []string
 	StatementID    pgtype.Int8
-	Since          pgtype.Timestamptz
-	Until          pgtype.Timestamptz
 	TextFilter     pgtype.Text
 	TagKey         pgtype.Text
 	TagValue       pgtype.Text
 }
 
-type StatementMetricTotalsRow struct {
-	TotalExecTime float64
-	Calls         int64
-	Rows          int64
-	Reads         int64
-	Spills        int64
+type StatementPercentileSeriesRow struct {
+	BucketStart pgtype.Timestamptz
+	P90         float64
+	P95         float64
+	P99         float64
 }
 
-func (q *Queries) StatementMetricTotals(ctx context.Context, arg StatementMetricTotalsParams) (StatementMetricTotalsRow, error) {
-	row := q.db.QueryRow(ctx, statementMetricTotals,
+func (q *Queries) StatementPercentileSeries(ctx context.Context, arg StatementPercentileSeriesParams) ([]StatementPercentileSeriesRow, error) {
+	rows, err := q.db.Query(ctx, statementPercentileSeries,
+		arg.Since,
+		arg.Until,
+		arg.Bucket,
 		arg.ServerName,
 		arg.DatabaseName,
 		arg.AllowedServers,
 		arg.StatementID,
-		arg.Since,
-		arg.Until,
 		arg.TextFilter,
 		arg.TagKey,
 		arg.TagValue,
 	)
-	var i StatementMetricTotalsRow
-	err := row.Scan(
-		&i.TotalExecTime,
-		&i.Calls,
-		&i.Rows,
-		&i.Reads,
-		&i.Spills,
-	)
-	return i, err
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []StatementPercentileSeriesRow
+	for rows.Next() {
+		var i StatementPercentileSeriesRow
+		if err := rows.Scan(
+			&i.BucketStart,
+			&i.P90,
+			&i.P95,
+			&i.P99,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const tryClaimAlertNotification = `-- name: TryClaimAlertNotification :one
