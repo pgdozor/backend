@@ -308,6 +308,8 @@ LIMIT sqlc.arg('row_limit');
 -- name: GetStatementDetail :one
 SELECT
     s.query_text AS query,
+    s.server_name,
+    s.database_name,
     coalesce(st.tags, '{}'::jsonb) AS tags
 FROM statements s
 LEFT JOIN LATERAL (

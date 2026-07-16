@@ -58,6 +58,9 @@ message QueryStatementDetailResponse {
   StatementMetrics metrics = 3;
 
   repeated StatementSample samples = 4;
+
+  string server_name = 5;
+  string database_name = 6;
 }
 
 // One captured execution of the statement (from statement_samples).

@@ -313,6 +313,11 @@ type QueryStatementDetailResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Full normalized query text.
 	Query string `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"`
+	// The server and database the statement belongs to. The id is globally
+	// unique and permanently bound to this pair, so the UI shows it as fixed
+	// context rather than letting it be selected.
+	ServerName   string `protobuf:"bytes,5,opt,name=server_name,json=serverName,proto3" json:"server_name,omitempty"`
+	DatabaseName string `protobuf:"bytes,6,opt,name=database_name,json=databaseName,proto3" json:"database_name,omitempty"`
 	// Tags deduped across the statement's samples in the window: key=value when
 	// every sample agrees, key=* when the values differ (same logic as the
 	// QUERIES table).
@@ -357,6 +362,20 @@ func (*QueryStatementDetailResponse) Descriptor() ([]byte, []int) {
 func (x *QueryStatementDetailResponse) GetQuery() string {
 	if x != nil {
 		return x.Query
+	}
+	return ""
+}
+
+func (x *QueryStatementDetailResponse) GetServerName() string {
+	if x != nil {
+		return x.ServerName
+	}
+	return ""
+}
+
+func (x *QueryStatementDetailResponse) GetDatabaseName() string {
+	if x != nil {
+		return x.DatabaseName
 	}
 	return ""
 }
@@ -572,19 +591,14 @@ func (x *GetStatementSamplePlanResponse) GetPlanJson() string {
 }
 
 type StatementMetrics struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Calls per bucket. Bars in both the QUERIES list and the detail view.
-	Calls *StatementMetric `protobuf:"bytes,1,opt,name=calls,proto3" json:"calls,omitempty"`
-	// Detail view only: this statement's avg total time and avg IO time per bucket.
-	Avg   *StatementMetric `protobuf:"bytes,2,opt,name=avg,proto3" json:"avg,omitempty"`
-	AvgIo *StatementMetric `protobuf:"bytes,3,opt,name=avg_io,json=avgIo,proto3" json:"avg_io,omitempty"`
-	// QUERIES list only: call-weighted latency percentiles of query time per bucket.
-	P90 *StatementMetric `protobuf:"bytes,4,opt,name=p90,proto3" json:"p90,omitempty"`
-	P95 *StatementMetric `protobuf:"bytes,5,opt,name=p95,proto3" json:"p95,omitempty"`
-	P99 *StatementMetric `protobuf:"bytes,6,opt,name=p99,proto3" json:"p99,omitempty"`
-	// Width of each series bucket, so the chart never re-derives it and drifts
-	// from the server's bucketing.
-	BucketMs      int64 `protobuf:"varint,7,opt,name=bucket_ms,json=bucketMs,proto3" json:"bucket_ms,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Calls         *StatementMetric       `protobuf:"bytes,1,opt,name=calls,proto3" json:"calls,omitempty"`
+	Avg           *StatementMetric       `protobuf:"bytes,2,opt,name=avg,proto3" json:"avg,omitempty"`
+	AvgIo         *StatementMetric       `protobuf:"bytes,3,opt,name=avg_io,json=avgIo,proto3" json:"avg_io,omitempty"`
+	P90           *StatementMetric       `protobuf:"bytes,4,opt,name=p90,proto3" json:"p90,omitempty"`
+	P95           *StatementMetric       `protobuf:"bytes,5,opt,name=p95,proto3" json:"p95,omitempty"`
+	P99           *StatementMetric       `protobuf:"bytes,6,opt,name=p99,proto3" json:"p99,omitempty"`
+	BucketMs      int64                  `protobuf:"varint,7,opt,name=bucket_ms,json=bucketMs,proto3" json:"bucket_ms,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -668,7 +682,6 @@ func (x *StatementMetrics) GetBucketMs() int64 {
 	return 0
 }
 
-// One metric over the selected range as a bucketed time series for charting.
 type StatementMetric struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Series        []*MetricPoint         `protobuf:"bytes,1,rep,name=series,proto3" json:"series,omitempty"`
@@ -1021,9 +1034,12 @@ const file_pgdozor_v1_statement_proto_rawDesc = "" +
 	"\x1bQueryStatementDetailRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12.\n" +
 	"\x04from\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x04from\x12*\n" +
-	"\x02to\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x02to\"\xa4\x02\n" +
+	"\x02to\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x02to\"\xea\x02\n" +
 	"\x1cQueryStatementDetailResponse\x12\x14\n" +
-	"\x05query\x18\x01 \x01(\tR\x05query\x12F\n" +
+	"\x05query\x18\x01 \x01(\tR\x05query\x12\x1f\n" +
+	"\vserver_name\x18\x05 \x01(\tR\n" +
+	"serverName\x12#\n" +
+	"\rdatabase_name\x18\x06 \x01(\tR\fdatabaseName\x12F\n" +
 	"\x04tags\x18\x02 \x03(\v22.pgdozor.v1.QueryStatementDetailResponse.TagsEntryR\x04tags\x126\n" +
 	"\ametrics\x18\x03 \x01(\v2\x1c.pgdozor.v1.StatementMetricsR\ametrics\x125\n" +
 	"\asamples\x18\x04 \x03(\v2\x1b.pgdozor.v1.StatementSampleR\asamples\x1a7\n" +

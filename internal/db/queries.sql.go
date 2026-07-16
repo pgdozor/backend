@@ -312,6 +312,8 @@ func (q *Queries) GetSessionUser(ctx context.Context, tokenHash string) (GetSess
 const getStatementDetail = `-- name: GetStatementDetail :one
 SELECT
     s.query_text AS query,
+    s.server_name,
+    s.database_name,
     coalesce(st.tags, '{}'::jsonb) AS tags
 FROM statements s
 LEFT JOIN LATERAL (
@@ -341,8 +343,10 @@ type GetStatementDetailParams struct {
 }
 
 type GetStatementDetailRow struct {
-	Query string
-	Tags  []byte
+	Query        string
+	ServerName   string
+	DatabaseName string
+	Tags         []byte
 }
 
 func (q *Queries) GetStatementDetail(ctx context.Context, arg GetStatementDetailParams) (GetStatementDetailRow, error) {
@@ -353,7 +357,12 @@ func (q *Queries) GetStatementDetail(ctx context.Context, arg GetStatementDetail
 		arg.AllowedServers,
 	)
 	var i GetStatementDetailRow
-	err := row.Scan(&i.Query, &i.Tags)
+	err := row.Scan(
+		&i.Query,
+		&i.ServerName,
+		&i.DatabaseName,
+		&i.Tags,
+	)
 	return i, err
 }
 

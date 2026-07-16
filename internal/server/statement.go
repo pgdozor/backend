@@ -276,10 +276,12 @@ func (s *StatementServer) QueryStatementDetail(
 	}
 
 	return connect.NewResponse(&pgdozorv1.QueryStatementDetailResponse{
-		Query:   detail.Query,
-		Tags:    tags,
-		Metrics: metrics,
-		Samples: samples,
+		Query:        detail.Query,
+		ServerName:   detail.ServerName,
+		DatabaseName: detail.DatabaseName,
+		Tags:         tags,
+		Metrics:      metrics,
+		Samples:      samples,
 	}), nil
 }
 
