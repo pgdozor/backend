@@ -11,6 +11,22 @@ service StatementService {
   rpc QueryStatements(QueryStatementsRequest) returns (QueryStatementsResponse) {}
   rpc QueryStatementDetail(QueryStatementDetailRequest) returns (QueryStatementDetailResponse) {}
   rpc GetStatementSamplePlan(GetStatementSamplePlanRequest) returns (GetStatementSamplePlanResponse) {}
+  rpc ListTagKeys(ListTagKeysRequest) returns (ListTagKeysResponse) {}
+  rpc ListTagValues(ListTagValuesRequest) returns (ListTagValuesResponse) {}
+}
+
+enum TagFilterOperator {
+  TAG_FILTER_OPERATOR_UNSPECIFIED = 0;
+  TAG_FILTER_OPERATOR_EQUAL = 1;
+  TAG_FILTER_OPERATOR_NOT_EQUAL = 2;
+  TAG_FILTER_OPERATOR_EXISTS = 3;
+}
+
+// Values within a filter are ORed, separate filters are ANDed.
+message TagFilter {
+  string key = 1;
+  TagFilterOperator op = 2;
+  repeated string values = 3;
 }
 
 message ReportStatementsRequest {
@@ -27,10 +43,13 @@ message QueryStatementsRequest {
   google.protobuf.Timestamp to = 4;
 
   // Case-insensitive substring match against the normalized query text.
-  string filter = 5;
+  string query_text = 5;
 
   // Defaults to 1000 when unset.
   int32 limit = 6;
+
+  // ANDed with query_text.
+  repeated TagFilter tag_filters = 7;
 }
 
 message QueryStatementsResponse {
@@ -49,9 +68,9 @@ message QueryStatementDetailResponse {
   // Full normalized query text.
   string query = 1;
 
-  // Tags deduped across the statement's samples in the window: key=value when
-  // every sample agrees, key=* when the values differ (same logic as the
-  // QUERIES table).
+  // Tags deduped across the statement's samples in the window.
+  // A key is only present when every sample in the window agrees on its value.
+  // Keys whose values differ are omitted.
   map<string, string> tags = 2;
 
   // Per-query metrics over the window, scoped to this statement.
@@ -130,8 +149,7 @@ message StatementStat {
   double avg_exec_time = 7;
   int64 rows = 8;
 
-  // Tags collected from the statement's samples in the window: key=value
-  // when every sample agrees, key=* when the values differ.
+  // Same logic as QueryStatementDetailResponse.tags.
   map<string, string> tags = 9;
 
   // Share of total IO time across all matching statements.
@@ -163,4 +181,42 @@ message StatementDelta {
 
   // Total block-IO time (ms) summed across all IO-timing columns. Example: 4.2
   double total_io_time = 8;
+}
+
+message ListTagKeysRequest {
+  string server_name = 1;
+  string database_name = 2;
+  google.protobuf.Timestamp from = 3;
+  google.protobuf.Timestamp to = 4;
+}
+
+message ListTagKeysResponse {
+  repeated TagKey keys = 1;
+}
+
+message TagKey {
+  string key = 1;
+
+  // Distinct values seen for this key in the window.
+  int64 value_count = 2;
+}
+
+message ListTagValuesRequest {
+  string server_name = 1;
+  string database_name = 2;
+  google.protobuf.Timestamp from = 3;
+  google.protobuf.Timestamp to = 4;
+
+  string key = 5;
+}
+
+message ListTagValuesResponse {
+  repeated TagValue values = 1;
+}
+
+message TagValue {
+  string value = 1;
+
+  // Statements carrying this key=value in the window.
+  int64 statement_count = 2;
 }

@@ -241,6 +241,89 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 	return err
 }
 
+const filterStatementIDsByTags = `-- name: FilterStatementIDsByTags :many
+WITH scoped AS (
+    SELECT s.id
+    FROM statements s
+    WHERE ($2::text IS NULL OR s.server_name = $2)
+      AND ($3::text IS NULL OR s.database_name = $3)
+      AND ($4::text[] IS NULL OR s.server_name = ANY($4::text[]))
+),
+agreed AS (
+    SELECT ss.statement_id, kv.key, min(kv.value) AS value
+    FROM statement_samples ss
+    JOIN scoped ON scoped.id = ss.statement_id
+    CROSS JOIN LATERAL jsonb_each_text(ss.tags) AS kv(key, value)
+    WHERE ss.tags IS NOT NULL
+      AND ss.collected_at >= $5::timestamptz
+      AND ss.collected_at <= $6::timestamptz
+      AND kv.key IN (SELECT f ->> 'key' FROM jsonb_array_elements($1::jsonb) AS f)
+    GROUP BY ss.statement_id, kv.key
+    HAVING count(DISTINCT kv.value) = 1
+)
+SELECT scoped.id
+FROM scoped
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements($1::jsonb) AS f
+    WHERE NOT CASE f ->> 'op'
+        WHEN 'ne' THEN NOT EXISTS (
+            SELECT 1 FROM agreed a
+            WHERE a.statement_id = scoped.id
+              AND a.key = (f ->> 'key')
+              AND a.value IN (SELECT jsonb_array_elements_text(f -> 'values'))
+        )
+        WHEN 'exists' THEN EXISTS (
+            SELECT 1 FROM agreed a
+            WHERE a.statement_id = scoped.id
+              AND a.key = (f ->> 'key')
+        )
+        ELSE EXISTS (
+            SELECT 1 FROM agreed a
+            WHERE a.statement_id = scoped.id
+              AND a.key = (f ->> 'key')
+              AND a.value IN (SELECT jsonb_array_elements_text(f -> 'values'))
+        )
+    END
+)
+`
+
+type FilterStatementIDsByTagsParams struct {
+	TagFilters     []byte
+	ServerName     pgtype.Text
+	DatabaseName   pgtype.Text
+	AllowedServers []string
+	Since          pgtype.Timestamptz
+	Until          pgtype.Timestamptz
+}
+
+func (q *Queries) FilterStatementIDsByTags(ctx context.Context, arg FilterStatementIDsByTagsParams) ([]int64, error) {
+	rows, err := q.db.Query(ctx, filterStatementIDsByTags,
+		arg.TagFilters,
+		arg.ServerName,
+		arg.DatabaseName,
+		arg.AllowedServers,
+		arg.Since,
+		arg.Until,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAlertEnabled = `-- name: GetAlertEnabled :one
 SELECT enabled FROM alert_toggles WHERE server_name = $1 AND alert_key = $2
 `
@@ -321,7 +404,7 @@ LEFT JOIN LATERAL (
     FROM (
         SELECT
             kv.key,
-            CASE WHEN count(DISTINCT kv.value) = 1 THEN min(kv.value) ELSE '*' END AS value
+            min(kv.value) AS value
         FROM statement_samples qs
         CROSS JOIN LATERAL jsonb_each_text(qs.tags) AS kv(key, value)
         WHERE qs.statement_id = s.id
@@ -329,6 +412,7 @@ LEFT JOIN LATERAL (
           AND ($1::timestamptz IS NULL OR qs.collected_at >= $1)
           AND ($2::timestamptz IS NULL OR qs.collected_at <= $2)
         GROUP BY kv.key
+        HAVING count(DISTINCT kv.value) = 1
     ) per_key
 ) st ON true
 WHERE s.id = $3
@@ -927,16 +1011,10 @@ WITH per_statement AS (
       AND ($4::text[] IS NULL OR s.server_name = ANY($4::text[]))
       AND ($5::timestamptz IS NULL OR d.collected_at >= $5)
       AND ($6::timestamptz IS NULL OR d.collected_at <= $6)
-      AND (
-          ($7::text IS NULL AND $8::text IS NULL)
-          OR s.query_text ILIKE '%' || $7::text || '%'
-          OR EXISTS (
-              SELECT 1 FROM statement_samples ss
-              WHERE ss.statement_id = s.id
-                AND jsonb_exists(ss.tags, $8::text)
-                AND ($9::text IS NULL OR ss.tags ->> $8::text = $9::text)
-          )
-      )
+      AND ($7::text IS NULL
+           OR s.query_text ILIKE '%' || $7::text || '%')
+      AND ($8::bigint[] IS NULL
+           OR s.id = ANY($8::bigint[]))
     GROUP BY s.id
 ),
 statement_tags AS (
@@ -945,7 +1023,7 @@ statement_tags AS (
         SELECT
             qs.statement_id,
             kv.key,
-            CASE WHEN count(DISTINCT kv.value) = 1 THEN min(kv.value) ELSE '*' END AS value
+            min(kv.value) AS value
         FROM statement_samples qs
         CROSS JOIN LATERAL jsonb_each_text(qs.tags) AS kv(key, value)
         WHERE qs.tags IS NOT NULL
@@ -953,6 +1031,7 @@ statement_tags AS (
           AND ($5::timestamptz IS NULL OR qs.collected_at >= $5)
           AND ($6::timestamptz IS NULL OR qs.collected_at <= $6)
         GROUP BY qs.statement_id, kv.key
+        HAVING count(DISTINCT kv.value) = 1
     ) per_key
     GROUP BY statement_id
 )
@@ -980,8 +1059,7 @@ type ListStatementStatsParams struct {
 	Since          pgtype.Timestamptz
 	Until          pgtype.Timestamptz
 	TextFilter     pgtype.Text
-	TagKey         pgtype.Text
-	TagValue       pgtype.Text
+	StatementIds   []int64
 }
 
 type ListStatementStatsRow struct {
@@ -1005,8 +1083,7 @@ func (q *Queries) ListStatementStats(ctx context.Context, arg ListStatementStats
 		arg.Since,
 		arg.Until,
 		arg.TextFilter,
-		arg.TagKey,
-		arg.TagValue,
+		arg.StatementIds,
 	)
 	if err != nil {
 		return nil, err
@@ -1026,6 +1103,135 @@ func (q *Queries) ListStatementStats(ctx context.Context, arg ListStatementStats
 			&i.PctIo,
 			&i.Tags,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTagKeys = `-- name: ListTagKeys :many
+WITH agreed AS (
+    SELECT ss.statement_id, kv.key, min(kv.value) AS value
+    FROM statement_samples ss
+    JOIN statements s ON s.id = ss.statement_id
+    CROSS JOIN LATERAL jsonb_each_text(ss.tags) AS kv(key, value)
+    WHERE ss.tags IS NOT NULL
+      AND ss.statement_id IS NOT NULL
+      AND ss.collected_at >= $1::timestamptz
+      AND ss.collected_at <= $2::timestamptz
+      AND ($3::text IS NULL OR ss.server_name = $3)
+      AND ($4::text IS NULL OR s.database_name = $4)
+      AND ($5::text[] IS NULL OR ss.server_name = ANY($5::text[]))
+    GROUP BY ss.statement_id, kv.key
+    HAVING count(DISTINCT kv.value) = 1
+)
+SELECT
+    key::text                     AS key,
+    count(DISTINCT value)::bigint AS value_count
+FROM agreed
+GROUP BY key
+ORDER BY count(DISTINCT statement_id) DESC, key
+`
+
+type ListTagKeysParams struct {
+	Since          pgtype.Timestamptz
+	Until          pgtype.Timestamptz
+	ServerName     pgtype.Text
+	DatabaseName   pgtype.Text
+	AllowedServers []string
+}
+
+type ListTagKeysRow struct {
+	Key        string
+	ValueCount int64
+}
+
+func (q *Queries) ListTagKeys(ctx context.Context, arg ListTagKeysParams) ([]ListTagKeysRow, error) {
+	rows, err := q.db.Query(ctx, listTagKeys,
+		arg.Since,
+		arg.Until,
+		arg.ServerName,
+		arg.DatabaseName,
+		arg.AllowedServers,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListTagKeysRow
+	for rows.Next() {
+		var i ListTagKeysRow
+		if err := rows.Scan(&i.Key, &i.ValueCount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTagValues = `-- name: ListTagValues :many
+WITH agreed AS (
+    SELECT
+        ss.statement_id,
+        min(ss.tags ->> $1::text) AS value
+    FROM statement_samples ss
+    JOIN statements s ON s.id = ss.statement_id
+    WHERE ss.tags ? $1::text
+      AND ss.statement_id IS NOT NULL
+      AND ss.collected_at >= $2::timestamptz
+      AND ss.collected_at <= $3::timestamptz
+      AND ($4::text IS NULL OR ss.server_name = $4)
+      AND ($5::text IS NULL OR s.database_name = $5)
+      AND ($6::text[] IS NULL OR ss.server_name = ANY($6::text[]))
+    GROUP BY ss.statement_id
+    HAVING count(DISTINCT ss.tags ->> $1::text) = 1
+)
+SELECT
+    value::text                          AS value,
+    count(DISTINCT statement_id)::bigint AS statement_count
+FROM agreed
+GROUP BY value
+ORDER BY statement_count DESC, value
+`
+
+type ListTagValuesParams struct {
+	TagKey         string
+	Since          pgtype.Timestamptz
+	Until          pgtype.Timestamptz
+	ServerName     pgtype.Text
+	DatabaseName   pgtype.Text
+	AllowedServers []string
+}
+
+type ListTagValuesRow struct {
+	Value          string
+	StatementCount int64
+}
+
+func (q *Queries) ListTagValues(ctx context.Context, arg ListTagValuesParams) ([]ListTagValuesRow, error) {
+	rows, err := q.db.Query(ctx, listTagValues,
+		arg.TagKey,
+		arg.Since,
+		arg.Until,
+		arg.ServerName,
+		arg.DatabaseName,
+		arg.AllowedServers,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListTagValuesRow
+	for rows.Next() {
+		var i ListTagValuesRow
+		if err := rows.Scan(&i.Value, &i.StatementCount); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -1299,16 +1505,10 @@ FROM (
       AND ($6::bigint IS NULL OR d.statement_id = $6)
       AND d.collected_at >= $7::timestamptz
       AND d.collected_at <= $2::timestamptz
-      AND (
-          ($8::text IS NULL AND $9::text IS NULL)
-          OR s.query_text ILIKE '%' || $8::text || '%'
-          OR EXISTS (
-              SELECT 1 FROM statement_samples ss
-              WHERE ss.statement_id = s.id
-                AND jsonb_exists(ss.tags, $9::text)
-                AND ($10::text IS NULL OR ss.tags ->> $9::text = $10::text)
-          )
-      )
+      AND ($8::text IS NULL
+           OR s.query_text ILIKE '%' || $8::text || '%')
+      AND ($9::bigint[] IS NULL
+           OR s.id = ANY($9::bigint[]))
 ) b
 WHERE b.bucket_end > $7::timestamptz
   AND b.bucket_end <= least($2::timestamptz, now())
@@ -1325,8 +1525,7 @@ type StatementMetricSeriesParams struct {
 	StatementID    pgtype.Int8
 	Since          pgtype.Timestamptz
 	TextFilter     pgtype.Text
-	TagKey         pgtype.Text
-	TagValue       pgtype.Text
+	StatementIds   []int64
 }
 
 type StatementMetricSeriesRow struct {
@@ -1346,8 +1545,7 @@ func (q *Queries) StatementMetricSeries(ctx context.Context, arg StatementMetric
 		arg.StatementID,
 		arg.Since,
 		arg.TextFilter,
-		arg.TagKey,
-		arg.TagValue,
+		arg.StatementIds,
 	)
 	if err != nil {
 		return nil, err
@@ -1391,16 +1589,10 @@ WITH pts AS (
       AND d.collected_at >= $1::timestamptz
       AND d.collected_at <= $2::timestamptz
       AND d.calls > 0
-      AND (
-          ($8::text IS NULL AND $9::text IS NULL)
-          OR s.query_text ILIKE '%' || $8::text || '%'
-          OR EXISTS (
-              SELECT 1 FROM statement_samples ss
-              WHERE ss.statement_id = s.id
-                AND jsonb_exists(ss.tags, $9::text)
-                AND ($10::text IS NULL OR ss.tags ->> $9::text = $10::text)
-          )
-      )
+      AND ($8::text IS NULL
+           OR s.query_text ILIKE '%' || $8::text || '%')
+      AND ($9::bigint[] IS NULL
+           OR s.id = ANY($9::bigint[]))
 ),
 ordered AS (
     SELECT
@@ -1432,8 +1624,7 @@ type StatementPercentileSeriesParams struct {
 	AllowedServers []string
 	StatementID    pgtype.Int8
 	TextFilter     pgtype.Text
-	TagKey         pgtype.Text
-	TagValue       pgtype.Text
+	StatementIds   []int64
 }
 
 type StatementPercentileSeriesRow struct {
@@ -1453,8 +1644,7 @@ func (q *Queries) StatementPercentileSeries(ctx context.Context, arg StatementPe
 		arg.AllowedServers,
 		arg.StatementID,
 		arg.TextFilter,
-		arg.TagKey,
-		arg.TagValue,
+		arg.StatementIds,
 	)
 	if err != nil {
 		return nil, err

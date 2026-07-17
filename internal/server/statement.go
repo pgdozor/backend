@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -22,6 +23,10 @@ const (
 	minMetricBucket         = time.Minute
 	slowQueryMinCalls       = 50
 	slowQueryAvgThresholdMs = 1000.0
+
+	maxTagFilters      = 20
+	maxTagFilterValues = 50
+	maxTagValueLen     = 256
 )
 
 type StatementServer struct {
@@ -163,8 +168,15 @@ func (s *StatementServer) QueryStatements(
 
 	serverName := textFilter(msg.GetServerName())
 	databaseName := textFilter(msg.GetDatabaseName())
-	filter := parseStatementFilter(msg.GetFilter())
 	allowedServers := principal.AllowedServerFilter()
+
+	filter, err := s.resolveStatementFilter(
+		ctx, msg.GetQueryText(), msg.GetTagFilters(),
+		serverName, databaseName, from.AsTime(), to.AsTime(), allowedServers,
+	)
+	if err != nil {
+		return nil, err
+	}
 
 	statements, err := s.listStatements(ctx, msg, serverName, databaseName, filter, allowedServers)
 	if err != nil {
@@ -347,31 +359,152 @@ func concretizeStatement(query string, params []string) string {
 }
 
 type statementFilter struct {
-	text     pgtype.Text
-	tagKey   pgtype.Text
-	tagValue pgtype.Text
+	text pgtype.Text
+	// statementIDs value is resolved based on the supplied tag filters.
+	statementIDs []int64
 }
 
-// parseStatementFilter interprets the raw search box term:
-//   - "app=demo" -> the tag app must equal demo
-//   - "app"      -> the tag key app is present, or the query text contains "app"
-//   - "SELECT"   -> a tag key SELECT is present, or the query text contains "SELECT"
-func parseStatementFilter(raw string) statementFilter {
-	term := strings.TrimSpace(raw)
-	if term == "" {
-		return statementFilter{}
-	}
+type tagFilterJSON struct {
+	Key    string   `json:"key"`
+	Op     string   `json:"op"`
+	Values []string `json:"values"`
+}
 
-	if key, value, ok := strings.Cut(term, "="); ok {
-		key = strings.TrimSpace(key)
-		if key == "" {
-			return statementFilter{text: textFilter(term)}
+func tagFilterOp(tf *pgdozorv1.TagFilter) (string, error) {
+	switch tf.GetOp() {
+	case pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_EXISTS:
+		if len(tf.GetValues()) != 0 {
+			return "", connect.NewError(connect.CodeInvalidArgument,
+				errors.New("an exists tag filter must not carry values"))
 		}
 
-		return statementFilter{tagKey: textFilter(key), tagValue: textFilter(strings.TrimSpace(value))}
+		return "exists", nil
+	case pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_EQUAL:
+		return "eq", validateTagValues(tf.GetValues())
+	case pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_NOT_EQUAL:
+		return "ne", validateTagValues(tf.GetValues())
+	case pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_UNSPECIFIED:
+		return "", connect.NewError(connect.CodeInvalidArgument, errors.New("tag filter op is required"))
 	}
 
-	return statementFilter{text: textFilter(term), tagKey: textFilter(term)}
+	return "", connect.NewError(connect.CodeInvalidArgument, errors.New("unknown tag filter op"))
+}
+
+func validateTagValues(values []string) error {
+	if len(values) == 0 {
+		return connect.NewError(connect.CodeInvalidArgument, errors.New("tag filter requires at least one value"))
+	}
+
+	if len(values) > maxTagFilterValues {
+		return connect.NewError(connect.CodeInvalidArgument,
+			fmt.Errorf("a tag filter accepts at most %d values", maxTagFilterValues))
+	}
+
+	for _, v := range values {
+		if v == "" {
+			return connect.NewError(connect.CodeInvalidArgument, errors.New("tag filter values must not be empty"))
+		}
+
+		if len(v) > maxTagValueLen {
+			return connect.NewError(connect.CodeInvalidArgument,
+				fmt.Errorf("tag filter values must be at most %d bytes", maxTagValueLen))
+		}
+	}
+
+	return nil
+}
+
+func validTagKey(s string) bool {
+	if s == "" || s[0] < 'a' || s[0] > 'z' {
+		return false
+	}
+
+	for i := 1; i < len(s); i++ {
+		c := s[i]
+		if (c < 'a' || c > 'z') && (c < '0' || c > '9') && c != '_' {
+			return false
+		}
+	}
+
+	return true
+}
+
+func buildTagFilterJSON(filters []*pgdozorv1.TagFilter) ([]byte, error) {
+	if len(filters) == 0 {
+		return nil, nil
+	}
+
+	if len(filters) > maxTagFilters {
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			fmt.Errorf("at most %d tag filters are allowed", maxTagFilters))
+	}
+
+	encoded := make([]tagFilterJSON, len(filters))
+	for i, tf := range filters {
+		op, err := tagFilterOp(tf)
+		if err != nil {
+			return nil, err
+		}
+
+		key := tf.GetKey()
+		if !validTagKey(key) {
+			return nil, connect.NewError(connect.CodeInvalidArgument,
+				fmt.Errorf("tag key %q must match ^[a-z][a-z0-9_]*$", key))
+		}
+
+		values := tf.GetValues()
+		if values == nil {
+			values = []string{}
+		}
+
+		encoded[i] = tagFilterJSON{Key: key, Op: op, Values: values}
+	}
+
+	raw, err := json.Marshal(encoded)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return raw, nil
+}
+
+func (s *StatementServer) resolveStatementFilter(
+	ctx context.Context,
+	queryText string,
+	filters []*pgdozorv1.TagFilter,
+	serverName, databaseName pgtype.Text,
+	from, to time.Time,
+	allowedServers []string,
+) (statementFilter, error) {
+	filter := statementFilter{text: textFilter(strings.TrimSpace(queryText))}
+
+	tagFilters, err := buildTagFilterJSON(filters)
+	if err != nil {
+		return statementFilter{}, err
+	}
+
+	if tagFilters == nil {
+		return filter, nil
+	}
+
+	ids, err := s.queries.FilterStatementIDsByTags(ctx, db.FilterStatementIDsByTagsParams{
+		ServerName:     serverName,
+		DatabaseName:   databaseName,
+		AllowedServers: allowedServers,
+		TagFilters:     tagFilters,
+		Since:          pgtype.Timestamptz{Time: from, Valid: true},
+		Until:          pgtype.Timestamptz{Time: to, Valid: true},
+	})
+	if err != nil {
+		return statementFilter{}, connect.NewError(connect.CodeInternal, err)
+	}
+
+	if ids == nil {
+		ids = []int64{}
+	}
+	filter.statementIDs = ids
+
+	return filter, nil
 }
 
 func (s *StatementServer) listStatements(
@@ -386,8 +519,7 @@ func (s *StatementServer) listStatements(
 		DatabaseName:   databaseName,
 		AllowedServers: allowedServers,
 		TextFilter:     filter.text,
-		TagKey:         filter.tagKey,
-		TagValue:       filter.tagValue,
+		StatementIds:   filter.statementIDs,
 		Since:          timestamptzFromProto(msg.GetFrom()),
 		Until:          timestamptzFromProto(msg.GetTo()),
 		RowLimit:       resolveLimit(msg.GetLimit()),
@@ -439,8 +571,7 @@ func (s *StatementServer) statementMetrics(
 		DatabaseName:   databaseName,
 		AllowedServers: allowedServers,
 		TextFilter:     filter.text,
-		TagKey:         filter.tagKey,
-		TagValue:       filter.tagValue,
+		StatementIds:   filter.statementIDs,
 		StatementID:    statementID,
 	})
 	if err != nil {
@@ -484,8 +615,7 @@ func (s *StatementServer) statementPercentiles(
 		DatabaseName:   databaseName,
 		AllowedServers: allowedServers,
 		TextFilter:     filter.text,
-		TagKey:         filter.tagKey,
-		TagValue:       filter.tagValue,
+		StatementIds:   filter.statementIDs,
 		StatementID:    pgtype.Int8{},
 	})
 	if err != nil {
@@ -526,4 +656,89 @@ func avgExecTime(totalExecTime float64, calls int64) float64 {
 
 func statementMetric(series []*pgdozorv1.MetricPoint) *pgdozorv1.StatementMetric {
 	return &pgdozorv1.StatementMetric{Series: series}
+}
+
+func (s *StatementServer) ListTagKeys(
+	ctx context.Context,
+	req *connect.Request[pgdozorv1.ListTagKeysRequest],
+) (*connect.Response[pgdozorv1.ListTagKeysResponse], error) {
+	msg := req.Msg
+
+	principal, err := requirePrincipal(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if name := msg.GetServerName(); name != "" && !principal.CanViewServer(name) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("access to that server is not allowed"))
+	}
+
+	from, to := msg.GetFrom(), msg.GetTo()
+	if err = requireRange(from, to); err != nil {
+		return nil, err
+	}
+
+	rows, err := s.queries.ListTagKeys(ctx, db.ListTagKeysParams{
+		ServerName:     textFilter(msg.GetServerName()),
+		DatabaseName:   textFilter(msg.GetDatabaseName()),
+		AllowedServers: principal.AllowedServerFilter(),
+		Since:          timestamptzFromProto(from),
+		Until:          timestamptzFromProto(to),
+	})
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	keys := make([]*pgdozorv1.TagKey, len(rows))
+	for i, row := range rows {
+		keys[i] = &pgdozorv1.TagKey{Key: row.Key, ValueCount: row.ValueCount}
+	}
+
+	return connect.NewResponse(&pgdozorv1.ListTagKeysResponse{Keys: keys}), nil
+}
+
+func (s *StatementServer) ListTagValues(
+	ctx context.Context,
+	req *connect.Request[pgdozorv1.ListTagValuesRequest],
+) (*connect.Response[pgdozorv1.ListTagValuesResponse], error) {
+	msg := req.Msg
+
+	principal, err := requirePrincipal(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if name := msg.GetServerName(); name != "" && !principal.CanViewServer(name) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("access to that server is not allowed"))
+	}
+
+	from, to := msg.GetFrom(), msg.GetTo()
+	if err = requireRange(from, to); err != nil {
+		return nil, err
+	}
+
+	key := msg.GetKey()
+	if !validTagKey(key) {
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			fmt.Errorf("tag key %q must match ^[a-z][a-z0-9_]*$", key))
+	}
+
+	rows, err := s.queries.ListTagValues(ctx, db.ListTagValuesParams{
+		TagKey:         key,
+		ServerName:     textFilter(msg.GetServerName()),
+		DatabaseName:   textFilter(msg.GetDatabaseName()),
+		AllowedServers: principal.AllowedServerFilter(),
+		Since:          timestamptzFromProto(from),
+		Until:          timestamptzFromProto(to),
+	})
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	values := make([]*pgdozorv1.TagValue, len(rows))
+	for i, row := range rows {
+		values[i] = &pgdozorv1.TagValue{Value: row.Value, StatementCount: row.StatementCount}
+	}
+
+	return connect.NewResponse(&pgdozorv1.ListTagValuesResponse{Values: values}), nil
 }

@@ -1,53 +1,118 @@
 package server
 
 import (
+	"strings"
 	"testing"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"connectrpc.com/connect"
+
+	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
 )
 
-func TestParseStatementFilter(t *testing.T) {
+func tagFilter(key string, op pgdozorv1.TagFilterOperator, values ...string) *pgdozorv1.TagFilter {
+	return &pgdozorv1.TagFilter{Key: key, Op: op, Values: values}
+}
+
+func TestBuildTagFilterJSON(t *testing.T) {
 	t.Parallel()
 
-	text := func(s string) pgtype.Text { return pgtype.Text{String: s, Valid: true} }
-	none := pgtype.Text{}
+	const (
+		eq     = pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_EQUAL
+		ne     = pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_NOT_EQUAL
+		exists = pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_EXISTS
+		unspec = pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_UNSPECIFIED
+	)
 
 	cases := []struct {
-		name string
-		raw  string
-		want statementFilter
+		name    string
+		filters []*pgdozorv1.TagFilter
+		want    string
+		wantErr bool
 	}{
-		{name: "empty", raw: "", want: statementFilter{}},
-		{name: "whitespace only", raw: "   ", want: statementFilter{}},
+		{name: "no filters yields a nil param", filters: nil, want: ""},
 		{
-			name: "key=value matches a tag exactly",
-			raw:  "app=demo",
-			want: statementFilter{tagKey: text("app"), tagValue: text("demo")},
+			name:    "equal with one value",
+			filters: []*pgdozorv1.TagFilter{tagFilter("service", eq, "payments")},
+			want:    `[{"key":"service","op":"eq","values":["payments"]}]`,
 		},
 		{
-			name: "key=value trims around the equals",
-			raw:  "  app = demo  ",
-			want: statementFilter{tagKey: text("app"), tagValue: text("demo")},
+			name:    "equal ors its values",
+			filters: []*pgdozorv1.TagFilter{tagFilter("service", eq, "payments", "billing")},
+			want:    `[{"key":"service","op":"eq","values":["payments","billing"]}]`,
 		},
 		{
-			name: "bare term matches a tag key or the query text",
-			raw:  "app",
-			want: statementFilter{text: text("app"), tagKey: text("app")},
+			name:    "not equal",
+			filters: []*pgdozorv1.TagFilter{tagFilter("operation", ne, "deliver_email")},
+			want:    `[{"key":"operation","op":"ne","values":["deliver_email"]}]`,
 		},
 		{
-			name: "sql keyword is a text search",
-			raw:  "SELECT",
-			want: statementFilter{text: text("SELECT"), tagKey: text("SELECT")},
+			name:    "exists carries no values",
+			filters: []*pgdozorv1.TagFilter{tagFilter("tenant", exists)},
+			want:    `[{"key":"tenant","op":"exists","values":[]}]`,
 		},
 		{
-			name: "trailing equals leaves the value unset",
-			raw:  "app=",
-			want: statementFilter{tagKey: text("app"), tagValue: none},
+			name: "filters are anded in order",
+			filters: []*pgdozorv1.TagFilter{
+				tagFilter("service", eq, "payments"),
+				tagFilter("operation", ne, "deliver_email"),
+			},
+			want: `[{"key":"service","op":"eq","values":["payments"]},` +
+				`{"key":"operation","op":"ne","values":["deliver_email"]}]`,
 		},
 		{
-			name: "leading equals falls back to a text search",
-			raw:  "=demo",
-			want: statementFilter{text: text("=demo")},
+			name:    "value keeps the collector charset verbatim",
+			filters: []*pgdozorv1.TagFilter{tagFilter("build", eq, "sha256:9f8e/7d+6c")},
+			want:    `[{"key":"build","op":"eq","values":["sha256:9f8e/7d+6c"]}]`,
+		},
+		{
+			name:    "exists with values is rejected",
+			filters: []*pgdozorv1.TagFilter{tagFilter("tenant", exists, "acme")},
+			wantErr: true,
+		},
+		{
+			name:    "equal with no values is rejected",
+			filters: []*pgdozorv1.TagFilter{tagFilter("service", eq)},
+			wantErr: true,
+		},
+		{
+			name:    "unspecified op is rejected",
+			filters: []*pgdozorv1.TagFilter{tagFilter("service", unspec, "payments")},
+			wantErr: true,
+		},
+		{
+			name:    "empty value is rejected",
+			filters: []*pgdozorv1.TagFilter{tagFilter("service", eq, "")},
+			wantErr: true,
+		},
+		{
+			name:    "uppercase key is rejected",
+			filters: []*pgdozorv1.TagFilter{tagFilter("Service", eq, "payments")},
+			wantErr: true,
+		},
+		{
+			name:    "leading underscore key is rejected",
+			filters: []*pgdozorv1.TagFilter{tagFilter("_svc", eq, "payments")},
+			wantErr: true,
+		},
+		{
+			name:    "leading digit key is rejected",
+			filters: []*pgdozorv1.TagFilter{tagFilter("9x", eq, "payments")},
+			wantErr: true,
+		},
+		{
+			name:    "empty key is rejected",
+			filters: []*pgdozorv1.TagFilter{tagFilter("", eq, "payments")},
+			wantErr: true,
+		},
+		{
+			name:    "too many values is rejected",
+			filters: []*pgdozorv1.TagFilter{tagFilter("service", eq, make([]string, maxTagFilterValues+1)...)},
+			wantErr: true,
+		},
+		{
+			name:    "oversized value is rejected",
+			filters: []*pgdozorv1.TagFilter{tagFilter("service", eq, strings.Repeat("x", maxTagValueLen+1))},
+			wantErr: true,
 		},
 	}
 
@@ -55,8 +120,79 @@ func TestParseStatementFilter(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got := parseStatementFilter(tc.raw); got != tc.want {
-				t.Errorf("parseStatementFilter(%q) = %+v, want %+v", tc.raw, got, tc.want)
+			got, err := buildTagFilterJSON(tc.filters)
+			if tc.wantErr {
+				if err == nil {
+					t.Fatalf("buildTagFilterJSON() = %s, want an error", got)
+				}
+				if code := connect.CodeOf(err); code != connect.CodeInvalidArgument {
+					t.Errorf("buildTagFilterJSON() code = %v, want %v", code, connect.CodeInvalidArgument)
+				}
+
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("buildTagFilterJSON() error = %v", err)
+			}
+
+			if string(got) != tc.want {
+				t.Errorf("buildTagFilterJSON() = %s, want %s", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestBuildTagFilterJSONRejectsTooManyFilters(t *testing.T) {
+	t.Parallel()
+
+	filters := make([]*pgdozorv1.TagFilter, maxTagFilters+1)
+	for i := range filters {
+		filters[i] = tagFilter("service", pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_EQUAL, "payments")
+	}
+
+	_, err := buildTagFilterJSON(filters)
+	if err == nil {
+		t.Fatal("buildTagFilterJSON() error = nil, want an error")
+	}
+
+	if code := connect.CodeOf(err); code != connect.CodeInvalidArgument {
+		t.Errorf("buildTagFilterJSON() code = %v, want %v", code, connect.CodeInvalidArgument)
+	}
+}
+
+func TestValidTagKey(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		key  string
+		want bool
+	}{
+		{key: "service", want: true},
+		{key: "a", want: true},
+		{key: "z", want: true},
+		{key: "trace_id", want: true},
+		{key: "svc9", want: true},
+		{key: "a_0_z", want: true},
+		{key: "", want: false},
+		{key: "A", want: false},
+		{key: "`bad", want: false},
+		{key: "{bad", want: false},
+		{key: "_svc", want: false},
+		{key: "9svc", want: false},
+		{key: "svc-1", want: false},
+		{key: "svc.1", want: false},
+		{key: "svc:1", want: false},
+		{key: "svc 1", want: false},
+		{key: "svc=1", want: false},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.key, func(t *testing.T) {
+			t.Parallel()
+
+			if got := validTagKey(tc.key); got != tc.want {
+				t.Errorf("validTagKey(%q) = %v, want %v", tc.key, got, tc.want)
 			}
 		})
 	}

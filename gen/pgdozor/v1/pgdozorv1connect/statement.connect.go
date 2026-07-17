@@ -45,6 +45,12 @@ const (
 	// StatementServiceGetStatementSamplePlanProcedure is the fully-qualified name of the
 	// StatementService's GetStatementSamplePlan RPC.
 	StatementServiceGetStatementSamplePlanProcedure = "/pgdozor.v1.StatementService/GetStatementSamplePlan"
+	// StatementServiceListTagKeysProcedure is the fully-qualified name of the StatementService's
+	// ListTagKeys RPC.
+	StatementServiceListTagKeysProcedure = "/pgdozor.v1.StatementService/ListTagKeys"
+	// StatementServiceListTagValuesProcedure is the fully-qualified name of the StatementService's
+	// ListTagValues RPC.
+	StatementServiceListTagValuesProcedure = "/pgdozor.v1.StatementService/ListTagValues"
 )
 
 // StatementServiceClient is a client for the pgdozor.v1.StatementService service.
@@ -53,6 +59,8 @@ type StatementServiceClient interface {
 	QueryStatements(context.Context, *connect.Request[v1.QueryStatementsRequest]) (*connect.Response[v1.QueryStatementsResponse], error)
 	QueryStatementDetail(context.Context, *connect.Request[v1.QueryStatementDetailRequest]) (*connect.Response[v1.QueryStatementDetailResponse], error)
 	GetStatementSamplePlan(context.Context, *connect.Request[v1.GetStatementSamplePlanRequest]) (*connect.Response[v1.GetStatementSamplePlanResponse], error)
+	ListTagKeys(context.Context, *connect.Request[v1.ListTagKeysRequest]) (*connect.Response[v1.ListTagKeysResponse], error)
+	ListTagValues(context.Context, *connect.Request[v1.ListTagValuesRequest]) (*connect.Response[v1.ListTagValuesResponse], error)
 }
 
 // NewStatementServiceClient constructs a client for the pgdozor.v1.StatementService service. By
@@ -90,6 +98,18 @@ func NewStatementServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(statementServiceMethods.ByName("GetStatementSamplePlan")),
 			connect.WithClientOptions(opts...),
 		),
+		listTagKeys: connect.NewClient[v1.ListTagKeysRequest, v1.ListTagKeysResponse](
+			httpClient,
+			baseURL+StatementServiceListTagKeysProcedure,
+			connect.WithSchema(statementServiceMethods.ByName("ListTagKeys")),
+			connect.WithClientOptions(opts...),
+		),
+		listTagValues: connect.NewClient[v1.ListTagValuesRequest, v1.ListTagValuesResponse](
+			httpClient,
+			baseURL+StatementServiceListTagValuesProcedure,
+			connect.WithSchema(statementServiceMethods.ByName("ListTagValues")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -99,6 +119,8 @@ type statementServiceClient struct {
 	queryStatements        *connect.Client[v1.QueryStatementsRequest, v1.QueryStatementsResponse]
 	queryStatementDetail   *connect.Client[v1.QueryStatementDetailRequest, v1.QueryStatementDetailResponse]
 	getStatementSamplePlan *connect.Client[v1.GetStatementSamplePlanRequest, v1.GetStatementSamplePlanResponse]
+	listTagKeys            *connect.Client[v1.ListTagKeysRequest, v1.ListTagKeysResponse]
+	listTagValues          *connect.Client[v1.ListTagValuesRequest, v1.ListTagValuesResponse]
 }
 
 // ReportStatements calls pgdozor.v1.StatementService.ReportStatements.
@@ -121,12 +143,24 @@ func (c *statementServiceClient) GetStatementSamplePlan(ctx context.Context, req
 	return c.getStatementSamplePlan.CallUnary(ctx, req)
 }
 
+// ListTagKeys calls pgdozor.v1.StatementService.ListTagKeys.
+func (c *statementServiceClient) ListTagKeys(ctx context.Context, req *connect.Request[v1.ListTagKeysRequest]) (*connect.Response[v1.ListTagKeysResponse], error) {
+	return c.listTagKeys.CallUnary(ctx, req)
+}
+
+// ListTagValues calls pgdozor.v1.StatementService.ListTagValues.
+func (c *statementServiceClient) ListTagValues(ctx context.Context, req *connect.Request[v1.ListTagValuesRequest]) (*connect.Response[v1.ListTagValuesResponse], error) {
+	return c.listTagValues.CallUnary(ctx, req)
+}
+
 // StatementServiceHandler is an implementation of the pgdozor.v1.StatementService service.
 type StatementServiceHandler interface {
 	ReportStatements(context.Context, *connect.Request[v1.ReportStatementsRequest]) (*connect.Response[v1.ReportStatementsResponse], error)
 	QueryStatements(context.Context, *connect.Request[v1.QueryStatementsRequest]) (*connect.Response[v1.QueryStatementsResponse], error)
 	QueryStatementDetail(context.Context, *connect.Request[v1.QueryStatementDetailRequest]) (*connect.Response[v1.QueryStatementDetailResponse], error)
 	GetStatementSamplePlan(context.Context, *connect.Request[v1.GetStatementSamplePlanRequest]) (*connect.Response[v1.GetStatementSamplePlanResponse], error)
+	ListTagKeys(context.Context, *connect.Request[v1.ListTagKeysRequest]) (*connect.Response[v1.ListTagKeysResponse], error)
+	ListTagValues(context.Context, *connect.Request[v1.ListTagValuesRequest]) (*connect.Response[v1.ListTagValuesResponse], error)
 }
 
 // NewStatementServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -160,6 +194,18 @@ func NewStatementServiceHandler(svc StatementServiceHandler, opts ...connect.Han
 		connect.WithSchema(statementServiceMethods.ByName("GetStatementSamplePlan")),
 		connect.WithHandlerOptions(opts...),
 	)
+	statementServiceListTagKeysHandler := connect.NewUnaryHandler(
+		StatementServiceListTagKeysProcedure,
+		svc.ListTagKeys,
+		connect.WithSchema(statementServiceMethods.ByName("ListTagKeys")),
+		connect.WithHandlerOptions(opts...),
+	)
+	statementServiceListTagValuesHandler := connect.NewUnaryHandler(
+		StatementServiceListTagValuesProcedure,
+		svc.ListTagValues,
+		connect.WithSchema(statementServiceMethods.ByName("ListTagValues")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/pgdozor.v1.StatementService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case StatementServiceReportStatementsProcedure:
@@ -170,6 +216,10 @@ func NewStatementServiceHandler(svc StatementServiceHandler, opts ...connect.Han
 			statementServiceQueryStatementDetailHandler.ServeHTTP(w, r)
 		case StatementServiceGetStatementSamplePlanProcedure:
 			statementServiceGetStatementSamplePlanHandler.ServeHTTP(w, r)
+		case StatementServiceListTagKeysProcedure:
+			statementServiceListTagKeysHandler.ServeHTTP(w, r)
+		case StatementServiceListTagValuesProcedure:
+			statementServiceListTagValuesHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -193,4 +243,12 @@ func (UnimplementedStatementServiceHandler) QueryStatementDetail(context.Context
 
 func (UnimplementedStatementServiceHandler) GetStatementSamplePlan(context.Context, *connect.Request[v1.GetStatementSamplePlanRequest]) (*connect.Response[v1.GetStatementSamplePlanResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("pgdozor.v1.StatementService.GetStatementSamplePlan is not implemented"))
+}
+
+func (UnimplementedStatementServiceHandler) ListTagKeys(context.Context, *connect.Request[v1.ListTagKeysRequest]) (*connect.Response[v1.ListTagKeysResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("pgdozor.v1.StatementService.ListTagKeys is not implemented"))
+}
+
+func (UnimplementedStatementServiceHandler) ListTagValues(context.Context, *connect.Request[v1.ListTagValuesRequest]) (*connect.Response[v1.ListTagValuesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("pgdozor.v1.StatementService.ListTagValues is not implemented"))
 }

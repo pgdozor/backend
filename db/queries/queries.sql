@@ -178,16 +178,10 @@ FROM (
       AND (sqlc.narg('statement_id')::bigint IS NULL OR d.statement_id = sqlc.narg('statement_id'))
       AND d.collected_at >= sqlc.arg('since')::timestamptz
       AND d.collected_at <= sqlc.arg('until')::timestamptz
-      AND (
-          (sqlc.narg('text_filter')::text IS NULL AND sqlc.narg('tag_key')::text IS NULL)
-          OR s.query_text ILIKE '%' || sqlc.narg('text_filter')::text || '%'
-          OR EXISTS (
-              SELECT 1 FROM statement_samples ss
-              WHERE ss.statement_id = s.id
-                AND jsonb_exists(ss.tags, sqlc.narg('tag_key')::text)
-                AND (sqlc.narg('tag_value')::text IS NULL OR ss.tags ->> sqlc.narg('tag_key')::text = sqlc.narg('tag_value')::text)
-          )
-      )
+      AND (sqlc.narg('text_filter')::text IS NULL
+           OR s.query_text ILIKE '%' || sqlc.narg('text_filter')::text || '%')
+      AND (sqlc.narg('statement_ids')::bigint[] IS NULL
+           OR s.id = ANY(sqlc.narg('statement_ids')::bigint[]))
 ) b
 WHERE b.bucket_end > sqlc.arg('since')::timestamptz
   AND b.bucket_end <= least(sqlc.arg('until')::timestamptz, now())
@@ -213,16 +207,10 @@ WITH pts AS (
       AND d.collected_at >= sqlc.arg('since')::timestamptz
       AND d.collected_at <= sqlc.arg('until')::timestamptz
       AND d.calls > 0
-      AND (
-          (sqlc.narg('text_filter')::text IS NULL AND sqlc.narg('tag_key')::text IS NULL)
-          OR s.query_text ILIKE '%' || sqlc.narg('text_filter')::text || '%'
-          OR EXISTS (
-              SELECT 1 FROM statement_samples ss
-              WHERE ss.statement_id = s.id
-                AND jsonb_exists(ss.tags, sqlc.narg('tag_key')::text)
-                AND (sqlc.narg('tag_value')::text IS NULL OR ss.tags ->> sqlc.narg('tag_key')::text = sqlc.narg('tag_value')::text)
-          )
-      )
+      AND (sqlc.narg('text_filter')::text IS NULL
+           OR s.query_text ILIKE '%' || sqlc.narg('text_filter')::text || '%')
+      AND (sqlc.narg('statement_ids')::bigint[] IS NULL
+           OR s.id = ANY(sqlc.narg('statement_ids')::bigint[]))
 ),
 ordered AS (
     SELECT
@@ -244,6 +232,99 @@ WHERE bucket_end > sqlc.arg('since')::timestamptz
 GROUP BY bucket_end
 ORDER BY bucket_end;
 
+-- name: FilterStatementIDsByTags :many
+WITH scoped AS (
+    SELECT s.id
+    FROM statements s
+    WHERE (sqlc.narg('server_name')::text IS NULL OR s.server_name = sqlc.narg('server_name'))
+      AND (sqlc.narg('database_name')::text IS NULL OR s.database_name = sqlc.narg('database_name'))
+      AND (sqlc.narg('allowed_servers')::text[] IS NULL OR s.server_name = ANY(sqlc.narg('allowed_servers')::text[]))
+),
+agreed AS (
+    SELECT ss.statement_id, kv.key, min(kv.value) AS value
+    FROM statement_samples ss
+    JOIN scoped ON scoped.id = ss.statement_id
+    CROSS JOIN LATERAL jsonb_each_text(ss.tags) AS kv(key, value)
+    WHERE ss.tags IS NOT NULL
+      AND ss.collected_at >= sqlc.arg('since')::timestamptz
+      AND ss.collected_at <= sqlc.arg('until')::timestamptz
+      AND kv.key IN (SELECT f ->> 'key' FROM jsonb_array_elements(sqlc.arg('tag_filters')::jsonb) AS f)
+    GROUP BY ss.statement_id, kv.key
+    HAVING count(DISTINCT kv.value) = 1
+)
+SELECT scoped.id
+FROM scoped
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(sqlc.arg('tag_filters')::jsonb) AS f
+    WHERE NOT CASE f ->> 'op'
+        WHEN 'ne' THEN NOT EXISTS (
+            SELECT 1 FROM agreed a
+            WHERE a.statement_id = scoped.id
+              AND a.key = (f ->> 'key')
+              AND a.value IN (SELECT jsonb_array_elements_text(f -> 'values'))
+        )
+        WHEN 'exists' THEN EXISTS (
+            SELECT 1 FROM agreed a
+            WHERE a.statement_id = scoped.id
+              AND a.key = (f ->> 'key')
+        )
+        ELSE EXISTS (
+            SELECT 1 FROM agreed a
+            WHERE a.statement_id = scoped.id
+              AND a.key = (f ->> 'key')
+              AND a.value IN (SELECT jsonb_array_elements_text(f -> 'values'))
+        )
+    END
+);
+
+-- name: ListTagKeys :many
+WITH agreed AS (
+    SELECT ss.statement_id, kv.key, min(kv.value) AS value
+    FROM statement_samples ss
+    JOIN statements s ON s.id = ss.statement_id
+    CROSS JOIN LATERAL jsonb_each_text(ss.tags) AS kv(key, value)
+    WHERE ss.tags IS NOT NULL
+      AND ss.statement_id IS NOT NULL
+      AND ss.collected_at >= sqlc.arg('since')::timestamptz
+      AND ss.collected_at <= sqlc.arg('until')::timestamptz
+      AND (sqlc.narg('server_name')::text IS NULL OR ss.server_name = sqlc.narg('server_name'))
+      AND (sqlc.narg('database_name')::text IS NULL OR s.database_name = sqlc.narg('database_name'))
+      AND (sqlc.narg('allowed_servers')::text[] IS NULL OR ss.server_name = ANY(sqlc.narg('allowed_servers')::text[]))
+    GROUP BY ss.statement_id, kv.key
+    HAVING count(DISTINCT kv.value) = 1
+)
+SELECT
+    key::text                     AS key,
+    count(DISTINCT value)::bigint AS value_count
+FROM agreed
+GROUP BY key
+ORDER BY count(DISTINCT statement_id) DESC, key;
+
+-- name: ListTagValues :many
+WITH agreed AS (
+    SELECT
+        ss.statement_id,
+        min(ss.tags ->> sqlc.arg('tag_key')::text) AS value
+    FROM statement_samples ss
+    JOIN statements s ON s.id = ss.statement_id
+    WHERE ss.tags ? sqlc.arg('tag_key')::text
+      AND ss.statement_id IS NOT NULL
+      AND ss.collected_at >= sqlc.arg('since')::timestamptz
+      AND ss.collected_at <= sqlc.arg('until')::timestamptz
+      AND (sqlc.narg('server_name')::text IS NULL OR ss.server_name = sqlc.narg('server_name'))
+      AND (sqlc.narg('database_name')::text IS NULL OR s.database_name = sqlc.narg('database_name'))
+      AND (sqlc.narg('allowed_servers')::text[] IS NULL OR ss.server_name = ANY(sqlc.narg('allowed_servers')::text[]))
+    GROUP BY ss.statement_id
+    HAVING count(DISTINCT ss.tags ->> sqlc.arg('tag_key')::text) = 1
+)
+SELECT
+    value::text                          AS value,
+    count(DISTINCT statement_id)::bigint AS statement_count
+FROM agreed
+GROUP BY value
+ORDER BY statement_count DESC, value;
+
 -- name: ListStatementStats :many
 WITH per_statement AS (
     SELECT
@@ -261,16 +342,10 @@ WITH per_statement AS (
       AND (sqlc.narg('allowed_servers')::text[] IS NULL OR s.server_name = ANY(sqlc.narg('allowed_servers')::text[]))
       AND (sqlc.narg('since')::timestamptz IS NULL OR d.collected_at >= sqlc.narg('since'))
       AND (sqlc.narg('until')::timestamptz IS NULL OR d.collected_at <= sqlc.narg('until'))
-      AND (
-          (sqlc.narg('text_filter')::text IS NULL AND sqlc.narg('tag_key')::text IS NULL)
-          OR s.query_text ILIKE '%' || sqlc.narg('text_filter')::text || '%'
-          OR EXISTS (
-              SELECT 1 FROM statement_samples ss
-              WHERE ss.statement_id = s.id
-                AND jsonb_exists(ss.tags, sqlc.narg('tag_key')::text)
-                AND (sqlc.narg('tag_value')::text IS NULL OR ss.tags ->> sqlc.narg('tag_key')::text = sqlc.narg('tag_value')::text)
-          )
-      )
+      AND (sqlc.narg('text_filter')::text IS NULL
+           OR s.query_text ILIKE '%' || sqlc.narg('text_filter')::text || '%')
+      AND (sqlc.narg('statement_ids')::bigint[] IS NULL
+           OR s.id = ANY(sqlc.narg('statement_ids')::bigint[]))
     GROUP BY s.id
 ),
 statement_tags AS (
@@ -279,7 +354,7 @@ statement_tags AS (
         SELECT
             qs.statement_id,
             kv.key,
-            CASE WHEN count(DISTINCT kv.value) = 1 THEN min(kv.value) ELSE '*' END AS value
+            min(kv.value) AS value
         FROM statement_samples qs
         CROSS JOIN LATERAL jsonb_each_text(qs.tags) AS kv(key, value)
         WHERE qs.tags IS NOT NULL
@@ -287,6 +362,7 @@ statement_tags AS (
           AND (sqlc.narg('since')::timestamptz IS NULL OR qs.collected_at >= sqlc.narg('since'))
           AND (sqlc.narg('until')::timestamptz IS NULL OR qs.collected_at <= sqlc.narg('until'))
         GROUP BY qs.statement_id, kv.key
+        HAVING count(DISTINCT kv.value) = 1
     ) per_key
     GROUP BY statement_id
 )
@@ -317,7 +393,7 @@ LEFT JOIN LATERAL (
     FROM (
         SELECT
             kv.key,
-            CASE WHEN count(DISTINCT kv.value) = 1 THEN min(kv.value) ELSE '*' END AS value
+            min(kv.value) AS value
         FROM statement_samples qs
         CROSS JOIN LATERAL jsonb_each_text(qs.tags) AS kv(key, value)
         WHERE qs.statement_id = s.id
@@ -325,6 +401,7 @@ LEFT JOIN LATERAL (
           AND (sqlc.narg('since')::timestamptz IS NULL OR qs.collected_at >= sqlc.narg('since'))
           AND (sqlc.narg('until')::timestamptz IS NULL OR qs.collected_at <= sqlc.narg('until'))
         GROUP BY kv.key
+        HAVING count(DISTINCT kv.value) = 1
     ) per_key
 ) st ON true
 WHERE s.id = sqlc.arg('statement_id')
