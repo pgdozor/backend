@@ -29,6 +29,8 @@ const (
 	connectTimeout    = 10 * time.Second
 	shutdownTimeout   = 10 * time.Second
 	readyzTimeout     = 2 * time.Second
+
+	apiPrefix = "/api"
 )
 
 func main() {
@@ -67,39 +69,42 @@ func run(logger *slog.Logger) error {
 	notifier := alerts.NewNotifier(queries, logger)
 	go alerts.RunScheduler(ctx, queries, notifier, logger)
 
-	mux := http.NewServeMux()
-
-	registerHealthEndpoints(mux, pool)
+	apiMux := http.NewServeMux()
 
 	activityPath, activityHandler := pgdozorv1connect.NewActivityServiceHandler(
 		server.NewActivityServer(pool, notifier),
 		interceptors,
 	)
-	mux.Handle(activityPath, activityHandler)
+	apiMux.Handle(activityPath, activityHandler)
 
 	statementPath, statementHandler := pgdozorv1connect.NewStatementServiceHandler(
 		server.NewStatementServer(queries, notifier),
 		interceptors,
 	)
-	mux.Handle(statementPath, statementHandler)
+	apiMux.Handle(statementPath, statementHandler)
 
 	logPath, logHandler := pgdozorv1connect.NewLogServiceHandler(server.NewLogServer(queries, notifier), interceptors)
-	mux.Handle(logPath, logHandler)
+	apiMux.Handle(logPath, logHandler)
 
 	healthPath, healthHandler := pgdozorv1connect.NewHealthServiceHandler(server.NewHealthServer(queries), interceptors)
-	mux.Handle(healthPath, healthHandler)
+	apiMux.Handle(healthPath, healthHandler)
 
 	authPath, authHandler := pgdozorv1connect.NewAuthServiceHandler(
 		server.NewAuthServer(pool, cfg.CookieSecure),
 		interceptors,
 	)
-	mux.Handle(authPath, authHandler)
+	apiMux.Handle(authPath, authHandler)
 
 	adminPath, adminHandler := pgdozorv1connect.NewAdminServiceHandler(server.NewAdminServer(pool), interceptors)
-	mux.Handle(adminPath, adminHandler)
+	apiMux.Handle(adminPath, adminHandler)
 
 	alertPath, alertHandler := pgdozorv1connect.NewAlertServiceHandler(server.NewAlertServer(pool), interceptors)
-	mux.Handle(alertPath, alertHandler)
+	apiMux.Handle(alertPath, alertHandler)
+
+	mux := http.NewServeMux()
+
+	registerHealthEndpoints(mux, pool)
+	mux.Handle(apiPrefix+"/", http.StripPrefix(apiPrefix, apiMux))
 
 	var protocols http.Protocols
 	protocols.SetHTTP1(true)
