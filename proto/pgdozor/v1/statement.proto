@@ -12,6 +12,7 @@ service StatementService {
   rpc QueryStatements(QueryStatementsRequest) returns (QueryStatementsResponse) {}
   rpc QueryStatementDetail(QueryStatementDetailRequest) returns (QueryStatementDetailResponse) {}
   rpc GetStatementSamplePlan(GetStatementSamplePlanRequest) returns (GetStatementSamplePlanResponse) {}
+  rpc GetStatementText(GetStatementTextRequest) returns (GetStatementTextResponse) {}
   rpc ListTagKeys(ListTagKeysRequest) returns (ListTagKeysResponse) {}
   rpc ListTagValues(ListTagValuesRequest) returns (ListTagValuesResponse) {}
 }
@@ -21,6 +22,13 @@ enum TagFilterOperator {
   TAG_FILTER_OPERATOR_EQUAL = 1;
   TAG_FILTER_OPERATOR_NOT_EQUAL = 2;
   TAG_FILTER_OPERATOR_EXISTS = 3;
+}
+
+enum QueryKind {
+  QUERY_KIND_UNSPECIFIED = 0;
+  QUERY_KIND_READS = 1;
+  QUERY_KIND_WRITES = 2;
+  QUERY_KIND_OTHERS = 3;
 }
 
 // Values within a filter are ORed, separate filters are ANDed.
@@ -70,6 +78,9 @@ message QueryStatementsRequest {
 
   // ANDed with query_text.
   repeated TagFilter tag_filters = 7;
+
+  // Only statements of these kinds are returned.
+  repeated QueryKind kinds = 8;
 }
 
 message QueryStatementsResponse {
@@ -135,6 +146,16 @@ message GetStatementSamplePlanResponse {
   string plan_json = 2;
 }
 
+message GetStatementTextRequest {
+  // Internal statement id.
+  int64 id = 1;
+}
+
+message GetStatementTextResponse {
+  // Full normalized query text.
+  string query = 1;
+}
+
 message StatementMetrics {
   StatementMetric calls = 1;
   StatementMetric avg = 2;
@@ -158,7 +179,8 @@ message StatementStat {
   // Internal statement id, for building Query Detail URLs.
   int64 id = 1;
 
-  string query = 2;
+  // Structural preview of the normalized query.
+  string preview = 2;
   string user_name = 3;
   double total_exec_time = 4;
 

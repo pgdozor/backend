@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.26.3-bookworm AS build
+FROM --platform=$TARGETPLATFORM golang:1.26.3-bookworm AS build
 
 WORKDIR /src
 
@@ -7,15 +7,13 @@ RUN go mod download
 
 COPY . .
 
-ARG TARGETOS
-ARG TARGETARCH
-ENV CGO_ENABLED=0
+ENV CGO_ENABLED=1
 
-RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags "-s -w" -o /out/pgdozor-api ./cmd/api
-RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags "-s -w" -o /out/pgdozor-migrate ./cmd/migrate
-RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags "-s -w" -o /out/pgdozor-jobs ./cmd/jobs
+RUN go build -trimpath -ldflags "-s -w" -o /out/pgdozor-api ./cmd/api
+RUN go build -trimpath -ldflags "-s -w" -o /out/pgdozor-migrate ./cmd/migrate
+RUN go build -trimpath -ldflags "-s -w" -o /out/pgdozor-jobs ./cmd/jobs
 
-FROM gcr.io/distroless/static:nonroot
+FROM gcr.io/distroless/base-debian12:nonroot
 
 COPY --from=build /out/pgdozor-api /pgdozor-api
 COPY --from=build /out/pgdozor-migrate /pgdozor-migrate

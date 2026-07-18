@@ -13,7 +13,6 @@ WITH params AS (
         @wait_event_type::text        AS wait_event_type,
         @wait_event::text             AS wait_event,
         @query_start::timestamptz     AS query_start,
-        @statement_id::bigint         AS statement_id,
         @query::text                  AS query,
         @query_tags::jsonb            AS query_tags,
         @blocked_by_pid::int          AS blocked_by_pid,
@@ -26,8 +25,7 @@ norm AS (
         NULLIF(wait_event, '')      AS wait_event,
         NULLIF(query, '')           AS query,
         NULLIF(lock_mode, '')       AS lock_mode,
-        NULLIF(blocked_by_pid, 0)   AS blocked_by_pid,
-        NULLIF(statement_id, 0)     AS statement_id
+        NULLIF(blocked_by_pid, 0)   AS blocked_by_pid
     FROM params
 ),
 tx AS (
@@ -53,8 +51,8 @@ latest AS (
     LIMIT 1
 ),
 tq_ins AS (
-    INSERT INTO transaction_queries (transaction_id, xact_start, query_start, statement_id, query, query_tags)
-    SELECT tx.id, params.xact_start, params.query_start, norm.statement_id, norm.query, params.query_tags
+    INSERT INTO transaction_queries (transaction_id, xact_start, query_start, query, query_tags)
+    SELECT tx.id, params.xact_start, params.query_start, norm.query, params.query_tags
     FROM tx, norm, params
     WHERE params.query_start IS DISTINCT FROM (SELECT query_start FROM latest)
     ON CONFLICT (transaction_id, query_start, xact_start) DO NOTHING
@@ -105,7 +103,7 @@ LIMIT sqlc.arg('row_limit');
 
 -- name: ListTransactionEvents :many
 SELECT q.transaction_id, e.state, e.wait_event_type, e.wait_event, e.lock_mode,
-       q.statement_id, q.query, q.query_tags, e.first_seen_at, e.last_seen_at
+       q.query, q.query_tags, e.first_seen_at, e.last_seen_at
 FROM transaction_events e
 JOIN transaction_queries q ON q.id = e.transaction_query_id
 JOIN transactions t ON t.id = q.transaction_id
@@ -134,26 +132,35 @@ WHERE e.blocked_by_pid IS NOT NULL
 ORDER BY e.lock_wait_start, e.id;
 
 -- name: EnsureStatements :batchone
-INSERT INTO statements (server_name, database_name, user_name, query_id, query_text)
-VALUES ($1, $2, $3, $4, '')
+INSERT INTO statements (server_name, database_name, user_name, query_id, query_full, query_short, query_kind)
+VALUES ($1, $2, $3, $4, '', '', 0)
 ON CONFLICT (server_name, database_name, user_name, query_id)
-DO UPDATE SET query_text = statements.query_text
+DO UPDATE SET query_full = statements.query_full
 RETURNING id;
 
 -- name: ListStatementsMissingText :many
 SELECT user_name, database_name, query_id
 FROM statements
 WHERE id = ANY(sqlc.arg('ids')::bigint[])
-  AND query_text = '';
+  AND query_full = '';
 
 -- name: FillStatementText :batchexec
 UPDATE statements
-SET query_text = sqlc.arg('query_text')
+SET query_full = sqlc.arg('query_full'),
+    query_short = sqlc.arg('query_short'),
+    query_kind = sqlc.arg('query_kind')
 WHERE server_name = sqlc.arg('server_name')
   AND database_name = sqlc.arg('database_name')
   AND user_name = sqlc.arg('user_name')
   AND query_id = sqlc.arg('query_id')
-  AND query_text = '';
+  AND query_full = '';
+
+-- name: GetStatementText :one
+SELECT query_full
+FROM statements
+WHERE id = sqlc.arg('id')
+  AND (sqlc.narg('allowed_servers')::text[] IS NULL
+       OR server_name = ANY(sqlc.narg('allowed_servers')::text[]));
 
 -- name: InsertStatementDeltas :copyfrom
 INSERT INTO statement_deltas (
@@ -187,7 +194,7 @@ FROM (
       AND d.collected_at >= sqlc.arg('since')::timestamptz
       AND d.collected_at <= sqlc.arg('until')::timestamptz
       AND (sqlc.narg('text_filter')::text IS NULL
-           OR s.query_text ILIKE '%' || sqlc.narg('text_filter')::text || '%')
+           OR s.query_full ILIKE '%' || sqlc.narg('text_filter')::text || '%')
       AND (sqlc.narg('statement_ids')::bigint[] IS NULL
            OR s.id = ANY(sqlc.narg('statement_ids')::bigint[]))
 ) b
@@ -216,7 +223,7 @@ WITH pts AS (
       AND d.collected_at <= sqlc.arg('until')::timestamptz
       AND d.calls > 0
       AND (sqlc.narg('text_filter')::text IS NULL
-           OR s.query_text ILIKE '%' || sqlc.narg('text_filter')::text || '%')
+           OR s.query_full ILIKE '%' || sqlc.narg('text_filter')::text || '%')
       AND (sqlc.narg('statement_ids')::bigint[] IS NULL
            OR s.id = ANY(sqlc.narg('statement_ids')::bigint[]))
 ),
@@ -337,7 +344,7 @@ ORDER BY statement_count DESC, value;
 WITH per_statement AS (
     SELECT
         s.id,
-        s.query_text AS query,
+        s.query_short AS preview,
         s.user_name,
         sum(d.calls)::bigint                     AS calls,
         sum(d.rows)::bigint                      AS rows,
@@ -351,9 +358,10 @@ WITH per_statement AS (
       AND (sqlc.narg('since')::timestamptz IS NULL OR d.collected_at >= sqlc.narg('since'))
       AND (sqlc.narg('until')::timestamptz IS NULL OR d.collected_at <= sqlc.narg('until'))
       AND (sqlc.narg('text_filter')::text IS NULL
-           OR s.query_text ILIKE '%' || sqlc.narg('text_filter')::text || '%')
+           OR s.query_full ILIKE '%' || sqlc.narg('text_filter')::text || '%')
       AND (sqlc.narg('statement_ids')::bigint[] IS NULL
            OR s.id = ANY(sqlc.narg('statement_ids')::bigint[]))
+      AND s.query_kind = ANY(sqlc.arg('kinds')::int[])
     GROUP BY s.id
 ),
 statement_tags AS (
@@ -376,7 +384,7 @@ statement_tags AS (
 )
 SELECT
     ps.id,
-    ps.query,
+    ps.preview,
     ps.user_name,
     ps.calls,
     ps.rows,
@@ -391,7 +399,7 @@ LIMIT sqlc.arg('row_limit');
 
 -- name: GetStatementDetail :one
 SELECT
-    s.query_text AS query,
+    s.query_full AS query,
     s.server_name,
     s.database_name,
     coalesce(st.tags, '{}'::jsonb) AS tags
@@ -661,12 +669,12 @@ SELECT
          AND log_level = ANY(ARRAY[5, 7, 8])) AS errors_previous;
 
 -- name: AlertDigestTopStatements :many
-SELECT s.query_text AS query,
+SELECT s.query_full AS query,
        sum(d.total_exec_time)::double precision AS total_exec_time
 FROM statement_deltas d
 JOIN statements s ON s.id = d.statement_id
 WHERE s.server_name = sqlc.arg('server_name')
   AND d.collected_at >= now() - interval '7 days'
-GROUP BY s.query_text
+GROUP BY s.query_full
 ORDER BY total_exec_time DESC
 LIMIT 5;

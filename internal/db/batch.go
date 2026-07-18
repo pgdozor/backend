@@ -18,10 +18,10 @@ var (
 )
 
 const ensureStatements = `-- name: EnsureStatements :batchone
-INSERT INTO statements (server_name, database_name, user_name, query_id, query_text)
-VALUES ($1, $2, $3, $4, '')
+INSERT INTO statements (server_name, database_name, user_name, query_id, query_full, query_short, query_kind)
+VALUES ($1, $2, $3, $4, '', '', 0)
 ON CONFLICT (server_name, database_name, user_name, query_id)
-DO UPDATE SET query_text = statements.query_text
+DO UPDATE SET query_full = statements.query_full
 RETURNING id
 `
 
@@ -78,12 +78,14 @@ func (b *EnsureStatementsBatchResults) Close() error {
 
 const fillStatementText = `-- name: FillStatementText :batchexec
 UPDATE statements
-SET query_text = $1
-WHERE server_name = $2
-  AND database_name = $3
-  AND user_name = $4
-  AND query_id = $5
-  AND query_text = ''
+SET query_full = $1,
+    query_short = $2,
+    query_kind = $3
+WHERE server_name = $4
+  AND database_name = $5
+  AND user_name = $6
+  AND query_id = $7
+  AND query_full = ''
 `
 
 type FillStatementTextBatchResults struct {
@@ -93,7 +95,9 @@ type FillStatementTextBatchResults struct {
 }
 
 type FillStatementTextParams struct {
-	QueryText    string
+	QueryFull    string
+	QueryShort   string
+	QueryKind    int32
 	ServerName   string
 	DatabaseName string
 	UserName     string
@@ -104,7 +108,9 @@ func (q *Queries) FillStatementText(ctx context.Context, arg []FillStatementText
 	batch := &pgx.Batch{}
 	for _, a := range arg {
 		vals := []interface{}{
-			a.QueryText,
+			a.QueryFull,
+			a.QueryShort,
+			a.QueryKind,
 			a.ServerName,
 			a.DatabaseName,
 			a.UserName,
@@ -238,12 +244,11 @@ WITH params AS (
         $10::text        AS wait_event_type,
         $11::text             AS wait_event,
         $12::timestamptz     AS query_start,
-        $13::bigint         AS statement_id,
-        $14::text                  AS query,
-        $15::jsonb            AS query_tags,
-        $16::int          AS blocked_by_pid,
-        $17::timestamptz AS lock_wait_start,
-        $18::text              AS lock_mode
+        $13::text                  AS query,
+        $14::jsonb            AS query_tags,
+        $15::int          AS blocked_by_pid,
+        $16::timestamptz AS lock_wait_start,
+        $17::text              AS lock_mode
 ),
 norm AS (
     SELECT
@@ -251,8 +256,7 @@ norm AS (
         NULLIF(wait_event, '')      AS wait_event,
         NULLIF(query, '')           AS query,
         NULLIF(lock_mode, '')       AS lock_mode,
-        NULLIF(blocked_by_pid, 0)   AS blocked_by_pid,
-        NULLIF(statement_id, 0)     AS statement_id
+        NULLIF(blocked_by_pid, 0)   AS blocked_by_pid
     FROM params
 ),
 tx AS (
@@ -278,8 +282,8 @@ latest AS (
     LIMIT 1
 ),
 tq_ins AS (
-    INSERT INTO transaction_queries (transaction_id, xact_start, query_start, statement_id, query, query_tags)
-    SELECT tx.id, params.xact_start, params.query_start, norm.statement_id, norm.query, params.query_tags
+    INSERT INTO transaction_queries (transaction_id, xact_start, query_start, query, query_tags)
+    SELECT tx.id, params.xact_start, params.query_start, norm.query, params.query_tags
     FROM tx, norm, params
     WHERE params.query_start IS DISTINCT FROM (SELECT query_start FROM latest)
     ON CONFLICT (transaction_id, query_start, xact_start) DO NOTHING
@@ -336,7 +340,6 @@ type RecordTransactionEventParams struct {
 	WaitEventType   string
 	WaitEvent       string
 	QueryStart      pgtype.Timestamptz
-	StatementID     int64
 	Query           string
 	QueryTags       []byte
 	BlockedByPid    int32
@@ -360,7 +363,6 @@ func (q *Queries) RecordTransactionEvent(ctx context.Context, arg []RecordTransa
 			a.WaitEventType,
 			a.WaitEvent,
 			a.QueryStart,
-			a.StatementID,
 			a.Query,
 			a.QueryTags,
 			a.BlockedByPid,

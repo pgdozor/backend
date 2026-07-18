@@ -16,6 +16,7 @@ import (
 	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
 	"github.com/pgdozor/backend/internal/alerts"
 	"github.com/pgdozor/backend/internal/db"
+	"github.com/pgdozor/backend/internal/sqlsummary"
 )
 
 const (
@@ -137,12 +138,15 @@ func (s *StatementServer) ReportStatementTexts(
 	params := make([]db.FillStatementTextParams, len(texts))
 	for i, text := range texts {
 		identity := text.GetIdentity()
+		summary := sqlsummary.Process(text.GetQuery())
 		params[i] = db.FillStatementTextParams{
 			ServerName:   serverName,
 			DatabaseName: identity.GetDatabaseName(),
 			UserName:     identity.GetUserName(),
 			QueryID:      identity.GetQueryId(),
-			QueryText:    text.GetQuery(),
+			QueryFull:    summary.Clean,
+			QueryShort:   summary.Preview,
+			QueryKind:    int32(summary.Kind),
 		}
 	}
 
@@ -396,6 +400,34 @@ func (s *StatementServer) GetStatementSamplePlan(
 	}), nil
 }
 
+func (s *StatementServer) GetStatementText(
+	ctx context.Context,
+	req *connect.Request[pgdozorv1.GetStatementTextRequest],
+) (*connect.Response[pgdozorv1.GetStatementTextResponse], error) {
+	id := req.Msg.GetId()
+	if id == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("id is required"))
+	}
+
+	principal, err := requirePrincipal(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	query, err := s.queries.GetStatementText(ctx, db.GetStatementTextParams{
+		ID:             id,
+		AllowedServers: principal.AllowedServerFilter(),
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("statement %d not found", id))
+	}
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&pgdozorv1.GetStatementTextResponse{Query: query}), nil
+}
+
 func concretizeStatement(query string, params []string) string {
 	if len(params) == 0 {
 		return query
@@ -575,6 +607,14 @@ func (s *StatementServer) resolveStatementFilter(
 	return filter, nil
 }
 
+func requestedKinds(kinds []pgdozorv1.QueryKind) []int32 {
+	out := make([]int32, len(kinds))
+	for i, k := range kinds {
+		out[i] = int32(k)
+	}
+	return out
+}
+
 func (s *StatementServer) listStatements(
 	ctx context.Context,
 	msg *pgdozorv1.QueryStatementsRequest,
@@ -590,6 +630,7 @@ func (s *StatementServer) listStatements(
 		StatementIds:   filter.statementIDs,
 		Since:          timestamptzFromProto(msg.GetFrom()),
 		Until:          timestamptzFromProto(msg.GetTo()),
+		Kinds:          requestedKinds(msg.GetKinds()),
 		RowLimit:       resolveLimit(msg.GetLimit()),
 	})
 	if err != nil {
@@ -605,7 +646,7 @@ func (s *StatementServer) listStatements(
 
 		statements[i] = &pgdozorv1.StatementStat{
 			Id:            row.ID,
-			Query:         row.Query,
+			Preview:       row.Preview,
 			UserName:      row.UserName,
 			TotalExecTime: row.TotalExecTime,
 			PctOfTotal:    row.PctOfTotal,

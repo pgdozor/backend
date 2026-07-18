@@ -26,7 +26,6 @@ type reconstructedEvent struct {
 	waitEventType string
 	waitEvent     string
 	lockMode      string
-	statementID   int64
 	query         string
 	queryTags     map[string]string
 	firstSeen     time.Time
@@ -44,7 +43,6 @@ func reconstructedEventFromRow(row db.ListTransactionEventsRow) (reconstructedEv
 		waitEventType: protoFromText(row.WaitEventType),
 		waitEvent:     protoFromText(row.WaitEvent),
 		lockMode:      protoFromText(row.LockMode),
-		statementID:   row.StatementID.Int64,
 		query:         row.Query,
 		queryTags:     queryTags,
 		firstSeen:     row.FirstSeenAt.Time,
@@ -77,7 +75,6 @@ func buildTransactionEvents(start time.Time, events []reconstructedEvent) []*pgd
 
 		if isRunningStatus(status) {
 			event.Query = e.query
-			event.StatementId = e.statementID
 			event.QueryTags = e.queryTags
 		}
 

@@ -554,9 +554,7 @@ type TransactionEvent struct {
 	To     *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=to,proto3" json:"to,omitempty"`
 	Status TransactionEventStatus `protobuf:"varint,3,opt,name=status,proto3,enum=pgdozor.v1.TransactionEventStatus" json:"status,omitempty"`
 	// The query running during the event.
-	Query string `protobuf:"bytes,5,opt,name=query,proto3" json:"query,omitempty"`
-	// Internal statement id (links to Query Detail view).
-	StatementId   int64  `protobuf:"varint,6,opt,name=statement_id,json=statementId,proto3" json:"statement_id,omitempty"`
+	Query         string `protobuf:"bytes,5,opt,name=query,proto3" json:"query,omitempty"`
 	WaitEventType string `protobuf:"bytes,7,opt,name=wait_event_type,json=waitEventType,proto3" json:"wait_event_type,omitempty"`
 	WaitEvent     string `protobuf:"bytes,8,opt,name=wait_event,json=waitEvent,proto3" json:"wait_event,omitempty"`
 	LockMode      string `protobuf:"bytes,9,opt,name=lock_mode,json=lockMode,proto3" json:"lock_mode,omitempty"`
@@ -622,13 +620,6 @@ func (x *TransactionEvent) GetQuery() string {
 		return x.Query
 	}
 	return ""
-}
-
-func (x *TransactionEvent) GetStatementId() int64 {
-	if x != nil {
-		return x.StatementId
-	}
-	return 0
 }
 
 func (x *TransactionEvent) GetWaitEventType() string {
@@ -989,13 +980,12 @@ const file_pgdozor_v1_activity_proto_rawDesc = "" +
 	"\x10application_name\x18\x02 \x01(\tR\x0fapplicationName\x120\n" +
 	"\x05start\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x05start\x12,\n" +
 	"\x03end\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\x03end\x124\n" +
-	"\x06events\x18\x06 \x03(\v2\x1c.pgdozor.v1.TransactionEventR\x06events\"\xd1\x03\n" +
+	"\x06events\x18\x06 \x03(\v2\x1c.pgdozor.v1.TransactionEventR\x06events\"\xae\x03\n" +
 	"\x10TransactionEvent\x12.\n" +
 	"\x04from\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\x04from\x12*\n" +
 	"\x02to\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x02to\x12:\n" +
 	"\x06status\x18\x03 \x01(\x0e2\".pgdozor.v1.TransactionEventStatusR\x06status\x12\x14\n" +
-	"\x05query\x18\x05 \x01(\tR\x05query\x12!\n" +
-	"\fstatement_id\x18\x06 \x01(\x03R\vstatementId\x12&\n" +
+	"\x05query\x18\x05 \x01(\tR\x05query\x12&\n" +
 	"\x0fwait_event_type\x18\a \x01(\tR\rwaitEventType\x12\x1d\n" +
 	"\n" +
 	"wait_event\x18\b \x01(\tR\twaitEvent\x12\x1b\n" +

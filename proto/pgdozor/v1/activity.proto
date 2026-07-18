@@ -119,9 +119,6 @@ message TransactionEvent {
   // The query running during the event.
   string query = 5;
 
-  // Internal statement id (links to Query Detail view).
-  int64 statement_id = 6;
-
   string wait_event_type = 7;
   string wait_event = 8;
   string lock_mode = 9;

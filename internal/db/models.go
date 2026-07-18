@@ -84,7 +84,9 @@ type Statement struct {
 	DatabaseName string
 	UserName     string
 	QueryID      int64
-	QueryText    string
+	QueryFull    string
+	QueryShort   string
+	QueryKind    int32
 }
 
 type StatementDelta struct {
@@ -180,7 +182,6 @@ type TransactionQueriesDefault struct {
 	XactStart     pgtype.Timestamptz
 	TransactionID int64
 	QueryStart    pgtype.Timestamptz
-	StatementID   pgtype.Int8
 	Query         string
 	QueryTags     []byte
 }
@@ -190,7 +191,6 @@ type TransactionQuery struct {
 	XactStart     pgtype.Timestamptz
 	TransactionID int64
 	QueryStart    pgtype.Timestamptz
-	StatementID   pgtype.Int8
 	Query         string
 	QueryTags     []byte
 }

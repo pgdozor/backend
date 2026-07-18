@@ -133,7 +133,7 @@ func countTrend(current, previous int64) string {
 func previewQuery(query string) string {
 	query = strings.Join(strings.Fields(query), " ")
 	if len(query) > maxQueryPreview {
-		return query[:maxQueryPreview] + "…"
+		return query[:maxQueryPreview] + "..."
 	}
 
 	return query

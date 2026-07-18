@@ -6,7 +6,9 @@ CREATE TABLE statements (
     database_name TEXT   NOT NULL,
     user_name     TEXT   NOT NULL,
     query_id      BIGINT NOT NULL,
-    query_text    TEXT   NOT NULL,
+    query_full    TEXT    NOT NULL,
+    query_short   TEXT    NOT NULL,
+    query_kind    INTEGER NOT NULL,
     UNIQUE (server_name, database_name, user_name, query_id)
 );
 
@@ -90,7 +92,6 @@ CREATE TABLE transaction_queries (
     xact_start     TIMESTAMPTZ NOT NULL,
     transaction_id BIGINT      NOT NULL,
     query_start    TIMESTAMPTZ NOT NULL,
-    statement_id   BIGINT      REFERENCES statements (id),
     query          TEXT        NOT NULL,
     query_tags     JSONB,
     PRIMARY KEY (id, xact_start),

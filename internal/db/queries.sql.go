@@ -55,13 +55,13 @@ func (q *Queries) AlertDigestSummary(ctx context.Context, serverName string) (Al
 }
 
 const alertDigestTopStatements = `-- name: AlertDigestTopStatements :many
-SELECT s.query_text AS query,
+SELECT s.query_full AS query,
        sum(d.total_exec_time)::double precision AS total_exec_time
 FROM statement_deltas d
 JOIN statements s ON s.id = d.statement_id
 WHERE s.server_name = $1
   AND d.collected_at >= now() - interval '7 days'
-GROUP BY s.query_text
+GROUP BY s.query_full
 ORDER BY total_exec_time DESC
 LIMIT 5
 `
@@ -394,7 +394,7 @@ func (q *Queries) GetSessionUser(ctx context.Context, tokenHash string) (GetSess
 
 const getStatementDetail = `-- name: GetStatementDetail :one
 SELECT
-    s.query_text AS query,
+    s.query_full AS query,
     s.server_name,
     s.database_name,
     coalesce(st.tags, '{}'::jsonb) AS tags
@@ -473,6 +473,26 @@ func (q *Queries) GetStatementSamplePlan(ctx context.Context, arg GetStatementSa
 	var i GetStatementSamplePlanRow
 	err := row.Scan(&i.Query, &i.Parameters, &i.ExplainPlanJson)
 	return i, err
+}
+
+const getStatementText = `-- name: GetStatementText :one
+SELECT query_full
+FROM statements
+WHERE id = $1
+  AND ($2::text[] IS NULL
+       OR server_name = ANY($2::text[]))
+`
+
+type GetStatementTextParams struct {
+	ID             int64
+	AllowedServers []string
+}
+
+func (q *Queries) GetStatementText(ctx context.Context, arg GetStatementTextParams) (string, error) {
+	row := q.db.QueryRow(ctx, getStatementText, arg.ID, arg.AllowedServers)
+	var query_full string
+	err := row.Scan(&query_full)
+	return query_full, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
@@ -998,7 +1018,7 @@ const listStatementStats = `-- name: ListStatementStats :many
 WITH per_statement AS (
     SELECT
         s.id,
-        s.query_text AS query,
+        s.query_short AS preview,
         s.user_name,
         sum(d.calls)::bigint                     AS calls,
         sum(d.rows)::bigint                      AS rows,
@@ -1012,9 +1032,10 @@ WITH per_statement AS (
       AND ($5::timestamptz IS NULL OR d.collected_at >= $5)
       AND ($6::timestamptz IS NULL OR d.collected_at <= $6)
       AND ($7::text IS NULL
-           OR s.query_text ILIKE '%' || $7::text || '%')
+           OR s.query_full ILIKE '%' || $7::text || '%')
       AND ($8::bigint[] IS NULL
            OR s.id = ANY($8::bigint[]))
+      AND s.query_kind = ANY($9::int[])
     GROUP BY s.id
 ),
 statement_tags AS (
@@ -1037,7 +1058,7 @@ statement_tags AS (
 )
 SELECT
     ps.id,
-    ps.query,
+    ps.preview,
     ps.user_name,
     ps.calls,
     ps.rows,
@@ -1060,11 +1081,12 @@ type ListStatementStatsParams struct {
 	Until          pgtype.Timestamptz
 	TextFilter     pgtype.Text
 	StatementIds   []int64
+	Kinds          []int32
 }
 
 type ListStatementStatsRow struct {
 	ID            int64
-	Query         string
+	Preview       string
 	UserName      string
 	Calls         int64
 	Rows          int64
@@ -1084,6 +1106,7 @@ func (q *Queries) ListStatementStats(ctx context.Context, arg ListStatementStats
 		arg.Until,
 		arg.TextFilter,
 		arg.StatementIds,
+		arg.Kinds,
 	)
 	if err != nil {
 		return nil, err
@@ -1094,7 +1117,7 @@ func (q *Queries) ListStatementStats(ctx context.Context, arg ListStatementStats
 		var i ListStatementStatsRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.Query,
+			&i.Preview,
 			&i.UserName,
 			&i.Calls,
 			&i.Rows,
@@ -1117,7 +1140,7 @@ const listStatementsMissingText = `-- name: ListStatementsMissingText :many
 SELECT user_name, database_name, query_id
 FROM statements
 WHERE id = ANY($1::bigint[])
-  AND query_text = ''
+  AND query_full = ''
 `
 
 type ListStatementsMissingTextRow struct {
@@ -1277,7 +1300,7 @@ func (q *Queries) ListTagValues(ctx context.Context, arg ListTagValuesParams) ([
 
 const listTransactionEvents = `-- name: ListTransactionEvents :many
 SELECT q.transaction_id, e.state, e.wait_event_type, e.wait_event, e.lock_mode,
-       q.statement_id, q.query, q.query_tags, e.first_seen_at, e.last_seen_at
+       q.query, q.query_tags, e.first_seen_at, e.last_seen_at
 FROM transaction_events e
 JOIN transaction_queries q ON q.id = e.transaction_query_id
 JOIN transactions t ON t.id = q.transaction_id
@@ -1297,7 +1320,6 @@ type ListTransactionEventsRow struct {
 	WaitEventType pgtype.Text
 	WaitEvent     pgtype.Text
 	LockMode      pgtype.Text
-	StatementID   pgtype.Int8
 	Query         string
 	QueryTags     []byte
 	FirstSeenAt   pgtype.Timestamptz
@@ -1319,7 +1341,6 @@ func (q *Queries) ListTransactionEvents(ctx context.Context, arg ListTransaction
 			&i.WaitEventType,
 			&i.WaitEvent,
 			&i.LockMode,
-			&i.StatementID,
 			&i.Query,
 			&i.QueryTags,
 			&i.FirstSeenAt,
@@ -1539,7 +1560,7 @@ FROM (
       AND d.collected_at >= $7::timestamptz
       AND d.collected_at <= $2::timestamptz
       AND ($8::text IS NULL
-           OR s.query_text ILIKE '%' || $8::text || '%')
+           OR s.query_full ILIKE '%' || $8::text || '%')
       AND ($9::bigint[] IS NULL
            OR s.id = ANY($9::bigint[]))
 ) b
@@ -1623,7 +1644,7 @@ WITH pts AS (
       AND d.collected_at <= $2::timestamptz
       AND d.calls > 0
       AND ($8::text IS NULL
-           OR s.query_text ILIKE '%' || $8::text || '%')
+           OR s.query_full ILIKE '%' || $8::text || '%')
       AND ($9::bigint[] IS NULL
            OR s.id = ANY($9::bigint[]))
 ),

@@ -131,13 +131,13 @@ func assertText(
 
 	var got string
 	err := pool.QueryRow(ctx,
-		`SELECT query_text FROM statements WHERE server_name = $1 AND query_id = $2 AND user_name = $3`,
+		`SELECT query_full FROM statements WHERE server_name = $1 AND query_id = $2 AND user_name = $3`,
 		serverName, queryID, userName).Scan(&got)
 	if err != nil {
-		t.Fatalf("read query_text for %s: %v", userName, err)
+		t.Fatalf("read query_full for %s: %v", userName, err)
 	}
 
 	if got != want {
-		t.Fatalf("query_text for %s = %q, want %q", userName, got, want)
+		t.Fatalf("query_full for %s = %q, want %q", userName, got, want)
 	}
 }

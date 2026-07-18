@@ -45,8 +45,8 @@ func tagFilterTestPool(t *testing.T, serverName string) *pgxpool.Pool {
 
 	if _, err = pool.Exec(ctx, `
 		WITH s AS (
-		    INSERT INTO statements (server_name, database_name, user_name, query_id, query_text)
-		    VALUES ($1, 'db', 'app', 991001, 'SELECT 1')
+		    INSERT INTO statements (server_name, database_name, user_name, query_id, query_full, query_short, query_kind)
+		    VALUES ($1, 'db', 'app', 991001, 'SELECT 1', 'SELECT 1', 1)
 		    RETURNING id
 		), d AS (
 		    INSERT INTO statement_deltas (statement_id, collected_at, calls, rows, total_exec_time, total_io_time)
@@ -85,6 +85,7 @@ func TestStatementIDsNilMatchesAllEmptyMatchesNone(t *testing.T) {
 			Since:        pgtype.Timestamptz{Time: from, Valid: true},
 			Until:        pgtype.Timestamptz{Time: to, Valid: true},
 			StatementIds: ids,
+			Kinds:        []int32{1, 2, 3},
 		}
 	}
 

@@ -66,14 +66,9 @@ func (s *ActivityServer) ReportActivity(
 
 	q := s.queries.WithTx(tx)
 
-	statementIDs, err := resolveStatements(ctx, q, serverName, txnSnapshots)
-	if err != nil {
-		return nil, err
-	}
-
 	params := make([]db.RecordTransactionEventParams, len(txnSnapshots))
 	for i, snap := range txnSnapshots {
-		param, paramErr := transactionEventParams(serverName, collectedAt, snap, statementIDs[i])
+		param, paramErr := transactionEventParams(serverName, collectedAt, snap)
 		if paramErr != nil {
 			return nil, connect.NewError(connect.CodeInternal, paramErr)
 		}
@@ -238,51 +233,10 @@ func (s *ActivityServer) QueryBlocking(
 	return connect.NewResponse(&pgdozorv1.QueryBlockingResponse{Trees: buildBlockingTrees(rows)}), nil
 }
 
-func resolveStatements(
-	ctx context.Context,
-	queries *db.Queries,
-	serverName string,
-	snapshots []*pgdozorv1.ActivitySnapshot,
-) ([]int64, error) {
-	statementParams := make([]db.EnsureStatementsParams, 0, len(snapshots))
-	paramIndex := make([]int, len(snapshots))
-	for i, snap := range snapshots {
-		paramIndex[i] = -1
-		if queryID := snap.GetQueryId(); queryID != 0 {
-			paramIndex[i] = len(statementParams)
-			statementParams = append(statementParams, db.EnsureStatementsParams{
-				ServerName:   serverName,
-				DatabaseName: snap.GetDatabaseName(),
-				UserName:     snap.GetUserName(),
-				QueryID:      queryID,
-			})
-		}
-	}
-
-	statementIDs := make([]int64, len(snapshots))
-	if len(statementParams) == 0 {
-		return statementIDs, nil
-	}
-
-	ids, err := ensureStatements(ctx, queries, statementParams)
-	if err != nil {
-		return nil, err
-	}
-
-	for i, idx := range paramIndex {
-		if idx >= 0 {
-			statementIDs[i] = ids[idx]
-		}
-	}
-
-	return statementIDs, nil
-}
-
 func transactionEventParams(
 	serverName string,
 	collectedAt pgtype.Timestamptz,
 	snap *pgdozorv1.ActivitySnapshot,
-	statementID int64,
 ) (db.RecordTransactionEventParams, error) {
 	tags, err := jsonbFromStringMap(snap.GetQueryTags())
 	if err != nil {
@@ -302,7 +256,6 @@ func transactionEventParams(
 		WaitEventType:   snap.GetWaitEventType(),
 		WaitEvent:       snap.GetWaitEvent(),
 		QueryStart:      timestamptzFromProto(snap.GetQueryStart()),
-		StatementID:     statementID,
 		Query:           snap.GetQuery(),
 		QueryTags:       tags,
 		BlockedByPid:    snap.GetBlockedByPid(),
