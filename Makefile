@@ -65,11 +65,15 @@ seed:
 
 .PHONY: run
 run:
-	go run ./cmd/backend
+	go run ./cmd/api
 
 .PHONY: dev
 dev:
-	DATABASE_URL="$(DATABASE_URL)" go run ./cmd/backend
+	DATABASE_URL="$(DATABASE_URL)" go run ./cmd/api
+
+.PHONY: jobs
+jobs:
+	DATABASE_URL="$(DATABASE_URL)" go run ./cmd/jobs
 
 .PHONY: test
 test:

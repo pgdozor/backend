@@ -16,36 +16,53 @@ const (
 	minRetentionDays     = 14
 )
 
-type Config struct {
+// APIConfig is the API server configuration (cmd/api).
+type APIConfig struct {
 	DatabaseURL    string
 	ListenAddr     string
 	AllowedOrigins []string
 	CookieSecure   bool
-	RetentionDays  int
 }
 
-func Load() (Config, error) {
+func LoadAPI() (APIConfig, error) {
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		return Config{}, errors.New("DATABASE_URL is not set")
+		return APIConfig{}, errors.New("DATABASE_URL is not set")
 	}
 
 	listenAddr, err := parseListenAddr(os.Getenv("LISTEN_ADDR"))
 	if err != nil {
-		return Config{}, err
+		return APIConfig{}, err
 	}
 
-	retentionDays, err := parseRetentionDays(os.Getenv("RETENTION_DAYS"))
-	if err != nil {
-		return Config{}, err
-	}
-
-	return Config{
+	return APIConfig{
 		DatabaseURL:    databaseURL,
 		ListenAddr:     listenAddr,
 		AllowedOrigins: parseAllowedOrigins(os.Getenv("CORS_ALLOWED_ORIGINS")),
 		CookieSecure:   os.Getenv("COOKIE_SECURE") == "true",
-		RetentionDays:  retentionDays,
+	}, nil
+}
+
+// JobsConfig is the background jobs configuration (cmd/jobs).
+type JobsConfig struct {
+	DatabaseURL   string
+	RetentionDays int
+}
+
+func LoadJobs() (JobsConfig, error) {
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL == "" {
+		return JobsConfig{}, errors.New("DATABASE_URL is not set")
+	}
+
+	retentionDays, err := parseRetentionDays(os.Getenv("RETENTION_DAYS"))
+	if err != nil {
+		return JobsConfig{}, err
+	}
+
+	return JobsConfig{
+		DatabaseURL:   databaseURL,
+		RetentionDays: retentionDays,
 	}, nil
 }
 

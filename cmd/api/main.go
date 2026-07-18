@@ -20,7 +20,6 @@ import (
 	"github.com/pgdozor/backend/internal/alerts"
 	"github.com/pgdozor/backend/internal/config"
 	"github.com/pgdozor/backend/internal/db"
-	"github.com/pgdozor/backend/internal/retention"
 	"github.com/pgdozor/backend/internal/server"
 )
 
@@ -50,7 +49,7 @@ func run(logger *slog.Logger) error {
 
 	_ = godotenv.Load()
 
-	cfg, err := config.Load()
+	cfg, err := config.LoadAPI()
 	if err != nil {
 		return err
 	}
@@ -64,10 +63,7 @@ func run(logger *slog.Logger) error {
 	queries := db.New(pool)
 	interceptors := connect.WithInterceptors(server.NewAuthInterceptor(queries))
 
-	go retention.Run(ctx, pool, cfg.RetentionDays, logger)
-
 	notifier := alerts.NewNotifier(queries, logger)
-	go alerts.RunScheduler(ctx, queries, notifier, logger)
 
 	apiMux := http.NewServeMux()
 
@@ -117,7 +113,7 @@ func run(logger *slog.Logger) error {
 		Protocols:         &protocols,
 	}
 
-	logger.InfoContext(ctx, "pgdozor backend listening", "addr", cfg.ListenAddr)
+	logger.InfoContext(ctx, "pgdozor api listening", "addr", cfg.ListenAddr)
 
 	serveErr := make(chan error, 1)
 	go func() { serveErr <- httpServer.ListenAndServe() }()

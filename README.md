@@ -42,5 +42,5 @@ make release VERSION=0.1.0   # checks, tags v0.1.0, pushes; CI builds and publis
 Or build the image directly:
 
 ```sh
-docker build -t pgdozor-backend .   # ships the backend + migrate binaries
+docker build -t pgdozor-backend .   # ships the api, jobs and migrate binaries
 ```
