@@ -36,14 +36,6 @@ func collectStatementIDs(n int, batch statementIDBatch) ([]int64, error) {
 	return ids, nil
 }
 
-func upsertStatements(
-	ctx context.Context,
-	queries *db.Queries,
-	params []db.UpsertStatementsParams,
-) ([]int64, error) {
-	return collectStatementIDs(len(params), queries.UpsertStatements(ctx, params))
-}
-
 func ensureStatements(
 	ctx context.Context,
 	queries *db.Queries,

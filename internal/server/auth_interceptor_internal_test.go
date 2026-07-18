@@ -16,6 +16,7 @@ func TestIsCollectorProcedure(t *testing.T) {
 	}{
 		{pgdozorv1connect.ActivityServiceReportActivityProcedure, true},
 		{pgdozorv1connect.StatementServiceReportStatementsProcedure, true},
+		{pgdozorv1connect.StatementServiceReportStatementTextsProcedure, true},
 		{pgdozorv1connect.LogServiceReportLogsProcedure, true},
 		{pgdozorv1connect.HealthServiceReportHealthProcedure, true},
 		{pgdozorv1connect.ActivityServiceQueryTransactionsProcedure, false},

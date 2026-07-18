@@ -64,6 +64,7 @@ func isCollectorProcedure(procedure string) bool {
 	switch procedure {
 	case pgdozorv1connect.ActivityServiceReportActivityProcedure,
 		pgdozorv1connect.StatementServiceReportStatementsProcedure,
+		pgdozorv1connect.StatementServiceReportStatementTextsProcedure,
 		pgdozorv1connect.LogServiceReportLogsProcedure,
 		pgdozorv1connect.HealthServiceReportHealthProcedure:
 		return true

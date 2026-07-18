@@ -297,7 +297,7 @@ func (s *LogServer) insertStatementSamples(
 ) error {
 	var (
 		entries         []sampleEntry
-		statementParams []db.UpsertStatementsParams
+		statementParams []db.EnsureStatementsParams
 	)
 
 	for i, event := range events {
@@ -310,12 +310,11 @@ func (s *LogServer) insertStatementSamples(
 
 		if queryID := event.GetQueryId(); queryID != 0 {
 			entry.statementIndex = len(statementParams)
-			statementParams = append(statementParams, db.UpsertStatementsParams{
+			statementParams = append(statementParams, db.EnsureStatementsParams{
 				ServerName:   serverName,
 				DatabaseName: event.GetDatabaseName(),
 				UserName:     event.GetUsername(),
 				QueryID:      queryID,
-				QueryText:    sample.GetQuery(),
 			})
 		}
 
@@ -329,7 +328,7 @@ func (s *LogServer) insertStatementSamples(
 	var statementIDs []int64
 
 	if len(statementParams) > 0 {
-		ids, err := upsertStatements(ctx, s.queries, statementParams)
+		ids, err := ensureStatements(ctx, s.queries, statementParams)
 		if err != nil {
 			return err
 		}

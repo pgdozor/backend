@@ -62,18 +62,17 @@ func (s *StatementServer) ReportStatements(
 
 	newSlowQuery := s.detectNewSlowQuery(ctx, serverName, deltas)
 
-	statementParams := make([]db.UpsertStatementsParams, len(deltas))
+	statementParams := make([]db.EnsureStatementsParams, len(deltas))
 	for i, delta := range deltas {
-		statementParams[i] = db.UpsertStatementsParams{
+		statementParams[i] = db.EnsureStatementsParams{
 			ServerName:   serverName,
 			DatabaseName: delta.GetDatabaseName(),
 			UserName:     delta.GetUserName(),
 			QueryID:      delta.GetQueryId(),
-			QueryText:    delta.GetQuery(),
 		}
 	}
 
-	statementIDs, err := upsertStatements(ctx, s.queries, statementParams)
+	statementIDs, err := ensureStatements(ctx, s.queries, statementParams)
 	if err != nil {
 		return nil, err
 	}
@@ -94,11 +93,80 @@ func (s *StatementServer) ReportStatements(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
+	missing, err := s.queries.ListStatementsMissingText(ctx, statementIDs)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
 	if newSlowQuery {
 		s.notifier.Fire(serverName, alerts.KeyNewSlowQuery, "A previously unseen statement entered the slow list.")
 	}
 
-	return connect.NewResponse(&pgdozorv1.ReportStatementsResponse{}), nil
+	return connect.NewResponse(&pgdozorv1.ReportStatementsResponse{
+		UnknownStatements: unknownStatementsToProto(missing),
+	}), nil
+}
+
+func unknownStatementsToProto(rows []db.ListStatementsMissingTextRow) []*pgdozorv1.StatementIdentity {
+	out := make([]*pgdozorv1.StatementIdentity, len(rows))
+	for i, row := range rows {
+		out[i] = &pgdozorv1.StatementIdentity{
+			UserName:     row.UserName,
+			DatabaseName: row.DatabaseName,
+			QueryId:      row.QueryID,
+		}
+	}
+
+	return out
+}
+
+func (s *StatementServer) ReportStatementTexts(
+	ctx context.Context,
+	req *connect.Request[pgdozorv1.ReportStatementTextsRequest],
+) (*connect.Response[pgdozorv1.ReportStatementTextsResponse], error) {
+	texts := req.Msg.GetStatementTexts()
+	if len(texts) == 0 {
+		return connect.NewResponse(&pgdozorv1.ReportStatementTextsResponse{}), nil
+	}
+
+	serverName, err := requireCollectorServer(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	params := make([]db.FillStatementTextParams, len(texts))
+	for i, text := range texts {
+		identity := text.GetIdentity()
+		params[i] = db.FillStatementTextParams{
+			ServerName:   serverName,
+			DatabaseName: identity.GetDatabaseName(),
+			UserName:     identity.GetUserName(),
+			QueryID:      identity.GetQueryId(),
+			QueryText:    text.GetQuery(),
+		}
+	}
+
+	if err = drainFillTextBatch(s.queries.FillStatementText(ctx, params)); err != nil {
+		return nil, err
+	}
+
+	return connect.NewResponse(&pgdozorv1.ReportStatementTextsResponse{}), nil
+}
+
+func drainFillTextBatch(results *db.FillStatementTextBatchResults) error {
+	var execErr error
+
+	results.Exec(func(_ int, err error) {
+		if err != nil && execErr == nil {
+			execErr = err
+		}
+	})
+
+	if execErr != nil {
+		return connect.NewError(connect.CodeInternal, execErr)
+	}
+
+	return nil
 }
 
 func (s *StatementServer) detectNewSlowQuery(

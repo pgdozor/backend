@@ -188,9 +188,10 @@ func (x *ReportStatementsRequest) GetStatementDeltas() []*StatementDelta {
 }
 
 type ReportStatementsResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	UnknownStatements []*StatementIdentity   `protobuf:"bytes,1,rep,name=unknown_statements,json=unknownStatements,proto3" json:"unknown_statements,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *ReportStatementsResponse) Reset() {
@@ -223,6 +224,205 @@ func (*ReportStatementsResponse) Descriptor() ([]byte, []int) {
 	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{2}
 }
 
+func (x *ReportStatementsResponse) GetUnknownStatements() []*StatementIdentity {
+	if x != nil {
+		return x.UnknownStatements
+	}
+	return nil
+}
+
+type StatementIdentity struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserName      string                 `protobuf:"bytes,1,opt,name=user_name,json=userName,proto3" json:"user_name,omitempty"`
+	DatabaseName  string                 `protobuf:"bytes,2,opt,name=database_name,json=databaseName,proto3" json:"database_name,omitempty"`
+	QueryId       int64                  `protobuf:"varint,3,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StatementIdentity) Reset() {
+	*x = StatementIdentity{}
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StatementIdentity) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StatementIdentity) ProtoMessage() {}
+
+func (x *StatementIdentity) ProtoReflect() protoreflect.Message {
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StatementIdentity.ProtoReflect.Descriptor instead.
+func (*StatementIdentity) Descriptor() ([]byte, []int) {
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *StatementIdentity) GetUserName() string {
+	if x != nil {
+		return x.UserName
+	}
+	return ""
+}
+
+func (x *StatementIdentity) GetDatabaseName() string {
+	if x != nil {
+		return x.DatabaseName
+	}
+	return ""
+}
+
+func (x *StatementIdentity) GetQueryId() int64 {
+	if x != nil {
+		return x.QueryId
+	}
+	return 0
+}
+
+type ReportStatementTextsRequest struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	StatementTexts []*StatementText       `protobuf:"bytes,1,rep,name=statement_texts,json=statementTexts,proto3" json:"statement_texts,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *ReportStatementTextsRequest) Reset() {
+	*x = ReportStatementTextsRequest{}
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReportStatementTextsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReportStatementTextsRequest) ProtoMessage() {}
+
+func (x *ReportStatementTextsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReportStatementTextsRequest.ProtoReflect.Descriptor instead.
+func (*ReportStatementTextsRequest) Descriptor() ([]byte, []int) {
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ReportStatementTextsRequest) GetStatementTexts() []*StatementText {
+	if x != nil {
+		return x.StatementTexts
+	}
+	return nil
+}
+
+type ReportStatementTextsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReportStatementTextsResponse) Reset() {
+	*x = ReportStatementTextsResponse{}
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReportStatementTextsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReportStatementTextsResponse) ProtoMessage() {}
+
+func (x *ReportStatementTextsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReportStatementTextsResponse.ProtoReflect.Descriptor instead.
+func (*ReportStatementTextsResponse) Descriptor() ([]byte, []int) {
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{5}
+}
+
+type StatementText struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Identity      *StatementIdentity     `protobuf:"bytes,1,opt,name=identity,proto3" json:"identity,omitempty"`
+	Query         string                 `protobuf:"bytes,2,opt,name=query,proto3" json:"query,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StatementText) Reset() {
+	*x = StatementText{}
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StatementText) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StatementText) ProtoMessage() {}
+
+func (x *StatementText) ProtoReflect() protoreflect.Message {
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StatementText.ProtoReflect.Descriptor instead.
+func (*StatementText) Descriptor() ([]byte, []int) {
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *StatementText) GetIdentity() *StatementIdentity {
+	if x != nil {
+		return x.Identity
+	}
+	return nil
+}
+
+func (x *StatementText) GetQuery() string {
+	if x != nil {
+		return x.Query
+	}
+	return ""
+}
+
 type QueryStatementsRequest struct {
 	state        protoimpl.MessageState `protogen:"open.v1"`
 	ServerName   string                 `protobuf:"bytes,1,opt,name=server_name,json=serverName,proto3" json:"server_name,omitempty"`
@@ -241,7 +441,7 @@ type QueryStatementsRequest struct {
 
 func (x *QueryStatementsRequest) Reset() {
 	*x = QueryStatementsRequest{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[3]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -253,7 +453,7 @@ func (x *QueryStatementsRequest) String() string {
 func (*QueryStatementsRequest) ProtoMessage() {}
 
 func (x *QueryStatementsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[3]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -266,7 +466,7 @@ func (x *QueryStatementsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryStatementsRequest.ProtoReflect.Descriptor instead.
 func (*QueryStatementsRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{3}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *QueryStatementsRequest) GetServerName() string {
@@ -328,7 +528,7 @@ type QueryStatementsResponse struct {
 
 func (x *QueryStatementsResponse) Reset() {
 	*x = QueryStatementsResponse{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[4]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -340,7 +540,7 @@ func (x *QueryStatementsResponse) String() string {
 func (*QueryStatementsResponse) ProtoMessage() {}
 
 func (x *QueryStatementsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[4]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -353,7 +553,7 @@ func (x *QueryStatementsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryStatementsResponse.ProtoReflect.Descriptor instead.
 func (*QueryStatementsResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{4}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *QueryStatementsResponse) GetMetrics() *StatementMetrics {
@@ -382,7 +582,7 @@ type QueryStatementDetailRequest struct {
 
 func (x *QueryStatementDetailRequest) Reset() {
 	*x = QueryStatementDetailRequest{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[5]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -394,7 +594,7 @@ func (x *QueryStatementDetailRequest) String() string {
 func (*QueryStatementDetailRequest) ProtoMessage() {}
 
 func (x *QueryStatementDetailRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[5]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -407,7 +607,7 @@ func (x *QueryStatementDetailRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryStatementDetailRequest.ProtoReflect.Descriptor instead.
 func (*QueryStatementDetailRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{5}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *QueryStatementDetailRequest) GetId() int64 {
@@ -450,7 +650,7 @@ type QueryStatementDetailResponse struct {
 
 func (x *QueryStatementDetailResponse) Reset() {
 	*x = QueryStatementDetailResponse{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[6]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -462,7 +662,7 @@ func (x *QueryStatementDetailResponse) String() string {
 func (*QueryStatementDetailResponse) ProtoMessage() {}
 
 func (x *QueryStatementDetailResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[6]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -475,7 +675,7 @@ func (x *QueryStatementDetailResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryStatementDetailResponse.ProtoReflect.Descriptor instead.
 func (*QueryStatementDetailResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{6}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *QueryStatementDetailResponse) GetQuery() string {
@@ -540,7 +740,7 @@ type StatementSample struct {
 
 func (x *StatementSample) Reset() {
 	*x = StatementSample{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[7]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -552,7 +752,7 @@ func (x *StatementSample) String() string {
 func (*StatementSample) ProtoMessage() {}
 
 func (x *StatementSample) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[7]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -565,7 +765,7 @@ func (x *StatementSample) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StatementSample.ProtoReflect.Descriptor instead.
 func (*StatementSample) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{7}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *StatementSample) GetId() int64 {
@@ -620,7 +820,7 @@ type GetStatementSamplePlanRequest struct {
 
 func (x *GetStatementSamplePlanRequest) Reset() {
 	*x = GetStatementSamplePlanRequest{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[8]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -632,7 +832,7 @@ func (x *GetStatementSamplePlanRequest) String() string {
 func (*GetStatementSamplePlanRequest) ProtoMessage() {}
 
 func (x *GetStatementSamplePlanRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[8]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -645,7 +845,7 @@ func (x *GetStatementSamplePlanRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetStatementSamplePlanRequest.ProtoReflect.Descriptor instead.
 func (*GetStatementSamplePlanRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{8}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetStatementSamplePlanRequest) GetSampleId() int64 {
@@ -667,7 +867,7 @@ type GetStatementSamplePlanResponse struct {
 
 func (x *GetStatementSamplePlanResponse) Reset() {
 	*x = GetStatementSamplePlanResponse{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[9]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -679,7 +879,7 @@ func (x *GetStatementSamplePlanResponse) String() string {
 func (*GetStatementSamplePlanResponse) ProtoMessage() {}
 
 func (x *GetStatementSamplePlanResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[9]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -692,7 +892,7 @@ func (x *GetStatementSamplePlanResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetStatementSamplePlanResponse.ProtoReflect.Descriptor instead.
 func (*GetStatementSamplePlanResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{9}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *GetStatementSamplePlanResponse) GetQuery() string {
@@ -724,7 +924,7 @@ type StatementMetrics struct {
 
 func (x *StatementMetrics) Reset() {
 	*x = StatementMetrics{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[10]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -736,7 +936,7 @@ func (x *StatementMetrics) String() string {
 func (*StatementMetrics) ProtoMessage() {}
 
 func (x *StatementMetrics) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[10]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -749,7 +949,7 @@ func (x *StatementMetrics) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StatementMetrics.ProtoReflect.Descriptor instead.
 func (*StatementMetrics) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{10}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *StatementMetrics) GetCalls() *StatementMetric {
@@ -810,7 +1010,7 @@ type StatementMetric struct {
 
 func (x *StatementMetric) Reset() {
 	*x = StatementMetric{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[11]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -822,7 +1022,7 @@ func (x *StatementMetric) String() string {
 func (*StatementMetric) ProtoMessage() {}
 
 func (x *StatementMetric) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[11]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -835,7 +1035,7 @@ func (x *StatementMetric) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StatementMetric.ProtoReflect.Descriptor instead.
 func (*StatementMetric) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{11}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *StatementMetric) GetSeries() []*MetricPoint {
@@ -855,7 +1055,7 @@ type MetricPoint struct {
 
 func (x *MetricPoint) Reset() {
 	*x = MetricPoint{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[12]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -867,7 +1067,7 @@ func (x *MetricPoint) String() string {
 func (*MetricPoint) ProtoMessage() {}
 
 func (x *MetricPoint) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[12]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -880,7 +1080,7 @@ func (x *MetricPoint) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MetricPoint.ProtoReflect.Descriptor instead.
 func (*MetricPoint) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{12}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *MetricPoint) GetAt() *timestamppb.Timestamp {
@@ -919,7 +1119,7 @@ type StatementStat struct {
 
 func (x *StatementStat) Reset() {
 	*x = StatementStat{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[13]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -931,7 +1131,7 @@ func (x *StatementStat) String() string {
 func (*StatementStat) ProtoMessage() {}
 
 func (x *StatementStat) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[13]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -944,7 +1144,7 @@ func (x *StatementStat) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StatementStat.ProtoReflect.Descriptor instead.
 func (*StatementStat) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{13}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *StatementStat) GetId() int64 {
@@ -1026,23 +1226,21 @@ type StatementDelta struct {
 	DatabaseName string `protobuf:"bytes,2,opt,name=database_name,json=databaseName,proto3" json:"database_name,omitempty"`
 	// Example: 74381239123499122
 	QueryId int64 `protobuf:"varint,3,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
-	// Example: "SELECT * FROM users WHERE id = $1"
-	Query string `protobuf:"bytes,4,opt,name=query,proto3" json:"query,omitempty"`
 	// Example: 12
-	Calls int64 `protobuf:"varint,5,opt,name=calls,proto3" json:"calls,omitempty"`
+	Calls int64 `protobuf:"varint,4,opt,name=calls,proto3" json:"calls,omitempty"`
 	// Example: 480
-	Rows int64 `protobuf:"varint,6,opt,name=rows,proto3" json:"rows,omitempty"`
+	Rows int64 `protobuf:"varint,5,opt,name=rows,proto3" json:"rows,omitempty"`
 	// Example: 35.7
-	TotalExecTime float64 `protobuf:"fixed64,7,opt,name=total_exec_time,json=totalExecTime,proto3" json:"total_exec_time,omitempty"`
+	TotalExecTime float64 `protobuf:"fixed64,6,opt,name=total_exec_time,json=totalExecTime,proto3" json:"total_exec_time,omitempty"`
 	// Total block-IO time (ms) summed across all IO-timing columns. Example: 4.2
-	TotalIoTime   float64 `protobuf:"fixed64,8,opt,name=total_io_time,json=totalIoTime,proto3" json:"total_io_time,omitempty"`
+	TotalIoTime   float64 `protobuf:"fixed64,7,opt,name=total_io_time,json=totalIoTime,proto3" json:"total_io_time,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *StatementDelta) Reset() {
 	*x = StatementDelta{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[14]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1054,7 +1252,7 @@ func (x *StatementDelta) String() string {
 func (*StatementDelta) ProtoMessage() {}
 
 func (x *StatementDelta) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[14]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1067,7 +1265,7 @@ func (x *StatementDelta) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StatementDelta.ProtoReflect.Descriptor instead.
 func (*StatementDelta) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{14}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *StatementDelta) GetUserName() string {
@@ -1089,13 +1287,6 @@ func (x *StatementDelta) GetQueryId() int64 {
 		return x.QueryId
 	}
 	return 0
-}
-
-func (x *StatementDelta) GetQuery() string {
-	if x != nil {
-		return x.Query
-	}
-	return ""
 }
 
 func (x *StatementDelta) GetCalls() int64 {
@@ -1138,7 +1329,7 @@ type ListTagKeysRequest struct {
 
 func (x *ListTagKeysRequest) Reset() {
 	*x = ListTagKeysRequest{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[15]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1150,7 +1341,7 @@ func (x *ListTagKeysRequest) String() string {
 func (*ListTagKeysRequest) ProtoMessage() {}
 
 func (x *ListTagKeysRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[15]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1163,7 +1354,7 @@ func (x *ListTagKeysRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTagKeysRequest.ProtoReflect.Descriptor instead.
 func (*ListTagKeysRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{15}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *ListTagKeysRequest) GetServerName() string {
@@ -1203,7 +1394,7 @@ type ListTagKeysResponse struct {
 
 func (x *ListTagKeysResponse) Reset() {
 	*x = ListTagKeysResponse{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[16]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1215,7 +1406,7 @@ func (x *ListTagKeysResponse) String() string {
 func (*ListTagKeysResponse) ProtoMessage() {}
 
 func (x *ListTagKeysResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[16]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1228,7 +1419,7 @@ func (x *ListTagKeysResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTagKeysResponse.ProtoReflect.Descriptor instead.
 func (*ListTagKeysResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{16}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ListTagKeysResponse) GetKeys() []*TagKey {
@@ -1249,7 +1440,7 @@ type TagKey struct {
 
 func (x *TagKey) Reset() {
 	*x = TagKey{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[17]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1261,7 +1452,7 @@ func (x *TagKey) String() string {
 func (*TagKey) ProtoMessage() {}
 
 func (x *TagKey) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[17]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1274,7 +1465,7 @@ func (x *TagKey) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TagKey.ProtoReflect.Descriptor instead.
 func (*TagKey) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{17}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *TagKey) GetKey() string {
@@ -1304,7 +1495,7 @@ type ListTagValuesRequest struct {
 
 func (x *ListTagValuesRequest) Reset() {
 	*x = ListTagValuesRequest{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[18]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1316,7 +1507,7 @@ func (x *ListTagValuesRequest) String() string {
 func (*ListTagValuesRequest) ProtoMessage() {}
 
 func (x *ListTagValuesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[18]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1329,7 +1520,7 @@ func (x *ListTagValuesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTagValuesRequest.ProtoReflect.Descriptor instead.
 func (*ListTagValuesRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{18}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *ListTagValuesRequest) GetServerName() string {
@@ -1376,7 +1567,7 @@ type ListTagValuesResponse struct {
 
 func (x *ListTagValuesResponse) Reset() {
 	*x = ListTagValuesResponse{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[19]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1388,7 +1579,7 @@ func (x *ListTagValuesResponse) String() string {
 func (*ListTagValuesResponse) ProtoMessage() {}
 
 func (x *ListTagValuesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[19]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1401,7 +1592,7 @@ func (x *ListTagValuesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTagValuesResponse.ProtoReflect.Descriptor instead.
 func (*ListTagValuesResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{19}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ListTagValuesResponse) GetValues() []*TagValue {
@@ -1422,7 +1613,7 @@ type TagValue struct {
 
 func (x *TagValue) Reset() {
 	*x = TagValue{}
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[20]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1434,7 +1625,7 @@ func (x *TagValue) String() string {
 func (*TagValue) ProtoMessage() {}
 
 func (x *TagValue) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_statement_proto_msgTypes[20]
+	mi := &file_pgdozor_v1_statement_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1447,7 +1638,7 @@ func (x *TagValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TagValue.ProtoReflect.Descriptor instead.
 func (*TagValue) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{20}
+	return file_pgdozor_v1_statement_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *TagValue) GetValue() string {
@@ -1476,8 +1667,19 @@ const file_pgdozor_v1_statement_proto_rawDesc = "" +
 	"\x06values\x18\x03 \x03(\tR\x06values\"\x9f\x01\n" +
 	"\x17ReportStatementsRequest\x12=\n" +
 	"\fcollected_at\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\vcollectedAt\x12E\n" +
-	"\x10statement_deltas\x18\x02 \x03(\v2\x1a.pgdozor.v1.StatementDeltaR\x0fstatementDeltas\"\x1a\n" +
-	"\x18ReportStatementsResponse\"\xa7\x02\n" +
+	"\x10statement_deltas\x18\x02 \x03(\v2\x1a.pgdozor.v1.StatementDeltaR\x0fstatementDeltas\"h\n" +
+	"\x18ReportStatementsResponse\x12L\n" +
+	"\x12unknown_statements\x18\x01 \x03(\v2\x1d.pgdozor.v1.StatementIdentityR\x11unknownStatements\"p\n" +
+	"\x11StatementIdentity\x12\x1b\n" +
+	"\tuser_name\x18\x01 \x01(\tR\buserName\x12#\n" +
+	"\rdatabase_name\x18\x02 \x01(\tR\fdatabaseName\x12\x19\n" +
+	"\bquery_id\x18\x03 \x01(\x03R\aqueryId\"a\n" +
+	"\x1bReportStatementTextsRequest\x12B\n" +
+	"\x0fstatement_texts\x18\x01 \x03(\v2\x19.pgdozor.v1.StatementTextR\x0estatementTexts\"\x1e\n" +
+	"\x1cReportStatementTextsResponse\"`\n" +
+	"\rStatementText\x129\n" +
+	"\bidentity\x18\x01 \x01(\v2\x1d.pgdozor.v1.StatementIdentityR\bidentity\x12\x14\n" +
+	"\x05query\x18\x02 \x01(\tR\x05query\"\xa7\x02\n" +
 	"\x16QueryStatementsRequest\x12\x1f\n" +
 	"\vserver_name\x18\x01 \x01(\tR\n" +
 	"serverName\x12#\n" +
@@ -1554,16 +1756,15 @@ const file_pgdozor_v1_statement_proto_rawDesc = "" +
 	" \x01(\x01R\x05pctIo\x1a7\n" +
 	"\tTagsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xf9\x01\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xe3\x01\n" +
 	"\x0eStatementDelta\x12\x1b\n" +
 	"\tuser_name\x18\x01 \x01(\tR\buserName\x12#\n" +
 	"\rdatabase_name\x18\x02 \x01(\tR\fdatabaseName\x12\x19\n" +
 	"\bquery_id\x18\x03 \x01(\x03R\aqueryId\x12\x14\n" +
-	"\x05query\x18\x04 \x01(\tR\x05query\x12\x14\n" +
-	"\x05calls\x18\x05 \x01(\x03R\x05calls\x12\x12\n" +
-	"\x04rows\x18\x06 \x01(\x03R\x04rows\x12&\n" +
-	"\x0ftotal_exec_time\x18\a \x01(\x01R\rtotalExecTime\x12\"\n" +
-	"\rtotal_io_time\x18\b \x01(\x01R\vtotalIoTime\"\xb6\x01\n" +
+	"\x05calls\x18\x04 \x01(\x03R\x05calls\x12\x12\n" +
+	"\x04rows\x18\x05 \x01(\x03R\x04rows\x12&\n" +
+	"\x0ftotal_exec_time\x18\x06 \x01(\x01R\rtotalExecTime\x12\"\n" +
+	"\rtotal_io_time\x18\a \x01(\x01R\vtotalIoTime\"\xb6\x01\n" +
 	"\x12ListTagKeysRequest\x12\x1f\n" +
 	"\vserver_name\x18\x01 \x01(\tR\n" +
 	"serverName\x12#\n" +
@@ -1592,9 +1793,10 @@ const file_pgdozor_v1_statement_proto_rawDesc = "" +
 	"\x1fTAG_FILTER_OPERATOR_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19TAG_FILTER_OPERATOR_EQUAL\x10\x01\x12!\n" +
 	"\x1dTAG_FILTER_OPERATOR_NOT_EQUAL\x10\x02\x12\x1e\n" +
-	"\x1aTAG_FILTER_OPERATOR_EXISTS\x10\x032\xdb\x04\n" +
+	"\x1aTAG_FILTER_OPERATOR_EXISTS\x10\x032\xc8\x05\n" +
 	"\x10StatementService\x12_\n" +
-	"\x10ReportStatements\x12#.pgdozor.v1.ReportStatementsRequest\x1a$.pgdozor.v1.ReportStatementsResponse\"\x00\x12\\\n" +
+	"\x10ReportStatements\x12#.pgdozor.v1.ReportStatementsRequest\x1a$.pgdozor.v1.ReportStatementsResponse\"\x00\x12k\n" +
+	"\x14ReportStatementTexts\x12'.pgdozor.v1.ReportStatementTextsRequest\x1a(.pgdozor.v1.ReportStatementTextsResponse\"\x00\x12\\\n" +
 	"\x0fQueryStatements\x12\".pgdozor.v1.QueryStatementsRequest\x1a#.pgdozor.v1.QueryStatementsResponse\"\x00\x12k\n" +
 	"\x14QueryStatementDetail\x12'.pgdozor.v1.QueryStatementDetailRequest\x1a(.pgdozor.v1.QueryStatementDetailResponse\"\x00\x12q\n" +
 	"\x16GetStatementSamplePlan\x12).pgdozor.v1.GetStatementSamplePlanRequest\x1a*.pgdozor.v1.GetStatementSamplePlanResponse\"\x00\x12P\n" +
@@ -1614,83 +1816,92 @@ func file_pgdozor_v1_statement_proto_rawDescGZIP() []byte {
 }
 
 var file_pgdozor_v1_statement_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_pgdozor_v1_statement_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
+var file_pgdozor_v1_statement_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_pgdozor_v1_statement_proto_goTypes = []any{
 	(TagFilterOperator)(0),                 // 0: pgdozor.v1.TagFilterOperator
 	(*TagFilter)(nil),                      // 1: pgdozor.v1.TagFilter
 	(*ReportStatementsRequest)(nil),        // 2: pgdozor.v1.ReportStatementsRequest
 	(*ReportStatementsResponse)(nil),       // 3: pgdozor.v1.ReportStatementsResponse
-	(*QueryStatementsRequest)(nil),         // 4: pgdozor.v1.QueryStatementsRequest
-	(*QueryStatementsResponse)(nil),        // 5: pgdozor.v1.QueryStatementsResponse
-	(*QueryStatementDetailRequest)(nil),    // 6: pgdozor.v1.QueryStatementDetailRequest
-	(*QueryStatementDetailResponse)(nil),   // 7: pgdozor.v1.QueryStatementDetailResponse
-	(*StatementSample)(nil),                // 8: pgdozor.v1.StatementSample
-	(*GetStatementSamplePlanRequest)(nil),  // 9: pgdozor.v1.GetStatementSamplePlanRequest
-	(*GetStatementSamplePlanResponse)(nil), // 10: pgdozor.v1.GetStatementSamplePlanResponse
-	(*StatementMetrics)(nil),               // 11: pgdozor.v1.StatementMetrics
-	(*StatementMetric)(nil),                // 12: pgdozor.v1.StatementMetric
-	(*MetricPoint)(nil),                    // 13: pgdozor.v1.MetricPoint
-	(*StatementStat)(nil),                  // 14: pgdozor.v1.StatementStat
-	(*StatementDelta)(nil),                 // 15: pgdozor.v1.StatementDelta
-	(*ListTagKeysRequest)(nil),             // 16: pgdozor.v1.ListTagKeysRequest
-	(*ListTagKeysResponse)(nil),            // 17: pgdozor.v1.ListTagKeysResponse
-	(*TagKey)(nil),                         // 18: pgdozor.v1.TagKey
-	(*ListTagValuesRequest)(nil),           // 19: pgdozor.v1.ListTagValuesRequest
-	(*ListTagValuesResponse)(nil),          // 20: pgdozor.v1.ListTagValuesResponse
-	(*TagValue)(nil),                       // 21: pgdozor.v1.TagValue
-	nil,                                    // 22: pgdozor.v1.QueryStatementDetailResponse.TagsEntry
-	nil,                                    // 23: pgdozor.v1.StatementSample.TagsEntry
-	nil,                                    // 24: pgdozor.v1.StatementStat.TagsEntry
-	(*timestamppb.Timestamp)(nil),          // 25: google.protobuf.Timestamp
+	(*StatementIdentity)(nil),              // 4: pgdozor.v1.StatementIdentity
+	(*ReportStatementTextsRequest)(nil),    // 5: pgdozor.v1.ReportStatementTextsRequest
+	(*ReportStatementTextsResponse)(nil),   // 6: pgdozor.v1.ReportStatementTextsResponse
+	(*StatementText)(nil),                  // 7: pgdozor.v1.StatementText
+	(*QueryStatementsRequest)(nil),         // 8: pgdozor.v1.QueryStatementsRequest
+	(*QueryStatementsResponse)(nil),        // 9: pgdozor.v1.QueryStatementsResponse
+	(*QueryStatementDetailRequest)(nil),    // 10: pgdozor.v1.QueryStatementDetailRequest
+	(*QueryStatementDetailResponse)(nil),   // 11: pgdozor.v1.QueryStatementDetailResponse
+	(*StatementSample)(nil),                // 12: pgdozor.v1.StatementSample
+	(*GetStatementSamplePlanRequest)(nil),  // 13: pgdozor.v1.GetStatementSamplePlanRequest
+	(*GetStatementSamplePlanResponse)(nil), // 14: pgdozor.v1.GetStatementSamplePlanResponse
+	(*StatementMetrics)(nil),               // 15: pgdozor.v1.StatementMetrics
+	(*StatementMetric)(nil),                // 16: pgdozor.v1.StatementMetric
+	(*MetricPoint)(nil),                    // 17: pgdozor.v1.MetricPoint
+	(*StatementStat)(nil),                  // 18: pgdozor.v1.StatementStat
+	(*StatementDelta)(nil),                 // 19: pgdozor.v1.StatementDelta
+	(*ListTagKeysRequest)(nil),             // 20: pgdozor.v1.ListTagKeysRequest
+	(*ListTagKeysResponse)(nil),            // 21: pgdozor.v1.ListTagKeysResponse
+	(*TagKey)(nil),                         // 22: pgdozor.v1.TagKey
+	(*ListTagValuesRequest)(nil),           // 23: pgdozor.v1.ListTagValuesRequest
+	(*ListTagValuesResponse)(nil),          // 24: pgdozor.v1.ListTagValuesResponse
+	(*TagValue)(nil),                       // 25: pgdozor.v1.TagValue
+	nil,                                    // 26: pgdozor.v1.QueryStatementDetailResponse.TagsEntry
+	nil,                                    // 27: pgdozor.v1.StatementSample.TagsEntry
+	nil,                                    // 28: pgdozor.v1.StatementStat.TagsEntry
+	(*timestamppb.Timestamp)(nil),          // 29: google.protobuf.Timestamp
 }
 var file_pgdozor_v1_statement_proto_depIdxs = []int32{
 	0,  // 0: pgdozor.v1.TagFilter.op:type_name -> pgdozor.v1.TagFilterOperator
-	25, // 1: pgdozor.v1.ReportStatementsRequest.collected_at:type_name -> google.protobuf.Timestamp
-	15, // 2: pgdozor.v1.ReportStatementsRequest.statement_deltas:type_name -> pgdozor.v1.StatementDelta
-	25, // 3: pgdozor.v1.QueryStatementsRequest.from:type_name -> google.protobuf.Timestamp
-	25, // 4: pgdozor.v1.QueryStatementsRequest.to:type_name -> google.protobuf.Timestamp
-	1,  // 5: pgdozor.v1.QueryStatementsRequest.tag_filters:type_name -> pgdozor.v1.TagFilter
-	11, // 6: pgdozor.v1.QueryStatementsResponse.metrics:type_name -> pgdozor.v1.StatementMetrics
-	14, // 7: pgdozor.v1.QueryStatementsResponse.statements:type_name -> pgdozor.v1.StatementStat
-	25, // 8: pgdozor.v1.QueryStatementDetailRequest.from:type_name -> google.protobuf.Timestamp
-	25, // 9: pgdozor.v1.QueryStatementDetailRequest.to:type_name -> google.protobuf.Timestamp
-	22, // 10: pgdozor.v1.QueryStatementDetailResponse.tags:type_name -> pgdozor.v1.QueryStatementDetailResponse.TagsEntry
-	11, // 11: pgdozor.v1.QueryStatementDetailResponse.metrics:type_name -> pgdozor.v1.StatementMetrics
-	8,  // 12: pgdozor.v1.QueryStatementDetailResponse.samples:type_name -> pgdozor.v1.StatementSample
-	25, // 13: pgdozor.v1.StatementSample.occurred_at:type_name -> google.protobuf.Timestamp
-	23, // 14: pgdozor.v1.StatementSample.tags:type_name -> pgdozor.v1.StatementSample.TagsEntry
-	12, // 15: pgdozor.v1.StatementMetrics.calls:type_name -> pgdozor.v1.StatementMetric
-	12, // 16: pgdozor.v1.StatementMetrics.avg:type_name -> pgdozor.v1.StatementMetric
-	12, // 17: pgdozor.v1.StatementMetrics.avg_io:type_name -> pgdozor.v1.StatementMetric
-	12, // 18: pgdozor.v1.StatementMetrics.p90:type_name -> pgdozor.v1.StatementMetric
-	12, // 19: pgdozor.v1.StatementMetrics.p95:type_name -> pgdozor.v1.StatementMetric
-	12, // 20: pgdozor.v1.StatementMetrics.p99:type_name -> pgdozor.v1.StatementMetric
-	13, // 21: pgdozor.v1.StatementMetric.series:type_name -> pgdozor.v1.MetricPoint
-	25, // 22: pgdozor.v1.MetricPoint.at:type_name -> google.protobuf.Timestamp
-	24, // 23: pgdozor.v1.StatementStat.tags:type_name -> pgdozor.v1.StatementStat.TagsEntry
-	25, // 24: pgdozor.v1.ListTagKeysRequest.from:type_name -> google.protobuf.Timestamp
-	25, // 25: pgdozor.v1.ListTagKeysRequest.to:type_name -> google.protobuf.Timestamp
-	18, // 26: pgdozor.v1.ListTagKeysResponse.keys:type_name -> pgdozor.v1.TagKey
-	25, // 27: pgdozor.v1.ListTagValuesRequest.from:type_name -> google.protobuf.Timestamp
-	25, // 28: pgdozor.v1.ListTagValuesRequest.to:type_name -> google.protobuf.Timestamp
-	21, // 29: pgdozor.v1.ListTagValuesResponse.values:type_name -> pgdozor.v1.TagValue
-	2,  // 30: pgdozor.v1.StatementService.ReportStatements:input_type -> pgdozor.v1.ReportStatementsRequest
-	4,  // 31: pgdozor.v1.StatementService.QueryStatements:input_type -> pgdozor.v1.QueryStatementsRequest
-	6,  // 32: pgdozor.v1.StatementService.QueryStatementDetail:input_type -> pgdozor.v1.QueryStatementDetailRequest
-	9,  // 33: pgdozor.v1.StatementService.GetStatementSamplePlan:input_type -> pgdozor.v1.GetStatementSamplePlanRequest
-	16, // 34: pgdozor.v1.StatementService.ListTagKeys:input_type -> pgdozor.v1.ListTagKeysRequest
-	19, // 35: pgdozor.v1.StatementService.ListTagValues:input_type -> pgdozor.v1.ListTagValuesRequest
-	3,  // 36: pgdozor.v1.StatementService.ReportStatements:output_type -> pgdozor.v1.ReportStatementsResponse
-	5,  // 37: pgdozor.v1.StatementService.QueryStatements:output_type -> pgdozor.v1.QueryStatementsResponse
-	7,  // 38: pgdozor.v1.StatementService.QueryStatementDetail:output_type -> pgdozor.v1.QueryStatementDetailResponse
-	10, // 39: pgdozor.v1.StatementService.GetStatementSamplePlan:output_type -> pgdozor.v1.GetStatementSamplePlanResponse
-	17, // 40: pgdozor.v1.StatementService.ListTagKeys:output_type -> pgdozor.v1.ListTagKeysResponse
-	20, // 41: pgdozor.v1.StatementService.ListTagValues:output_type -> pgdozor.v1.ListTagValuesResponse
-	36, // [36:42] is the sub-list for method output_type
-	30, // [30:36] is the sub-list for method input_type
-	30, // [30:30] is the sub-list for extension type_name
-	30, // [30:30] is the sub-list for extension extendee
-	0,  // [0:30] is the sub-list for field type_name
+	29, // 1: pgdozor.v1.ReportStatementsRequest.collected_at:type_name -> google.protobuf.Timestamp
+	19, // 2: pgdozor.v1.ReportStatementsRequest.statement_deltas:type_name -> pgdozor.v1.StatementDelta
+	4,  // 3: pgdozor.v1.ReportStatementsResponse.unknown_statements:type_name -> pgdozor.v1.StatementIdentity
+	7,  // 4: pgdozor.v1.ReportStatementTextsRequest.statement_texts:type_name -> pgdozor.v1.StatementText
+	4,  // 5: pgdozor.v1.StatementText.identity:type_name -> pgdozor.v1.StatementIdentity
+	29, // 6: pgdozor.v1.QueryStatementsRequest.from:type_name -> google.protobuf.Timestamp
+	29, // 7: pgdozor.v1.QueryStatementsRequest.to:type_name -> google.protobuf.Timestamp
+	1,  // 8: pgdozor.v1.QueryStatementsRequest.tag_filters:type_name -> pgdozor.v1.TagFilter
+	15, // 9: pgdozor.v1.QueryStatementsResponse.metrics:type_name -> pgdozor.v1.StatementMetrics
+	18, // 10: pgdozor.v1.QueryStatementsResponse.statements:type_name -> pgdozor.v1.StatementStat
+	29, // 11: pgdozor.v1.QueryStatementDetailRequest.from:type_name -> google.protobuf.Timestamp
+	29, // 12: pgdozor.v1.QueryStatementDetailRequest.to:type_name -> google.protobuf.Timestamp
+	26, // 13: pgdozor.v1.QueryStatementDetailResponse.tags:type_name -> pgdozor.v1.QueryStatementDetailResponse.TagsEntry
+	15, // 14: pgdozor.v1.QueryStatementDetailResponse.metrics:type_name -> pgdozor.v1.StatementMetrics
+	12, // 15: pgdozor.v1.QueryStatementDetailResponse.samples:type_name -> pgdozor.v1.StatementSample
+	29, // 16: pgdozor.v1.StatementSample.occurred_at:type_name -> google.protobuf.Timestamp
+	27, // 17: pgdozor.v1.StatementSample.tags:type_name -> pgdozor.v1.StatementSample.TagsEntry
+	16, // 18: pgdozor.v1.StatementMetrics.calls:type_name -> pgdozor.v1.StatementMetric
+	16, // 19: pgdozor.v1.StatementMetrics.avg:type_name -> pgdozor.v1.StatementMetric
+	16, // 20: pgdozor.v1.StatementMetrics.avg_io:type_name -> pgdozor.v1.StatementMetric
+	16, // 21: pgdozor.v1.StatementMetrics.p90:type_name -> pgdozor.v1.StatementMetric
+	16, // 22: pgdozor.v1.StatementMetrics.p95:type_name -> pgdozor.v1.StatementMetric
+	16, // 23: pgdozor.v1.StatementMetrics.p99:type_name -> pgdozor.v1.StatementMetric
+	17, // 24: pgdozor.v1.StatementMetric.series:type_name -> pgdozor.v1.MetricPoint
+	29, // 25: pgdozor.v1.MetricPoint.at:type_name -> google.protobuf.Timestamp
+	28, // 26: pgdozor.v1.StatementStat.tags:type_name -> pgdozor.v1.StatementStat.TagsEntry
+	29, // 27: pgdozor.v1.ListTagKeysRequest.from:type_name -> google.protobuf.Timestamp
+	29, // 28: pgdozor.v1.ListTagKeysRequest.to:type_name -> google.protobuf.Timestamp
+	22, // 29: pgdozor.v1.ListTagKeysResponse.keys:type_name -> pgdozor.v1.TagKey
+	29, // 30: pgdozor.v1.ListTagValuesRequest.from:type_name -> google.protobuf.Timestamp
+	29, // 31: pgdozor.v1.ListTagValuesRequest.to:type_name -> google.protobuf.Timestamp
+	25, // 32: pgdozor.v1.ListTagValuesResponse.values:type_name -> pgdozor.v1.TagValue
+	2,  // 33: pgdozor.v1.StatementService.ReportStatements:input_type -> pgdozor.v1.ReportStatementsRequest
+	5,  // 34: pgdozor.v1.StatementService.ReportStatementTexts:input_type -> pgdozor.v1.ReportStatementTextsRequest
+	8,  // 35: pgdozor.v1.StatementService.QueryStatements:input_type -> pgdozor.v1.QueryStatementsRequest
+	10, // 36: pgdozor.v1.StatementService.QueryStatementDetail:input_type -> pgdozor.v1.QueryStatementDetailRequest
+	13, // 37: pgdozor.v1.StatementService.GetStatementSamplePlan:input_type -> pgdozor.v1.GetStatementSamplePlanRequest
+	20, // 38: pgdozor.v1.StatementService.ListTagKeys:input_type -> pgdozor.v1.ListTagKeysRequest
+	23, // 39: pgdozor.v1.StatementService.ListTagValues:input_type -> pgdozor.v1.ListTagValuesRequest
+	3,  // 40: pgdozor.v1.StatementService.ReportStatements:output_type -> pgdozor.v1.ReportStatementsResponse
+	6,  // 41: pgdozor.v1.StatementService.ReportStatementTexts:output_type -> pgdozor.v1.ReportStatementTextsResponse
+	9,  // 42: pgdozor.v1.StatementService.QueryStatements:output_type -> pgdozor.v1.QueryStatementsResponse
+	11, // 43: pgdozor.v1.StatementService.QueryStatementDetail:output_type -> pgdozor.v1.QueryStatementDetailResponse
+	14, // 44: pgdozor.v1.StatementService.GetStatementSamplePlan:output_type -> pgdozor.v1.GetStatementSamplePlanResponse
+	21, // 45: pgdozor.v1.StatementService.ListTagKeys:output_type -> pgdozor.v1.ListTagKeysResponse
+	24, // 46: pgdozor.v1.StatementService.ListTagValues:output_type -> pgdozor.v1.ListTagValuesResponse
+	40, // [40:47] is the sub-list for method output_type
+	33, // [33:40] is the sub-list for method input_type
+	33, // [33:33] is the sub-list for extension type_name
+	33, // [33:33] is the sub-list for extension extendee
+	0,  // [0:33] is the sub-list for field type_name
 }
 
 func init() { file_pgdozor_v1_statement_proto_init() }
@@ -1704,7 +1915,7 @@ func file_pgdozor_v1_statement_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pgdozor_v1_statement_proto_rawDesc), len(file_pgdozor_v1_statement_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   24,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

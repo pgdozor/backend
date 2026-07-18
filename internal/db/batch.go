@@ -76,6 +76,67 @@ func (b *EnsureStatementsBatchResults) Close() error {
 	return b.br.Close()
 }
 
+const fillStatementText = `-- name: FillStatementText :batchexec
+UPDATE statements
+SET query_text = $1
+WHERE server_name = $2
+  AND database_name = $3
+  AND user_name = $4
+  AND query_id = $5
+  AND query_text = ''
+`
+
+type FillStatementTextBatchResults struct {
+	br     pgx.BatchResults
+	tot    int
+	closed bool
+}
+
+type FillStatementTextParams struct {
+	QueryText    string
+	ServerName   string
+	DatabaseName string
+	UserName     string
+	QueryID      int64
+}
+
+func (q *Queries) FillStatementText(ctx context.Context, arg []FillStatementTextParams) *FillStatementTextBatchResults {
+	batch := &pgx.Batch{}
+	for _, a := range arg {
+		vals := []interface{}{
+			a.QueryText,
+			a.ServerName,
+			a.DatabaseName,
+			a.UserName,
+			a.QueryID,
+		}
+		batch.Queue(fillStatementText, vals...)
+	}
+	br := q.db.SendBatch(ctx, batch)
+	return &FillStatementTextBatchResults{br, len(arg), false}
+}
+
+func (b *FillStatementTextBatchResults) Exec(f func(int, error)) {
+	defer b.br.Close()
+	for t := 0; t < b.tot; t++ {
+		if b.closed {
+			if f != nil {
+				f(t, ErrBatchAlreadyClosed)
+			}
+			continue
+		}
+		_, err := b.br.Exec()
+		if f != nil {
+			f(t, err)
+		}
+	}
+}
+
+func (b *FillStatementTextBatchResults) Close() error {
+	b.closed = true
+	return b.br.Close()
+}
+
 const insertLogEvents = `-- name: InsertLogEvents :batchone
 INSERT INTO log_events (
     server_name, collected_at, occurred_at, log_level, classification, message,
@@ -382,67 +443,6 @@ func (b *UpsertAlertToggleBatchResults) Exec(f func(int, error)) {
 }
 
 func (b *UpsertAlertToggleBatchResults) Close() error {
-	b.closed = true
-	return b.br.Close()
-}
-
-const upsertStatements = `-- name: UpsertStatements :batchone
-INSERT INTO statements (server_name, database_name, user_name, query_id, query_text)
-VALUES ($1, $2, $3, $4, $5)
-ON CONFLICT (server_name, database_name, user_name, query_id)
-DO UPDATE SET query_text = EXCLUDED.query_text
-RETURNING id
-`
-
-type UpsertStatementsBatchResults struct {
-	br     pgx.BatchResults
-	tot    int
-	closed bool
-}
-
-type UpsertStatementsParams struct {
-	ServerName   string
-	DatabaseName string
-	UserName     string
-	QueryID      int64
-	QueryText    string
-}
-
-func (q *Queries) UpsertStatements(ctx context.Context, arg []UpsertStatementsParams) *UpsertStatementsBatchResults {
-	batch := &pgx.Batch{}
-	for _, a := range arg {
-		vals := []interface{}{
-			a.ServerName,
-			a.DatabaseName,
-			a.UserName,
-			a.QueryID,
-			a.QueryText,
-		}
-		batch.Queue(upsertStatements, vals...)
-	}
-	br := q.db.SendBatch(ctx, batch)
-	return &UpsertStatementsBatchResults{br, len(arg), false}
-}
-
-func (b *UpsertStatementsBatchResults) QueryRow(f func(int, int64, error)) {
-	defer b.br.Close()
-	for t := 0; t < b.tot; t++ {
-		var id int64
-		if b.closed {
-			if f != nil {
-				f(t, id, ErrBatchAlreadyClosed)
-			}
-			continue
-		}
-		row := b.br.QueryRow()
-		err := row.Scan(&id)
-		if f != nil {
-			f(t, id, err)
-		}
-	}
-}
-
-func (b *UpsertStatementsBatchResults) Close() error {
 	b.closed = true
 	return b.br.Close()
 }

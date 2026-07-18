@@ -133,19 +133,27 @@ WHERE e.blocked_by_pid IS NOT NULL
   AND e.last_seen_at  >= sqlc.arg('from_time')
 ORDER BY e.lock_wait_start, e.id;
 
--- name: UpsertStatements :batchone
-INSERT INTO statements (server_name, database_name, user_name, query_id, query_text)
-VALUES ($1, $2, $3, $4, $5)
-ON CONFLICT (server_name, database_name, user_name, query_id)
-DO UPDATE SET query_text = EXCLUDED.query_text
-RETURNING id;
-
 -- name: EnsureStatements :batchone
 INSERT INTO statements (server_name, database_name, user_name, query_id, query_text)
 VALUES ($1, $2, $3, $4, '')
 ON CONFLICT (server_name, database_name, user_name, query_id)
 DO UPDATE SET query_text = statements.query_text
 RETURNING id;
+
+-- name: ListStatementsMissingText :many
+SELECT user_name, database_name, query_id
+FROM statements
+WHERE id = ANY(sqlc.arg('ids')::bigint[])
+  AND query_text = '';
+
+-- name: FillStatementText :batchexec
+UPDATE statements
+SET query_text = sqlc.arg('query_text')
+WHERE server_name = sqlc.arg('server_name')
+  AND database_name = sqlc.arg('database_name')
+  AND user_name = sqlc.arg('user_name')
+  AND query_id = sqlc.arg('query_id')
+  AND query_text = '';
 
 -- name: InsertStatementDeltas :copyfrom
 INSERT INTO statement_deltas (

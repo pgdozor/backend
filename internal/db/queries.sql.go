@@ -1113,6 +1113,39 @@ func (q *Queries) ListStatementStats(ctx context.Context, arg ListStatementStats
 	return items, nil
 }
 
+const listStatementsMissingText = `-- name: ListStatementsMissingText :many
+SELECT user_name, database_name, query_id
+FROM statements
+WHERE id = ANY($1::bigint[])
+  AND query_text = ''
+`
+
+type ListStatementsMissingTextRow struct {
+	UserName     string
+	DatabaseName string
+	QueryID      int64
+}
+
+func (q *Queries) ListStatementsMissingText(ctx context.Context, ids []int64) ([]ListStatementsMissingTextRow, error) {
+	rows, err := q.db.Query(ctx, listStatementsMissingText, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListStatementsMissingTextRow
+	for rows.Next() {
+		var i ListStatementsMissingTextRow
+		if err := rows.Scan(&i.UserName, &i.DatabaseName, &i.QueryID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listTagKeys = `-- name: ListTagKeys :many
 WITH agreed AS (
     SELECT ss.statement_id, kv.key, min(kv.value) AS value
