@@ -977,12 +977,28 @@ func (q *Queries) ListStaleServers(ctx context.Context, staleAfter pgtype.Interv
 
 const listStatementSamples = `-- name: ListStatementSamples :many
 SELECT id, occurred_at, query, duration_ms, parameters, explain_plan_json, tags
-FROM statement_samples
-WHERE statement_id = $1
-  AND ($2::text[] IS NULL OR server_name = ANY($2::text[]))
-  AND ($3::timestamptz IS NULL OR collected_at >= $3)
-  AND ($4::timestamptz IS NULL OR collected_at <= $4)
-ORDER BY occurred_at DESC NULLS LAST, id DESC
+FROM statement_samples s
+WHERE s.statement_id = $1
+  AND ($2::text[] IS NULL OR s.server_name = ANY($2::text[]))
+  AND ($3::timestamptz IS NULL OR s.collected_at >= $3)
+  AND ($4::timestamptz IS NULL OR s.collected_at <= $4)
+  AND NOT (
+      -- Drop this log_min_duration row when auto_explain logged the same run — keep the richer plan-bearing one.
+      s.explain_plan_json IS NULL
+      AND EXISTS (
+          SELECT 1
+          FROM statement_samples e
+          WHERE e.statement_id = s.statement_id
+            AND e.explain_plan_json IS NOT NULL
+            AND e.query = s.query
+            AND e.parameters IS NOT DISTINCT FROM s.parameters
+            AND abs(extract(epoch FROM e.occurred_at - s.occurred_at)) <= 1
+            AND abs(e.duration_ms - s.duration_ms) <= 1
+            AND ($3::timestamptz IS NULL OR e.collected_at >= $3)
+            AND ($4::timestamptz IS NULL OR e.collected_at <= $4)
+      )
+  )
+ORDER BY s.occurred_at DESC NULLS LAST, s.id DESC
 LIMIT $6
 OFFSET $5
 `

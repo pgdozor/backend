@@ -461,12 +461,28 @@ WHERE s.id = sqlc.arg('statement_id')
 
 -- name: ListStatementSamples :many
 SELECT id, occurred_at, query, duration_ms, parameters, explain_plan_json, tags
-FROM statement_samples
-WHERE statement_id = sqlc.arg('statement_id')
-  AND (sqlc.narg('allowed_servers')::text[] IS NULL OR server_name = ANY(sqlc.narg('allowed_servers')::text[]))
-  AND (sqlc.narg('since')::timestamptz IS NULL OR collected_at >= sqlc.narg('since'))
-  AND (sqlc.narg('until')::timestamptz IS NULL OR collected_at <= sqlc.narg('until'))
-ORDER BY occurred_at DESC NULLS LAST, id DESC
+FROM statement_samples s
+WHERE s.statement_id = sqlc.arg('statement_id')
+  AND (sqlc.narg('allowed_servers')::text[] IS NULL OR s.server_name = ANY(sqlc.narg('allowed_servers')::text[]))
+  AND (sqlc.narg('since')::timestamptz IS NULL OR s.collected_at >= sqlc.narg('since'))
+  AND (sqlc.narg('until')::timestamptz IS NULL OR s.collected_at <= sqlc.narg('until'))
+  AND NOT (
+      -- Drop this log_min_duration row when auto_explain logged the same run.
+      s.explain_plan_json IS NULL
+      AND EXISTS (
+          SELECT 1
+          FROM statement_samples e
+          WHERE e.statement_id = s.statement_id
+            AND e.explain_plan_json IS NOT NULL
+            AND e.query = s.query
+            AND e.parameters IS NOT DISTINCT FROM s.parameters
+            AND abs(extract(epoch FROM e.occurred_at - s.occurred_at)) <= 1
+            AND abs(e.duration_ms - s.duration_ms) <= 1
+            AND (sqlc.narg('since')::timestamptz IS NULL OR e.collected_at >= sqlc.narg('since'))
+            AND (sqlc.narg('until')::timestamptz IS NULL OR e.collected_at <= sqlc.narg('until'))
+      )
+  )
+ORDER BY s.occurred_at DESC NULLS LAST, s.id DESC
 LIMIT sqlc.arg('row_limit')
 OFFSET sqlc.arg('offset_rows');
 
