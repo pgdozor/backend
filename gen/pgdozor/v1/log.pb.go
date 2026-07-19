@@ -789,7 +789,7 @@ type QueryLogsRequest struct {
 	LogLevels []LogEvent_LogLevel `protobuf:"varint,5,rep,packed,name=log_levels,json=logLevels,proto3,enum=pgdozor.v1.LogEvent_LogLevel" json:"log_levels,omitempty"`
 	// Empty means every classification.
 	Classifications []LogEvent_LogClassification `protobuf:"varint,6,rep,packed,name=classifications,proto3,enum=pgdozor.v1.LogEvent_LogClassification" json:"classifications,omitempty"`
-	// Defaults to 1000 when unset.
+	// Defaults to 50 when unset.
 	Limit         int32 `protobuf:"varint,7,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

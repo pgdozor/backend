@@ -341,7 +341,19 @@ GROUP BY value
 ORDER BY statement_count DESC, value;
 
 -- name: ListStatementStats :many
-WITH per_statement AS (
+WITH totals AS (
+    SELECT
+        sum(d.total_exec_time)::double precision AS total_exec_time,
+        sum(d.total_io_time)::double precision   AS total_io_time
+    FROM statement_deltas d
+    JOIN statements s ON s.id = d.statement_id
+    WHERE (sqlc.narg('server_name')::text IS NULL OR s.server_name = sqlc.narg('server_name'))
+      AND (sqlc.narg('database_name')::text IS NULL OR s.database_name = sqlc.narg('database_name'))
+      AND (sqlc.narg('allowed_servers')::text[] IS NULL OR s.server_name = ANY(sqlc.narg('allowed_servers')::text[]))
+      AND (sqlc.narg('since')::timestamptz IS NULL OR d.collected_at >= sqlc.narg('since'))
+      AND (sqlc.narg('until')::timestamptz IS NULL OR d.collected_at <= sqlc.narg('until'))
+),
+per_statement AS (
     SELECT
         s.id,
         s.query_short AS preview,
@@ -389,13 +401,37 @@ SELECT
     ps.calls,
     ps.rows,
     ps.total_exec_time,
-    (coalesce(ps.total_exec_time / NULLIF(sum(ps.total_exec_time) OVER (), 0), 0) * 100)::double precision AS pct_of_total,
-    (coalesce(ps.total_io_time / NULLIF(sum(ps.total_io_time) OVER (), 0), 0) * 100)::double precision AS pct_io,
+    (coalesce(ps.total_exec_time / NULLIF((SELECT total_exec_time FROM totals), 0), 0) * 100)::double precision AS pct_of_total,
+    (coalesce(ps.total_io_time / NULLIF((SELECT total_io_time FROM totals), 0), 0) * 100)::double precision AS pct_io,
     coalesce(st.tags, '{}'::jsonb) AS tags
 FROM per_statement ps
 LEFT JOIN statement_tags st ON st.statement_id = ps.id
-ORDER BY ps.total_exec_time DESC
-LIMIT sqlc.arg('row_limit');
+ORDER BY
+    CASE WHEN sqlc.arg('sort_key')::text = 'query' AND sqlc.arg('sort_desc')::bool THEN ps.preview END DESC,
+    CASE WHEN sqlc.arg('sort_key')::text = 'query' AND NOT sqlc.arg('sort_desc')::bool THEN ps.preview END ASC,
+    CASE WHEN sqlc.arg('sort_key')::text = 'user' AND sqlc.arg('sort_desc')::bool THEN ps.user_name END DESC,
+    CASE WHEN sqlc.arg('sort_key')::text = 'user' AND NOT sqlc.arg('sort_desc')::bool THEN ps.user_name END ASC,
+    CASE WHEN sqlc.arg('sort_desc')::bool THEN
+        CASE sqlc.arg('sort_key')::text
+            WHEN 'avg' THEN ps.total_exec_time / NULLIF(ps.calls, 0)
+            WHEN 'calls' THEN ps.calls::double precision
+            WHEN 'rows_per_call' THEN ps.rows::double precision / NULLIF(ps.calls, 0)
+            WHEN 'pct_io' THEN ps.total_io_time
+            ELSE ps.total_exec_time
+        END
+    END DESC,
+    CASE WHEN NOT sqlc.arg('sort_desc')::bool THEN
+        CASE sqlc.arg('sort_key')::text
+            WHEN 'avg' THEN ps.total_exec_time / NULLIF(ps.calls, 0)
+            WHEN 'calls' THEN ps.calls::double precision
+            WHEN 'rows_per_call' THEN ps.rows::double precision / NULLIF(ps.calls, 0)
+            WHEN 'pct_io' THEN ps.total_io_time
+            ELSE ps.total_exec_time
+        END
+    END ASC,
+    ps.id DESC
+LIMIT sqlc.arg('row_limit')
+OFFSET sqlc.arg('offset_rows');
 
 -- name: GetStatementDetail :one
 SELECT

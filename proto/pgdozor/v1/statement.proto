@@ -10,6 +10,7 @@ service StatementService {
   rpc ReportStatements(ReportStatementsRequest) returns (ReportStatementsResponse) {}
   rpc ReportStatementTexts(ReportStatementTextsRequest) returns (ReportStatementTextsResponse) {}
   rpc QueryStatements(QueryStatementsRequest) returns (QueryStatementsResponse) {}
+  rpc QueryStatementMetrics(QueryStatementMetricsRequest) returns (QueryStatementMetricsResponse) {}
   rpc QueryStatementDetail(QueryStatementDetailRequest) returns (QueryStatementDetailResponse) {}
   rpc GetStatementSamplePlan(GetStatementSamplePlanRequest) returns (GetStatementSamplePlanResponse) {}
   rpc GetStatementText(GetStatementTextRequest) returns (GetStatementTextResponse) {}
@@ -29,6 +30,18 @@ enum QueryKind {
   QUERY_KIND_READS = 1;
   QUERY_KIND_WRITES = 2;
   QUERY_KIND_OTHERS = 3;
+}
+
+// Column the statement table is ordered by.
+enum StatementSortColumn {
+  STATEMENT_SORT_COLUMN_UNSPECIFIED = 0;
+  STATEMENT_SORT_COLUMN_QUERY = 1;
+  STATEMENT_SORT_COLUMN_USER = 2;
+  STATEMENT_SORT_COLUMN_AVG = 3;
+  STATEMENT_SORT_COLUMN_CALLS = 4;
+  STATEMENT_SORT_COLUMN_ROWS_PER_CALL = 5;
+  STATEMENT_SORT_COLUMN_PCT_IO = 6;
+  STATEMENT_SORT_COLUMN_PCT_TIME = 7;
 }
 
 // Values within a filter are ORed, separate filters are ANDed.
@@ -73,7 +86,7 @@ message QueryStatementsRequest {
   // Case-insensitive substring match against the normalized query text.
   string query_text = 5;
 
-  // Defaults to 1000 when unset.
+  // Page size. Defaults to 50 when unset.
   int32 limit = 6;
 
   // ANDed with query_text.
@@ -81,11 +94,30 @@ message QueryStatementsRequest {
 
   // Only statements of these kinds are returned.
   repeated QueryKind kinds = 8;
+
+  // Number of leading rows to skip, for pagination.
+  int32 offset = 9;
+
+  StatementSortColumn sort_column = 10;
+  bool sort_desc = 11;
 }
 
 message QueryStatementsResponse {
+  repeated StatementStat statements = 1;
+
+  // Whether more rows exist beyond this page.
+  bool has_more = 2;
+}
+
+message QueryStatementMetricsRequest {
+  string server_name = 1;
+  string database_name = 2;
+  google.protobuf.Timestamp from = 3;
+  google.protobuf.Timestamp to = 4;
+}
+
+message QueryStatementMetricsResponse {
   StatementMetrics metrics = 1;
-  repeated StatementStat statements = 2;
 }
 
 message QueryStatementDetailRequest {

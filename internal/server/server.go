@@ -8,7 +8,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-const defaultQueryLimit = 1000
+const defaultQueryLimit = 50
 
 func requireTimestamp(ts *timestamppb.Timestamp) error {
 	if ts != nil {
@@ -35,6 +35,14 @@ func resolveLimit(limit int32) int32 {
 	}
 
 	return limit
+}
+
+func resolveOffset(offset int32) int32 {
+	if offset < 0 {
+		return 0
+	}
+
+	return offset
 }
 
 func textFilter(name string) pgtype.Text {

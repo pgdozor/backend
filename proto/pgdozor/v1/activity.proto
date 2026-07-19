@@ -88,7 +88,7 @@ message QueryTransactionsRequest {
   google.protobuf.Timestamp from = 3;
   google.protobuf.Timestamp to = 4;
 
-  // Defaults to 1000 when unset.
+  // Defaults to 50 when unset.
   int32 limit = 5;
 }
 

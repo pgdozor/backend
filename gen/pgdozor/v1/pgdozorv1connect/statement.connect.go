@@ -42,6 +42,9 @@ const (
 	// StatementServiceQueryStatementsProcedure is the fully-qualified name of the StatementService's
 	// QueryStatements RPC.
 	StatementServiceQueryStatementsProcedure = "/pgdozor.v1.StatementService/QueryStatements"
+	// StatementServiceQueryStatementMetricsProcedure is the fully-qualified name of the
+	// StatementService's QueryStatementMetrics RPC.
+	StatementServiceQueryStatementMetricsProcedure = "/pgdozor.v1.StatementService/QueryStatementMetrics"
 	// StatementServiceQueryStatementDetailProcedure is the fully-qualified name of the
 	// StatementService's QueryStatementDetail RPC.
 	StatementServiceQueryStatementDetailProcedure = "/pgdozor.v1.StatementService/QueryStatementDetail"
@@ -64,6 +67,7 @@ type StatementServiceClient interface {
 	ReportStatements(context.Context, *connect.Request[v1.ReportStatementsRequest]) (*connect.Response[v1.ReportStatementsResponse], error)
 	ReportStatementTexts(context.Context, *connect.Request[v1.ReportStatementTextsRequest]) (*connect.Response[v1.ReportStatementTextsResponse], error)
 	QueryStatements(context.Context, *connect.Request[v1.QueryStatementsRequest]) (*connect.Response[v1.QueryStatementsResponse], error)
+	QueryStatementMetrics(context.Context, *connect.Request[v1.QueryStatementMetricsRequest]) (*connect.Response[v1.QueryStatementMetricsResponse], error)
 	QueryStatementDetail(context.Context, *connect.Request[v1.QueryStatementDetailRequest]) (*connect.Response[v1.QueryStatementDetailResponse], error)
 	GetStatementSamplePlan(context.Context, *connect.Request[v1.GetStatementSamplePlanRequest]) (*connect.Response[v1.GetStatementSamplePlanResponse], error)
 	GetStatementText(context.Context, *connect.Request[v1.GetStatementTextRequest]) (*connect.Response[v1.GetStatementTextResponse], error)
@@ -98,6 +102,12 @@ func NewStatementServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			httpClient,
 			baseURL+StatementServiceQueryStatementsProcedure,
 			connect.WithSchema(statementServiceMethods.ByName("QueryStatements")),
+			connect.WithClientOptions(opts...),
+		),
+		queryStatementMetrics: connect.NewClient[v1.QueryStatementMetricsRequest, v1.QueryStatementMetricsResponse](
+			httpClient,
+			baseURL+StatementServiceQueryStatementMetricsProcedure,
+			connect.WithSchema(statementServiceMethods.ByName("QueryStatementMetrics")),
 			connect.WithClientOptions(opts...),
 		),
 		queryStatementDetail: connect.NewClient[v1.QueryStatementDetailRequest, v1.QueryStatementDetailResponse](
@@ -138,6 +148,7 @@ type statementServiceClient struct {
 	reportStatements       *connect.Client[v1.ReportStatementsRequest, v1.ReportStatementsResponse]
 	reportStatementTexts   *connect.Client[v1.ReportStatementTextsRequest, v1.ReportStatementTextsResponse]
 	queryStatements        *connect.Client[v1.QueryStatementsRequest, v1.QueryStatementsResponse]
+	queryStatementMetrics  *connect.Client[v1.QueryStatementMetricsRequest, v1.QueryStatementMetricsResponse]
 	queryStatementDetail   *connect.Client[v1.QueryStatementDetailRequest, v1.QueryStatementDetailResponse]
 	getStatementSamplePlan *connect.Client[v1.GetStatementSamplePlanRequest, v1.GetStatementSamplePlanResponse]
 	getStatementText       *connect.Client[v1.GetStatementTextRequest, v1.GetStatementTextResponse]
@@ -158,6 +169,11 @@ func (c *statementServiceClient) ReportStatementTexts(ctx context.Context, req *
 // QueryStatements calls pgdozor.v1.StatementService.QueryStatements.
 func (c *statementServiceClient) QueryStatements(ctx context.Context, req *connect.Request[v1.QueryStatementsRequest]) (*connect.Response[v1.QueryStatementsResponse], error) {
 	return c.queryStatements.CallUnary(ctx, req)
+}
+
+// QueryStatementMetrics calls pgdozor.v1.StatementService.QueryStatementMetrics.
+func (c *statementServiceClient) QueryStatementMetrics(ctx context.Context, req *connect.Request[v1.QueryStatementMetricsRequest]) (*connect.Response[v1.QueryStatementMetricsResponse], error) {
+	return c.queryStatementMetrics.CallUnary(ctx, req)
 }
 
 // QueryStatementDetail calls pgdozor.v1.StatementService.QueryStatementDetail.
@@ -190,6 +206,7 @@ type StatementServiceHandler interface {
 	ReportStatements(context.Context, *connect.Request[v1.ReportStatementsRequest]) (*connect.Response[v1.ReportStatementsResponse], error)
 	ReportStatementTexts(context.Context, *connect.Request[v1.ReportStatementTextsRequest]) (*connect.Response[v1.ReportStatementTextsResponse], error)
 	QueryStatements(context.Context, *connect.Request[v1.QueryStatementsRequest]) (*connect.Response[v1.QueryStatementsResponse], error)
+	QueryStatementMetrics(context.Context, *connect.Request[v1.QueryStatementMetricsRequest]) (*connect.Response[v1.QueryStatementMetricsResponse], error)
 	QueryStatementDetail(context.Context, *connect.Request[v1.QueryStatementDetailRequest]) (*connect.Response[v1.QueryStatementDetailResponse], error)
 	GetStatementSamplePlan(context.Context, *connect.Request[v1.GetStatementSamplePlanRequest]) (*connect.Response[v1.GetStatementSamplePlanResponse], error)
 	GetStatementText(context.Context, *connect.Request[v1.GetStatementTextRequest]) (*connect.Response[v1.GetStatementTextResponse], error)
@@ -220,6 +237,12 @@ func NewStatementServiceHandler(svc StatementServiceHandler, opts ...connect.Han
 		StatementServiceQueryStatementsProcedure,
 		svc.QueryStatements,
 		connect.WithSchema(statementServiceMethods.ByName("QueryStatements")),
+		connect.WithHandlerOptions(opts...),
+	)
+	statementServiceQueryStatementMetricsHandler := connect.NewUnaryHandler(
+		StatementServiceQueryStatementMetricsProcedure,
+		svc.QueryStatementMetrics,
+		connect.WithSchema(statementServiceMethods.ByName("QueryStatementMetrics")),
 		connect.WithHandlerOptions(opts...),
 	)
 	statementServiceQueryStatementDetailHandler := connect.NewUnaryHandler(
@@ -260,6 +283,8 @@ func NewStatementServiceHandler(svc StatementServiceHandler, opts ...connect.Han
 			statementServiceReportStatementTextsHandler.ServeHTTP(w, r)
 		case StatementServiceQueryStatementsProcedure:
 			statementServiceQueryStatementsHandler.ServeHTTP(w, r)
+		case StatementServiceQueryStatementMetricsProcedure:
+			statementServiceQueryStatementMetricsHandler.ServeHTTP(w, r)
 		case StatementServiceQueryStatementDetailProcedure:
 			statementServiceQueryStatementDetailHandler.ServeHTTP(w, r)
 		case StatementServiceGetStatementSamplePlanProcedure:
@@ -289,6 +314,10 @@ func (UnimplementedStatementServiceHandler) ReportStatementTexts(context.Context
 
 func (UnimplementedStatementServiceHandler) QueryStatements(context.Context, *connect.Request[v1.QueryStatementsRequest]) (*connect.Response[v1.QueryStatementsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("pgdozor.v1.StatementService.QueryStatements is not implemented"))
+}
+
+func (UnimplementedStatementServiceHandler) QueryStatementMetrics(context.Context, *connect.Request[v1.QueryStatementMetricsRequest]) (*connect.Response[v1.QueryStatementMetricsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("pgdozor.v1.StatementService.QueryStatementMetrics is not implemented"))
 }
 
 func (UnimplementedStatementServiceHandler) QueryStatementDetail(context.Context, *connect.Request[v1.QueryStatementDetailRequest]) (*connect.Response[v1.QueryStatementDetailResponse], error) {

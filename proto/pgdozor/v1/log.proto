@@ -211,7 +211,7 @@ message QueryLogsRequest {
   // Empty means every classification.
   repeated LogEvent.LogClassification classifications = 6;
 
-  // Defaults to 1000 when unset.
+  // Defaults to 50 when unset.
   int32 limit = 7;
 }
 

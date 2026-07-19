@@ -1015,7 +1015,19 @@ func (q *Queries) ListStatementSamples(ctx context.Context, arg ListStatementSam
 }
 
 const listStatementStats = `-- name: ListStatementStats :many
-WITH per_statement AS (
+WITH totals AS (
+    SELECT
+        sum(d.total_exec_time)::double precision AS total_exec_time,
+        sum(d.total_io_time)::double precision   AS total_io_time
+    FROM statement_deltas d
+    JOIN statements s ON s.id = d.statement_id
+    WHERE ($5::text IS NULL OR s.server_name = $5)
+      AND ($6::text IS NULL OR s.database_name = $6)
+      AND ($7::text[] IS NULL OR s.server_name = ANY($7::text[]))
+      AND ($8::timestamptz IS NULL OR d.collected_at >= $8)
+      AND ($9::timestamptz IS NULL OR d.collected_at <= $9)
+),
+per_statement AS (
     SELECT
         s.id,
         s.query_short AS preview,
@@ -1026,16 +1038,16 @@ WITH per_statement AS (
         sum(d.total_io_time)::double precision   AS total_io_time
     FROM statement_deltas d
     JOIN statements s ON s.id = d.statement_id
-    WHERE ($2::text IS NULL OR s.server_name = $2)
-      AND ($3::text IS NULL OR s.database_name = $3)
-      AND ($4::text[] IS NULL OR s.server_name = ANY($4::text[]))
-      AND ($5::timestamptz IS NULL OR d.collected_at >= $5)
-      AND ($6::timestamptz IS NULL OR d.collected_at <= $6)
-      AND ($7::text IS NULL
-           OR s.query_full ILIKE '%' || $7::text || '%')
-      AND ($8::bigint[] IS NULL
-           OR s.id = ANY($8::bigint[]))
-      AND s.query_kind = ANY($9::int[])
+    WHERE ($5::text IS NULL OR s.server_name = $5)
+      AND ($6::text IS NULL OR s.database_name = $6)
+      AND ($7::text[] IS NULL OR s.server_name = ANY($7::text[]))
+      AND ($8::timestamptz IS NULL OR d.collected_at >= $8)
+      AND ($9::timestamptz IS NULL OR d.collected_at <= $9)
+      AND ($10::text IS NULL
+           OR s.query_full ILIKE '%' || $10::text || '%')
+      AND ($11::bigint[] IS NULL
+           OR s.id = ANY($11::bigint[]))
+      AND s.query_kind = ANY($12::int[])
     GROUP BY s.id
 ),
 statement_tags AS (
@@ -1049,8 +1061,8 @@ statement_tags AS (
         CROSS JOIN LATERAL jsonb_each_text(qs.tags) AS kv(key, value)
         WHERE qs.tags IS NOT NULL
           AND qs.statement_id IS NOT NULL
-          AND ($5::timestamptz IS NULL OR qs.collected_at >= $5)
-          AND ($6::timestamptz IS NULL OR qs.collected_at <= $6)
+          AND ($8::timestamptz IS NULL OR qs.collected_at >= $8)
+          AND ($9::timestamptz IS NULL OR qs.collected_at <= $9)
         GROUP BY qs.statement_id, kv.key
         HAVING count(DISTINCT kv.value) = 1
     ) per_key
@@ -1063,16 +1075,43 @@ SELECT
     ps.calls,
     ps.rows,
     ps.total_exec_time,
-    (coalesce(ps.total_exec_time / NULLIF(sum(ps.total_exec_time) OVER (), 0), 0) * 100)::double precision AS pct_of_total,
-    (coalesce(ps.total_io_time / NULLIF(sum(ps.total_io_time) OVER (), 0), 0) * 100)::double precision AS pct_io,
+    (coalesce(ps.total_exec_time / NULLIF((SELECT total_exec_time FROM totals), 0), 0) * 100)::double precision AS pct_of_total,
+    (coalesce(ps.total_io_time / NULLIF((SELECT total_io_time FROM totals), 0), 0) * 100)::double precision AS pct_io,
     coalesce(st.tags, '{}'::jsonb) AS tags
 FROM per_statement ps
 LEFT JOIN statement_tags st ON st.statement_id = ps.id
-ORDER BY ps.total_exec_time DESC
-LIMIT $1
+ORDER BY
+    CASE WHEN $1::text = 'query' AND $2::bool THEN ps.preview END DESC,
+    CASE WHEN $1::text = 'query' AND NOT $2::bool THEN ps.preview END ASC,
+    CASE WHEN $1::text = 'user' AND $2::bool THEN ps.user_name END DESC,
+    CASE WHEN $1::text = 'user' AND NOT $2::bool THEN ps.user_name END ASC,
+    CASE WHEN $2::bool THEN
+        CASE $1::text
+            WHEN 'avg' THEN ps.total_exec_time / NULLIF(ps.calls, 0)
+            WHEN 'calls' THEN ps.calls::double precision
+            WHEN 'rows_per_call' THEN ps.rows::double precision / NULLIF(ps.calls, 0)
+            WHEN 'pct_io' THEN ps.total_io_time
+            ELSE ps.total_exec_time
+        END
+    END DESC,
+    CASE WHEN NOT $2::bool THEN
+        CASE $1::text
+            WHEN 'avg' THEN ps.total_exec_time / NULLIF(ps.calls, 0)
+            WHEN 'calls' THEN ps.calls::double precision
+            WHEN 'rows_per_call' THEN ps.rows::double precision / NULLIF(ps.calls, 0)
+            WHEN 'pct_io' THEN ps.total_io_time
+            ELSE ps.total_exec_time
+        END
+    END ASC,
+    ps.id DESC
+LIMIT $4
+OFFSET $3
 `
 
 type ListStatementStatsParams struct {
+	SortKey        string
+	SortDesc       bool
+	OffsetRows     int32
 	RowLimit       int32
 	ServerName     pgtype.Text
 	DatabaseName   pgtype.Text
@@ -1098,6 +1137,9 @@ type ListStatementStatsRow struct {
 
 func (q *Queries) ListStatementStats(ctx context.Context, arg ListStatementStatsParams) ([]ListStatementStatsRow, error) {
 	rows, err := q.db.Query(ctx, listStatementStats,
+		arg.SortKey,
+		arg.SortDesc,
+		arg.OffsetRows,
 		arg.RowLimit,
 		arg.ServerName,
 		arg.DatabaseName,

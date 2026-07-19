@@ -12,9 +12,11 @@ import (
 	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
 	"github.com/pgdozor/backend/internal/alerts"
+	"github.com/pgdozor/backend/internal/auth"
 	"github.com/pgdozor/backend/internal/db"
 	"github.com/pgdozor/backend/internal/sqlsummary"
 )
@@ -224,17 +226,8 @@ func (s *StatementServer) QueryStatements(
 ) (*connect.Response[pgdozorv1.QueryStatementsResponse], error) {
 	msg := req.Msg
 
-	principal, err := requirePrincipal(ctx)
+	principal, err := s.authorizeStatementQuery(ctx, msg.GetServerName(), msg.GetFrom(), msg.GetTo())
 	if err != nil {
-		return nil, err
-	}
-
-	if name := msg.GetServerName(); name != "" && !principal.CanViewServer(name) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("access to that server is not allowed"))
-	}
-
-	from, to := msg.GetFrom(), msg.GetTo()
-	if err = requireRange(from, to); err != nil {
 		return nil, err
 	}
 
@@ -244,35 +237,75 @@ func (s *StatementServer) QueryStatements(
 
 	filter, err := s.resolveStatementFilter(
 		ctx, msg.GetQueryText(), msg.GetTagFilters(),
-		serverName, databaseName, from.AsTime(), to.AsTime(), allowedServers,
+		serverName, databaseName, msg.GetFrom().AsTime(), msg.GetTo().AsTime(), allowedServers,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	statements, err := s.listStatements(ctx, msg, serverName, databaseName, filter, allowedServers)
+	statements, hasMore, err := s.listStatements(ctx, msg, serverName, databaseName, filter, allowedServers)
 	if err != nil {
 		return nil, err
 	}
 
+	return connect.NewResponse(&pgdozorv1.QueryStatementsResponse{
+		Statements: statements,
+		HasMore:    hasMore,
+	}), nil
+}
+
+func (s *StatementServer) QueryStatementMetrics(
+	ctx context.Context,
+	req *connect.Request[pgdozorv1.QueryStatementMetricsRequest],
+) (*connect.Response[pgdozorv1.QueryStatementMetricsResponse], error) {
+	msg := req.Msg
+
+	principal, err := s.authorizeStatementQuery(ctx, msg.GetServerName(), msg.GetFrom(), msg.GetTo())
+	if err != nil {
+		return nil, err
+	}
+
+	serverName := textFilter(msg.GetServerName())
+	databaseName := textFilter(msg.GetDatabaseName())
+	allowedServers := principal.AllowedServerFilter()
+	from, to := msg.GetFrom().AsTime(), msg.GetTo().AsTime()
+
 	metrics, err := s.statementMetrics(
-		ctx, pgtype.Int8{}, serverName, databaseName, filter, from.AsTime(), to.AsTime(), allowedServers,
+		ctx, pgtype.Int8{}, serverName, databaseName, statementFilter{}, from, to, allowedServers,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	metrics.P90, metrics.P95, metrics.P99, err = s.statementPercentiles(
-		ctx, serverName, databaseName, filter, from.AsTime(), to.AsTime(), allowedServers,
+		ctx, serverName, databaseName, statementFilter{}, from, to, allowedServers,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	return connect.NewResponse(&pgdozorv1.QueryStatementsResponse{
-		Metrics:    metrics,
-		Statements: statements,
-	}), nil
+	return connect.NewResponse(&pgdozorv1.QueryStatementMetricsResponse{Metrics: metrics}), nil
+}
+
+func (s *StatementServer) authorizeStatementQuery(
+	ctx context.Context,
+	serverName string,
+	from, to *timestamppb.Timestamp,
+) (*auth.Principal, error) {
+	principal, err := requirePrincipal(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if serverName != "" && !principal.CanViewServer(serverName) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("access to that server is not allowed"))
+	}
+
+	if err = requireRange(from, to); err != nil {
+		return nil, err
+	}
+
+	return principal, nil
 }
 
 func (s *StatementServer) QueryStatementDetail(
@@ -621,7 +654,9 @@ func (s *StatementServer) listStatements(
 	serverName, databaseName pgtype.Text,
 	filter statementFilter,
 	allowedServers []string,
-) ([]*pgdozorv1.StatementStat, error) {
+) ([]*pgdozorv1.StatementStat, bool, error) {
+	limit := resolveLimit(msg.GetLimit())
+
 	rows, err := s.queries.ListStatementStats(ctx, db.ListStatementStatsParams{
 		ServerName:     serverName,
 		DatabaseName:   databaseName,
@@ -631,17 +666,25 @@ func (s *StatementServer) listStatements(
 		Since:          timestamptzFromProto(msg.GetFrom()),
 		Until:          timestamptzFromProto(msg.GetTo()),
 		Kinds:          requestedKinds(msg.GetKinds()),
-		RowLimit:       resolveLimit(msg.GetLimit()),
+		SortKey:        sortKey(msg.GetSortColumn()),
+		SortDesc:       msg.GetSortDesc(),
+		OffsetRows:     resolveOffset(msg.GetOffset()),
+		RowLimit:       limit + 1,
 	})
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, false, connect.NewError(connect.CodeInternal, err)
+	}
+
+	hasMore := len(rows) > int(limit)
+	if hasMore {
+		rows = rows[:limit]
 	}
 
 	statements := make([]*pgdozorv1.StatementStat, len(rows))
 	for i, row := range rows {
 		tags, tagErr := protoFromJSONB(row.Tags)
 		if tagErr != nil {
-			return nil, connect.NewError(connect.CodeInternal, tagErr)
+			return nil, false, connect.NewError(connect.CodeInternal, tagErr)
 		}
 
 		statements[i] = &pgdozorv1.StatementStat{
@@ -658,7 +701,29 @@ func (s *StatementServer) listStatements(
 		}
 	}
 
-	return statements, nil
+	return statements, hasMore, nil
+}
+
+func sortKey(col pgdozorv1.StatementSortColumn) string {
+	switch col {
+	case pgdozorv1.StatementSortColumn_STATEMENT_SORT_COLUMN_QUERY:
+		return "query"
+	case pgdozorv1.StatementSortColumn_STATEMENT_SORT_COLUMN_USER:
+		return "user"
+	case pgdozorv1.StatementSortColumn_STATEMENT_SORT_COLUMN_AVG:
+		return "avg"
+	case pgdozorv1.StatementSortColumn_STATEMENT_SORT_COLUMN_CALLS:
+		return "calls"
+	case pgdozorv1.StatementSortColumn_STATEMENT_SORT_COLUMN_ROWS_PER_CALL:
+		return "rows_per_call"
+	case pgdozorv1.StatementSortColumn_STATEMENT_SORT_COLUMN_PCT_IO:
+		return "pct_io"
+	case pgdozorv1.StatementSortColumn_STATEMENT_SORT_COLUMN_PCT_TIME,
+		pgdozorv1.StatementSortColumn_STATEMENT_SORT_COLUMN_UNSPECIFIED:
+		return "pct_time"
+	}
+
+	return "pct_time"
 }
 
 func (s *StatementServer) statementMetrics(
