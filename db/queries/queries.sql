@@ -476,6 +476,12 @@ FROM statement_samples
 WHERE id = sqlc.arg('sample_id')
   AND (sqlc.narg('allowed_servers')::text[] IS NULL OR server_name = ANY(sqlc.narg('allowed_servers')::text[]));
 
+-- name: GetStatementSampleText :one
+SELECT query, parameters
+FROM statement_samples
+WHERE id = sqlc.arg('sample_id')
+  AND (sqlc.narg('allowed_servers')::text[] IS NULL OR server_name = ANY(sqlc.narg('allowed_servers')::text[]));
+
 -- name: InsertLogEvents :batchone
 INSERT INTO log_events (
     server_name, collected_at, occurred_at, log_level, classification, message,

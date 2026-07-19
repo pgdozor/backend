@@ -475,6 +475,30 @@ func (q *Queries) GetStatementSamplePlan(ctx context.Context, arg GetStatementSa
 	return i, err
 }
 
+const getStatementSampleText = `-- name: GetStatementSampleText :one
+SELECT query, parameters
+FROM statement_samples
+WHERE id = $1
+  AND ($2::text[] IS NULL OR server_name = ANY($2::text[]))
+`
+
+type GetStatementSampleTextParams struct {
+	SampleID       int64
+	AllowedServers []string
+}
+
+type GetStatementSampleTextRow struct {
+	Query      string
+	Parameters []string
+}
+
+func (q *Queries) GetStatementSampleText(ctx context.Context, arg GetStatementSampleTextParams) (GetStatementSampleTextRow, error) {
+	row := q.db.QueryRow(ctx, getStatementSampleText, arg.SampleID, arg.AllowedServers)
+	var i GetStatementSampleTextRow
+	err := row.Scan(&i.Query, &i.Parameters)
+	return i, err
+}
+
 const getStatementText = `-- name: GetStatementText :one
 SELECT query_full
 FROM statements

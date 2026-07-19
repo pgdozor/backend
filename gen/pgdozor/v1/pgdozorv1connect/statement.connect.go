@@ -57,6 +57,9 @@ const (
 	// StatementServiceGetStatementSamplePlanProcedure is the fully-qualified name of the
 	// StatementService's GetStatementSamplePlan RPC.
 	StatementServiceGetStatementSamplePlanProcedure = "/pgdozor.v1.StatementService/GetStatementSamplePlan"
+	// StatementServiceGetStatementSampleTextProcedure is the fully-qualified name of the
+	// StatementService's GetStatementSampleText RPC.
+	StatementServiceGetStatementSampleTextProcedure = "/pgdozor.v1.StatementService/GetStatementSampleText"
 	// StatementServiceGetStatementTextProcedure is the fully-qualified name of the StatementService's
 	// GetStatementText RPC.
 	StatementServiceGetStatementTextProcedure = "/pgdozor.v1.StatementService/GetStatementText"
@@ -78,6 +81,7 @@ type StatementServiceClient interface {
 	QueryStatementDetailMetrics(context.Context, *connect.Request[v1.QueryStatementDetailMetricsRequest]) (*connect.Response[v1.QueryStatementDetailMetricsResponse], error)
 	QueryStatementSamples(context.Context, *connect.Request[v1.QueryStatementSamplesRequest]) (*connect.Response[v1.QueryStatementSamplesResponse], error)
 	GetStatementSamplePlan(context.Context, *connect.Request[v1.GetStatementSamplePlanRequest]) (*connect.Response[v1.GetStatementSamplePlanResponse], error)
+	GetStatementSampleText(context.Context, *connect.Request[v1.GetStatementSampleTextRequest]) (*connect.Response[v1.GetStatementSampleTextResponse], error)
 	GetStatementText(context.Context, *connect.Request[v1.GetStatementTextRequest]) (*connect.Response[v1.GetStatementTextResponse], error)
 	ListTagKeys(context.Context, *connect.Request[v1.ListTagKeysRequest]) (*connect.Response[v1.ListTagKeysResponse], error)
 	ListTagValues(context.Context, *connect.Request[v1.ListTagValuesRequest]) (*connect.Response[v1.ListTagValuesResponse], error)
@@ -142,6 +146,12 @@ func NewStatementServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(statementServiceMethods.ByName("GetStatementSamplePlan")),
 			connect.WithClientOptions(opts...),
 		),
+		getStatementSampleText: connect.NewClient[v1.GetStatementSampleTextRequest, v1.GetStatementSampleTextResponse](
+			httpClient,
+			baseURL+StatementServiceGetStatementSampleTextProcedure,
+			connect.WithSchema(statementServiceMethods.ByName("GetStatementSampleText")),
+			connect.WithClientOptions(opts...),
+		),
 		getStatementText: connect.NewClient[v1.GetStatementTextRequest, v1.GetStatementTextResponse](
 			httpClient,
 			baseURL+StatementServiceGetStatementTextProcedure,
@@ -173,6 +183,7 @@ type statementServiceClient struct {
 	queryStatementDetailMetrics *connect.Client[v1.QueryStatementDetailMetricsRequest, v1.QueryStatementDetailMetricsResponse]
 	queryStatementSamples       *connect.Client[v1.QueryStatementSamplesRequest, v1.QueryStatementSamplesResponse]
 	getStatementSamplePlan      *connect.Client[v1.GetStatementSamplePlanRequest, v1.GetStatementSamplePlanResponse]
+	getStatementSampleText      *connect.Client[v1.GetStatementSampleTextRequest, v1.GetStatementSampleTextResponse]
 	getStatementText            *connect.Client[v1.GetStatementTextRequest, v1.GetStatementTextResponse]
 	listTagKeys                 *connect.Client[v1.ListTagKeysRequest, v1.ListTagKeysResponse]
 	listTagValues               *connect.Client[v1.ListTagValuesRequest, v1.ListTagValuesResponse]
@@ -218,6 +229,11 @@ func (c *statementServiceClient) GetStatementSamplePlan(ctx context.Context, req
 	return c.getStatementSamplePlan.CallUnary(ctx, req)
 }
 
+// GetStatementSampleText calls pgdozor.v1.StatementService.GetStatementSampleText.
+func (c *statementServiceClient) GetStatementSampleText(ctx context.Context, req *connect.Request[v1.GetStatementSampleTextRequest]) (*connect.Response[v1.GetStatementSampleTextResponse], error) {
+	return c.getStatementSampleText.CallUnary(ctx, req)
+}
+
 // GetStatementText calls pgdozor.v1.StatementService.GetStatementText.
 func (c *statementServiceClient) GetStatementText(ctx context.Context, req *connect.Request[v1.GetStatementTextRequest]) (*connect.Response[v1.GetStatementTextResponse], error) {
 	return c.getStatementText.CallUnary(ctx, req)
@@ -243,6 +259,7 @@ type StatementServiceHandler interface {
 	QueryStatementDetailMetrics(context.Context, *connect.Request[v1.QueryStatementDetailMetricsRequest]) (*connect.Response[v1.QueryStatementDetailMetricsResponse], error)
 	QueryStatementSamples(context.Context, *connect.Request[v1.QueryStatementSamplesRequest]) (*connect.Response[v1.QueryStatementSamplesResponse], error)
 	GetStatementSamplePlan(context.Context, *connect.Request[v1.GetStatementSamplePlanRequest]) (*connect.Response[v1.GetStatementSamplePlanResponse], error)
+	GetStatementSampleText(context.Context, *connect.Request[v1.GetStatementSampleTextRequest]) (*connect.Response[v1.GetStatementSampleTextResponse], error)
 	GetStatementText(context.Context, *connect.Request[v1.GetStatementTextRequest]) (*connect.Response[v1.GetStatementTextResponse], error)
 	ListTagKeys(context.Context, *connect.Request[v1.ListTagKeysRequest]) (*connect.Response[v1.ListTagKeysResponse], error)
 	ListTagValues(context.Context, *connect.Request[v1.ListTagValuesRequest]) (*connect.Response[v1.ListTagValuesResponse], error)
@@ -303,6 +320,12 @@ func NewStatementServiceHandler(svc StatementServiceHandler, opts ...connect.Han
 		connect.WithSchema(statementServiceMethods.ByName("GetStatementSamplePlan")),
 		connect.WithHandlerOptions(opts...),
 	)
+	statementServiceGetStatementSampleTextHandler := connect.NewUnaryHandler(
+		StatementServiceGetStatementSampleTextProcedure,
+		svc.GetStatementSampleText,
+		connect.WithSchema(statementServiceMethods.ByName("GetStatementSampleText")),
+		connect.WithHandlerOptions(opts...),
+	)
 	statementServiceGetStatementTextHandler := connect.NewUnaryHandler(
 		StatementServiceGetStatementTextProcedure,
 		svc.GetStatementText,
@@ -339,6 +362,8 @@ func NewStatementServiceHandler(svc StatementServiceHandler, opts ...connect.Han
 			statementServiceQueryStatementSamplesHandler.ServeHTTP(w, r)
 		case StatementServiceGetStatementSamplePlanProcedure:
 			statementServiceGetStatementSamplePlanHandler.ServeHTTP(w, r)
+		case StatementServiceGetStatementSampleTextProcedure:
+			statementServiceGetStatementSampleTextHandler.ServeHTTP(w, r)
 		case StatementServiceGetStatementTextProcedure:
 			statementServiceGetStatementTextHandler.ServeHTTP(w, r)
 		case StatementServiceListTagKeysProcedure:
@@ -384,6 +409,10 @@ func (UnimplementedStatementServiceHandler) QueryStatementSamples(context.Contex
 
 func (UnimplementedStatementServiceHandler) GetStatementSamplePlan(context.Context, *connect.Request[v1.GetStatementSamplePlanRequest]) (*connect.Response[v1.GetStatementSamplePlanResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("pgdozor.v1.StatementService.GetStatementSamplePlan is not implemented"))
+}
+
+func (UnimplementedStatementServiceHandler) GetStatementSampleText(context.Context, *connect.Request[v1.GetStatementSampleTextRequest]) (*connect.Response[v1.GetStatementSampleTextResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("pgdozor.v1.StatementService.GetStatementSampleText is not implemented"))
 }
 
 func (UnimplementedStatementServiceHandler) GetStatementText(context.Context, *connect.Request[v1.GetStatementTextRequest]) (*connect.Response[v1.GetStatementTextResponse], error) {

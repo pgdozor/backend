@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -18,7 +17,7 @@ import (
 	"github.com/pgdozor/backend/internal/alerts"
 	"github.com/pgdozor/backend/internal/auth"
 	"github.com/pgdozor/backend/internal/db"
-	"github.com/pgdozor/backend/internal/sqlsummary"
+	"github.com/pgdozor/backend/internal/sqltext"
 )
 
 const (
@@ -140,7 +139,7 @@ func (s *StatementServer) ReportStatementTexts(
 	params := make([]db.FillStatementTextParams, len(texts))
 	for i, text := range texts {
 		identity := text.GetIdentity()
-		summary := sqlsummary.Process(text.GetQuery())
+		summary := sqltext.Process(text.GetQuery())
 		params[i] = db.FillStatementTextParams{
 			ServerName:   serverName,
 			DatabaseName: identity.GetDatabaseName(),
@@ -457,7 +456,7 @@ func statementSampleToProto(row db.ListStatementSamplesRow) (*pgdozorv1.Statemen
 	return &pgdozorv1.StatementSample{
 		Id:         row.ID,
 		OccurredAt: protoFromTimestamptz(row.OccurredAt),
-		Query:      concretizeStatement(row.Query, row.Parameters),
+		Query:      sqltext.SamplePreview(row.Query, row.Parameters),
 		Tags:       tags,
 		HasPlan:    protoFromText(row.ExplainPlanJson) != "",
 		DurationMs: row.DurationMs,
@@ -490,8 +489,38 @@ func (s *StatementServer) GetStatementSamplePlan(
 	}
 
 	return connect.NewResponse(&pgdozorv1.GetStatementSamplePlanResponse{
-		Query:    concretizeStatement(plan.Query, plan.Parameters),
+		Query:    sqltext.Concretize(plan.Query, plan.Parameters),
 		PlanJson: protoFromText(plan.ExplainPlanJson),
+	}), nil
+}
+
+func (s *StatementServer) GetStatementSampleText(
+	ctx context.Context,
+	req *connect.Request[pgdozorv1.GetStatementSampleTextRequest],
+) (*connect.Response[pgdozorv1.GetStatementSampleTextResponse], error) {
+	sampleID := req.Msg.GetSampleId()
+	if sampleID == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("sample_id is required"))
+	}
+
+	principal, err := requirePrincipal(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	sample, err := s.queries.GetStatementSampleText(ctx, db.GetStatementSampleTextParams{
+		SampleID:       sampleID,
+		AllowedServers: principal.AllowedServerFilter(),
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("statement sample %d not found", sampleID))
+	}
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&pgdozorv1.GetStatementSampleTextResponse{
+		Query: sqltext.Concretize(sample.Query, sample.Parameters),
 	}), nil
 }
 
@@ -521,36 +550,6 @@ func (s *StatementServer) GetStatementText(
 	}
 
 	return connect.NewResponse(&pgdozorv1.GetStatementTextResponse{Query: query}), nil
-}
-
-func concretizeStatement(query string, params []string) string {
-	if len(params) == 0 {
-		return query
-	}
-
-	var b strings.Builder
-	for i := 0; i < len(query); {
-		if query[i] != '$' || i+1 >= len(query) || query[i+1] < '0' || query[i+1] > '9' {
-			b.WriteByte(query[i])
-			i++
-
-			continue
-		}
-
-		j := i + 1
-		for j < len(query) && query[j] >= '0' && query[j] <= '9' {
-			j++
-		}
-
-		if n, convErr := strconv.Atoi(query[i+1 : j]); convErr == nil && n >= 1 && n <= len(params) {
-			b.WriteString(params[n-1])
-		} else {
-			b.WriteString(query[i:j])
-		}
-		i = j
-	}
-
-	return b.String()
 }
 
 type statementFilter struct {

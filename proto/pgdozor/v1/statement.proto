@@ -15,6 +15,7 @@ service StatementService {
   rpc QueryStatementDetailMetrics(QueryStatementDetailMetricsRequest) returns (QueryStatementDetailMetricsResponse) {}
   rpc QueryStatementSamples(QueryStatementSamplesRequest) returns (QueryStatementSamplesResponse) {}
   rpc GetStatementSamplePlan(GetStatementSamplePlanRequest) returns (GetStatementSamplePlanResponse) {}
+  rpc GetStatementSampleText(GetStatementSampleTextRequest) returns (GetStatementSampleTextResponse) {}
   rpc GetStatementText(GetStatementTextRequest) returns (GetStatementTextResponse) {}
   rpc ListTagKeys(ListTagKeysRequest) returns (ListTagKeysResponse) {}
   rpc ListTagValues(ListTagValuesRequest) returns (ListTagValuesResponse) {}
@@ -180,8 +181,7 @@ message StatementSample {
 
   google.protobuf.Timestamp occurred_at = 2;
 
-  // The statement as executed, with actual parameter values substituted into
-  // the $N placeholders (not normalized).
+  // Short concretized query for display; full text via GetStatementSampleText.
   string query = 3;
 
   // All tags as captured, including high-cardinality values.
@@ -204,6 +204,15 @@ message GetStatementSamplePlanResponse {
 
   // Raw Auto Explain plan as captured (JSON or text EXPLAIN output).
   string plan_json = 2;
+}
+
+message GetStatementSampleTextRequest {
+  // Internal statement sample id.
+  int64 sample_id = 1;
+}
+
+message GetStatementSampleTextResponse {
+  string query = 1;
 }
 
 message GetStatementTextRequest {
