@@ -12,6 +12,8 @@ service StatementService {
   rpc QueryStatements(QueryStatementsRequest) returns (QueryStatementsResponse) {}
   rpc QueryStatementMetrics(QueryStatementMetricsRequest) returns (QueryStatementMetricsResponse) {}
   rpc QueryStatementDetail(QueryStatementDetailRequest) returns (QueryStatementDetailResponse) {}
+  rpc QueryStatementDetailMetrics(QueryStatementDetailMetricsRequest) returns (QueryStatementDetailMetricsResponse) {}
+  rpc QueryStatementSamples(QueryStatementSamplesRequest) returns (QueryStatementSamplesResponse) {}
   rpc GetStatementSamplePlan(GetStatementSamplePlanRequest) returns (GetStatementSamplePlanResponse) {}
   rpc GetStatementText(GetStatementTextRequest) returns (GetStatementTextResponse) {}
   rpc ListTagKeys(ListTagKeysRequest) returns (ListTagKeysResponse) {}
@@ -136,13 +138,39 @@ message QueryStatementDetailResponse {
   // Keys whose values differ are omitted.
   map<string, string> tags = 2;
 
-  // Per-query metrics over the window, scoped to this statement.
-  StatementMetrics metrics = 3;
-
-  repeated StatementSample samples = 4;
-
   string server_name = 5;
   string database_name = 6;
+}
+
+message QueryStatementDetailMetricsRequest {
+  // Internal statement id.
+  int64 id = 1;
+  google.protobuf.Timestamp from = 2;
+  google.protobuf.Timestamp to = 3;
+}
+
+message QueryStatementDetailMetricsResponse {
+  StatementMetrics metrics = 1;
+}
+
+message QueryStatementSamplesRequest {
+  // Internal statement id.
+  int64 id = 1;
+  google.protobuf.Timestamp from = 2;
+  google.protobuf.Timestamp to = 3;
+
+  // Page size. Defaults to 50 when unset.
+  int32 limit = 4;
+
+  // Number of leading rows to skip, for pagination.
+  int32 offset = 5;
+}
+
+message QueryStatementSamplesResponse {
+  repeated StatementSample samples = 1;
+
+  // Whether more rows exist beyond this page.
+  bool has_more = 2;
 }
 
 // One captured execution of the statement (from statement_samples).

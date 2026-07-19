@@ -329,14 +329,11 @@ func (s *StatementServer) QueryStatementDetail(
 		return nil, err
 	}
 
-	allowedServers := principal.AllowedServerFilter()
-	since, until := timestamptzFromProto(from), timestamptzFromProto(to)
-
 	detail, err := s.queries.GetStatementDetail(ctx, db.GetStatementDetailParams{
 		StatementID:    id,
-		Since:          since,
-		Until:          until,
-		AllowedServers: allowedServers,
+		Since:          timestamptzFromProto(from),
+		Until:          timestamptzFromProto(to),
+		AllowedServers: principal.AllowedServerFilter(),
 	})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("statement %d not found", id))
@@ -350,6 +347,35 @@ func (s *StatementServer) QueryStatementDetail(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
+	return connect.NewResponse(&pgdozorv1.QueryStatementDetailResponse{
+		Query:        detail.Query,
+		ServerName:   detail.ServerName,
+		DatabaseName: detail.DatabaseName,
+		Tags:         tags,
+	}), nil
+}
+
+func (s *StatementServer) QueryStatementDetailMetrics(
+	ctx context.Context,
+	req *connect.Request[pgdozorv1.QueryStatementDetailMetricsRequest],
+) (*connect.Response[pgdozorv1.QueryStatementDetailMetricsResponse], error) {
+	msg := req.Msg
+
+	id := msg.GetId()
+	if id == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("id is required"))
+	}
+
+	principal, err := requirePrincipal(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	from, to := msg.GetFrom(), msg.GetTo()
+	if err = requireRange(from, to); err != nil {
+		return nil, err
+	}
+
 	metrics, err := s.statementMetrics(
 		ctx,
 		int8FromProto(id),
@@ -358,48 +384,84 @@ func (s *StatementServer) QueryStatementDetail(
 		statementFilter{},
 		from.AsTime(),
 		to.AsTime(),
-		allowedServers,
+		principal.AllowedServerFilter(),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	sampleRows, err := s.queries.ListStatementSamples(ctx, db.ListStatementSamplesParams{
+	return connect.NewResponse(&pgdozorv1.QueryStatementDetailMetricsResponse{Metrics: metrics}), nil
+}
+
+func (s *StatementServer) QueryStatementSamples(
+	ctx context.Context,
+	req *connect.Request[pgdozorv1.QueryStatementSamplesRequest],
+) (*connect.Response[pgdozorv1.QueryStatementSamplesResponse], error) {
+	msg := req.Msg
+
+	id := msg.GetId()
+	if id == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("id is required"))
+	}
+
+	principal, err := requirePrincipal(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	from, to := msg.GetFrom(), msg.GetTo()
+	if err = requireRange(from, to); err != nil {
+		return nil, err
+	}
+
+	limit := resolveLimit(msg.GetLimit())
+
+	rows, err := s.queries.ListStatementSamples(ctx, db.ListStatementSamplesParams{
 		StatementID:    int8FromProto(id),
-		AllowedServers: allowedServers,
-		Since:          since,
-		Until:          until,
-		RowLimit:       resolveLimit(0),
+		AllowedServers: principal.AllowedServerFilter(),
+		Since:          timestamptzFromProto(from),
+		Until:          timestamptzFromProto(to),
+		RowLimit:       limit + 1,
+		OffsetRows:     resolveOffset(msg.GetOffset()),
 	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	samples := make([]*pgdozorv1.StatementSample, len(sampleRows))
-	for i, row := range sampleRows {
-		sampleTags, tagErr := protoFromJSONB(row.Tags)
-		if tagErr != nil {
-			return nil, connect.NewError(connect.CodeInternal, tagErr)
-		}
-
-		samples[i] = &pgdozorv1.StatementSample{
-			Id:         row.ID,
-			OccurredAt: protoFromTimestamptz(row.OccurredAt),
-			Query:      concretizeStatement(row.Query, row.Parameters),
-			Tags:       sampleTags,
-			HasPlan:    protoFromText(row.ExplainPlanJson) != "",
-			DurationMs: row.DurationMs,
-		}
+	hasMore := len(rows) > int(limit)
+	if hasMore {
+		rows = rows[:limit]
 	}
 
-	return connect.NewResponse(&pgdozorv1.QueryStatementDetailResponse{
-		Query:        detail.Query,
-		ServerName:   detail.ServerName,
-		DatabaseName: detail.DatabaseName,
-		Tags:         tags,
-		Metrics:      metrics,
-		Samples:      samples,
+	samples := make([]*pgdozorv1.StatementSample, len(rows))
+	for i, row := range rows {
+		sample, sampleErr := statementSampleToProto(row)
+		if sampleErr != nil {
+			return nil, sampleErr
+		}
+		samples[i] = sample
+	}
+
+	return connect.NewResponse(&pgdozorv1.QueryStatementSamplesResponse{
+		Samples: samples,
+		HasMore: hasMore,
 	}), nil
+}
+
+func statementSampleToProto(row db.ListStatementSamplesRow) (*pgdozorv1.StatementSample, error) {
+	tags, err := protoFromJSONB(row.Tags)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return &pgdozorv1.StatementSample{
+		Id:         row.ID,
+		OccurredAt: protoFromTimestamptz(row.OccurredAt),
+		Query:      concretizeStatement(row.Query, row.Parameters),
+		Tags:       tags,
+		HasPlan:    protoFromText(row.ExplainPlanJson) != "",
+		DurationMs: row.DurationMs,
+	}, nil
 }
 
 func (s *StatementServer) GetStatementSamplePlan(

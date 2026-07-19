@@ -959,7 +959,8 @@ WHERE statement_id = $1
   AND ($3::timestamptz IS NULL OR collected_at >= $3)
   AND ($4::timestamptz IS NULL OR collected_at <= $4)
 ORDER BY occurred_at DESC NULLS LAST, id DESC
-LIMIT $5
+LIMIT $6
+OFFSET $5
 `
 
 type ListStatementSamplesParams struct {
@@ -967,6 +968,7 @@ type ListStatementSamplesParams struct {
 	AllowedServers []string
 	Since          pgtype.Timestamptz
 	Until          pgtype.Timestamptz
+	OffsetRows     int32
 	RowLimit       int32
 }
 
@@ -986,6 +988,7 @@ func (q *Queries) ListStatementSamples(ctx context.Context, arg ListStatementSam
 		arg.AllowedServers,
 		arg.Since,
 		arg.Until,
+		arg.OffsetRows,
 		arg.RowLimit,
 	)
 	if err != nil {

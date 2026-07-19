@@ -467,7 +467,8 @@ WHERE statement_id = sqlc.arg('statement_id')
   AND (sqlc.narg('since')::timestamptz IS NULL OR collected_at >= sqlc.narg('since'))
   AND (sqlc.narg('until')::timestamptz IS NULL OR collected_at <= sqlc.narg('until'))
 ORDER BY occurred_at DESC NULLS LAST, id DESC
-LIMIT sqlc.arg('row_limit');
+LIMIT sqlc.arg('row_limit')
+OFFSET sqlc.arg('offset_rows');
 
 -- name: GetStatementSamplePlan :one
 SELECT query, parameters, explain_plan_json
