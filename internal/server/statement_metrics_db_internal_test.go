@@ -53,7 +53,7 @@ func TestStatementSeriesTotalMatchesTable(t *testing.T) {
 
 	rows, err := q.ListStatementStats(ctx, db.ListStatementStatsParams{
 		RowLimit: 100000,
-		Since:    since,
+		Since:    pgtype.Timestamptz{Time: from.Add(-2 * bucket), Valid: true},
 		Until:    until,
 		Kinds: requestedKinds([]pgdozorv1.QueryKind{
 			pgdozorv1.QueryKind_QUERY_KIND_READS,
@@ -72,7 +72,7 @@ func TestStatementSeriesTotalMatchesTable(t *testing.T) {
 
 	if seriesTotal > tableTotal*(1+1e-6)+1 {
 		t.Fatalf(
-			"series total %.3fms exceeds table total %.3fms — the chart series must be a subset (only the in-progress bucket is omitted)",
+			"series total %.3fms exceeds table total %.3fms — the chart series must be a subset of the window widened by one leading bucket",
 			seriesTotal,
 			tableTotal,
 		)

@@ -819,7 +819,7 @@ func (s *StatementServer) statementMetrics(
 	avgIo := make([]*pgdozorv1.MetricPoint, n)
 
 	for i, b := range buckets {
-		at := protoFromTimestamptz(b.BucketStart)
+		at := protoFromTimestamptz(b.BucketEnd)
 		calls[i] = &pgdozorv1.MetricPoint{At: at, Value: float64(b.Calls)}
 		avg[i] = &pgdozorv1.MetricPoint{At: at, Value: avgExecTime(b.TotalExecTime, b.Calls)}
 		avgIo[i] = &pgdozorv1.MetricPoint{At: at, Value: avgExecTime(b.TotalIoTime, b.Calls)}
@@ -863,7 +863,7 @@ func (s *StatementServer) statementPercentiles(
 	s99 := make([]*pgdozorv1.MetricPoint, n)
 
 	for i, r := range rows {
-		at := protoFromTimestamptz(r.BucketStart)
+		at := protoFromTimestamptz(r.BucketEnd)
 		s90[i] = &pgdozorv1.MetricPoint{At: at, Value: r.P90}
 		s95[i] = &pgdozorv1.MetricPoint{At: at, Value: r.P95}
 		s99[i] = &pgdozorv1.MetricPoint{At: at, Value: r.P99}
