@@ -992,13 +992,14 @@ WHERE s.statement_id = $1
             AND e.explain_plan_json IS NOT NULL
             AND e.query = s.query
             AND e.parameters IS NOT DISTINCT FROM s.parameters
-            AND abs(extract(epoch FROM e.occurred_at - s.occurred_at)) <= 1
+            AND e.occurred_at BETWEEN s.occurred_at - interval '1 second'
+                                  AND s.occurred_at + interval '1 second'
             AND abs(e.duration_ms - s.duration_ms) <= 1
             AND ($3::timestamptz IS NULL OR e.collected_at >= $3)
             AND ($4::timestamptz IS NULL OR e.collected_at <= $4)
       )
   )
-ORDER BY s.occurred_at DESC NULLS LAST, s.id DESC
+ORDER BY s.occurred_at DESC, s.id DESC
 LIMIT $6
 OFFSET $5
 `
@@ -1096,18 +1097,18 @@ per_statement AS (
 statement_tags AS (
     SELECT statement_id, jsonb_object_agg(key, value) AS tags
     FROM (
-        SELECT
-            qs.statement_id,
-            kv.key,
-            min(kv.value) AS value
-        FROM statement_samples qs
-        CROSS JOIN LATERAL jsonb_each_text(qs.tags) AS kv(key, value)
-        WHERE qs.tags IS NOT NULL
-          AND qs.statement_id IS NOT NULL
-          AND ($8::timestamptz IS NULL OR qs.collected_at >= $8)
-          AND ($9::timestamptz IS NULL OR qs.collected_at <= $9)
-        GROUP BY qs.statement_id, kv.key
-        HAVING count(DISTINCT kv.value) = 1
+        SELECT dt.statement_id, kv.key, min(kv.value) AS value
+        FROM (
+            SELECT DISTINCT qs.statement_id, qs.tags
+            FROM statement_samples qs
+            WHERE qs.tags IS NOT NULL
+              AND qs.statement_id IN (SELECT id FROM per_statement)
+              AND ($8::timestamptz IS NULL OR qs.collected_at >= $8)
+              AND ($9::timestamptz IS NULL OR qs.collected_at <= $9)
+        ) dt
+        CROSS JOIN LATERAL jsonb_each_text(dt.tags) AS kv(key, value)
+        GROUP BY dt.statement_id, kv.key
+        HAVING min(kv.value) = max(kv.value)
     ) per_key
     GROUP BY statement_id
 )
