@@ -11,7 +11,7 @@ import (
 
 const (
 	CollectorTokenPrefix = "qsc_"
-	SessionTokenPrefix   = "pgds_"
+	SessionTokenPrefix   = "qss_"
 	tokenRandomBytes     = 20
 	base62Base           = 62
 	base62Alphabet       = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"

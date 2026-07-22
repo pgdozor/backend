@@ -79,10 +79,16 @@ func run(logger *slog.Logger) error {
 	)
 	apiMux.Handle(statementPath, statementHandler)
 
-	logPath, logHandler := querysheriffv1connect.NewLogServiceHandler(server.NewLogServer(queries, notifier), interceptors)
+	logPath, logHandler := querysheriffv1connect.NewLogServiceHandler(
+		server.NewLogServer(queries, notifier),
+		interceptors,
+	)
 	apiMux.Handle(logPath, logHandler)
 
-	healthPath, healthHandler := querysheriffv1connect.NewHealthServiceHandler(server.NewHealthServer(queries), interceptors)
+	healthPath, healthHandler := querysheriffv1connect.NewHealthServiceHandler(
+		server.NewHealthServer(queries),
+		interceptors,
+	)
 	apiMux.Handle(healthPath, healthHandler)
 
 	authPath, authHandler := querysheriffv1connect.NewAuthServiceHandler(

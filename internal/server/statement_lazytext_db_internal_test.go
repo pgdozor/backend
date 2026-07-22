@@ -53,10 +53,13 @@ func TestReportStatementsLazyText(t *testing.T) {
 	}
 
 	report := func() []*querysheriffv1.StatementIdentity {
-		resp, reportErr := server.ReportStatements(collectorCtx, connect.NewRequest(&querysheriffv1.ReportStatementsRequest{
-			CollectedAt:     timestamppb.New(time.Now()),
-			StatementDeltas: deltas,
-		}))
+		resp, reportErr := server.ReportStatements(
+			collectorCtx,
+			connect.NewRequest(&querysheriffv1.ReportStatementsRequest{
+				CollectedAt:     timestamppb.New(time.Now()),
+				StatementDeltas: deltas,
+			}),
+		)
 		if reportErr != nil {
 			t.Fatalf("ReportStatements: %v", reportErr)
 		}

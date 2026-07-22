@@ -12,6 +12,7 @@ check:
 	$(MAKE) buf-lint
 	$(MAKE) buf-generate
 	$(MAKE) sqlc-generate
+	$(MAKE) tidy
 	$(MAKE) fmt
 	$(MAKE) lint
 
@@ -42,6 +43,10 @@ fmt:
 .PHONY: sqlc-generate
 sqlc-generate:
 	$(SQLC) generate
+
+.PHONY: tidy
+tidy:
+	go mod tidy
 
 .PHONY: migrate-up
 migrate-up:
