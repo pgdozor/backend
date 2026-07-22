@@ -4,14 +4,14 @@ Ingests PostgreSQL activity/statement snapshots, log events, and collector healt
 
 Stack: Go, Connect/buf, pgx, sqlc, goose.
 
-> Production deployment (Kubernetes / Helm) lives in the [`pgdozor/docs`](https://github.com/pgdozor/docs) repo. This README is for working on the backend itself.
+> Production deployment (Kubernetes / Helm) lives in the [`querysheriff/docs`](https://github.com/querysheriff/docs) repo. This README is for working on the backend itself.
 
 ## Local development
 
 All tooling (buf, sqlc, goose, golangci-lint) is pinned and run via `go run`, so nothing extra needs installing.
 
 ```sh
-export DATABASE_URL="postgres://pgdozor_backend:pgdozor_backend@localhost:5432/pgdozor?sslmode=disable"
+export DATABASE_URL="postgres://querysheriff_backend:querysheriff_backend@localhost:5432/querysheriff?sslmode=disable"
 make migrate-up   # apply migrations
 make run          # listens on localhost:3000
 ```
@@ -42,5 +42,5 @@ make release VERSION=0.1.0   # checks, tags v0.1.0, pushes; CI builds and publis
 Or build the image directly:
 
 ```sh
-docker build -t pgdozor-backend .   # ships the api, jobs and migrate binaries
+docker build -t querysheriff-backend .   # ships the api, jobs and migrate binaries
 ```

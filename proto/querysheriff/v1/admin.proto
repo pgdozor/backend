@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-package pgdozor.v1;
+package querysheriff.v1;
 
 import "google/protobuf/timestamp.proto";
-import "pgdozor/v1/auth.proto";
+import "querysheriff/v1/auth.proto";
 
-option go_package = "github.com/pgdozor/backend/gen/pgdozor/v1;pgdozorv1";
+option go_package = "github.com/querysheriff/backend/gen/querysheriff/v1;querysheriffv1";
 
 service AdminService {
   rpc ListCollectorTokens(ListCollectorTokensRequest) returns (ListCollectorTokensResponse) {}

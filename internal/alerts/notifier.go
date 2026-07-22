@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
-	"github.com/pgdozor/backend/internal/db"
+	"github.com/querysheriff/backend/internal/db"
 )
 
 const fireTimeout = 15 * time.Second

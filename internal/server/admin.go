@@ -10,9 +10,9 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
-	"github.com/pgdozor/backend/internal/auth"
-	"github.com/pgdozor/backend/internal/db"
+	querysheriffv1 "github.com/querysheriff/backend/gen/querysheriff/v1"
+	"github.com/querysheriff/backend/internal/auth"
+	"github.com/querysheriff/backend/internal/db"
 )
 
 const emailExistsMsg = "a user with that email already exists"
@@ -28,29 +28,29 @@ func NewAdminServer(pool *pgxpool.Pool) *AdminServer {
 
 func (s *AdminServer) ListCollectorTokens(
 	ctx context.Context,
-	_ *connect.Request[pgdozorv1.ListCollectorTokensRequest],
-) (*connect.Response[pgdozorv1.ListCollectorTokensResponse], error) {
+	_ *connect.Request[querysheriffv1.ListCollectorTokensRequest],
+) (*connect.Response[querysheriffv1.ListCollectorTokensResponse], error) {
 	rows, err := s.queries.ListCollectorTokens(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	tokens := make([]*pgdozorv1.CollectorToken, len(rows))
+	tokens := make([]*querysheriffv1.CollectorToken, len(rows))
 	for i, row := range rows {
-		tokens[i] = &pgdozorv1.CollectorToken{
+		tokens[i] = &querysheriffv1.CollectorToken{
 			Id:         row.ID,
 			ServerName: row.ServerName,
 			CreatedAt:  protoFromTimestamptz(row.CreatedAt),
 		}
 	}
 
-	return connect.NewResponse(&pgdozorv1.ListCollectorTokensResponse{Tokens: tokens}), nil
+	return connect.NewResponse(&querysheriffv1.ListCollectorTokensResponse{Tokens: tokens}), nil
 }
 
 func (s *AdminServer) CreateCollectorToken(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.CreateCollectorTokenRequest],
-) (*connect.Response[pgdozorv1.CreateCollectorTokenResponse], error) {
+	req *connect.Request[querysheriffv1.CreateCollectorTokenRequest],
+) (*connect.Response[querysheriffv1.CreateCollectorTokenResponse], error) {
 	serverName := strings.TrimSpace(req.Msg.GetServerName())
 	if serverName == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("server_name is required"))
@@ -69,8 +69,8 @@ func (s *AdminServer) CreateCollectorToken(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return connect.NewResponse(&pgdozorv1.CreateCollectorTokenResponse{
-		Token: &pgdozorv1.CollectorToken{
+	return connect.NewResponse(&querysheriffv1.CreateCollectorTokenResponse{
+		Token: &querysheriffv1.CollectorToken{
 			Id:         row.ID,
 			ServerName: row.ServerName,
 			CreatedAt:  protoFromTimestamptz(row.CreatedAt),
@@ -81,8 +81,8 @@ func (s *AdminServer) CreateCollectorToken(
 
 func (s *AdminServer) DeleteCollectorToken(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.DeleteCollectorTokenRequest],
-) (*connect.Response[pgdozorv1.DeleteCollectorTokenResponse], error) {
+	req *connect.Request[querysheriffv1.DeleteCollectorTokenRequest],
+) (*connect.Response[querysheriffv1.DeleteCollectorTokenResponse], error) {
 	id := req.Msg.GetId()
 	if id == 0 {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("token id is required"))
@@ -99,7 +99,7 @@ func (s *AdminServer) DeleteCollectorToken(
 	serverName, err := q.DeleteCollectorToken(ctx, id)
 	if errors.Is(err, pgx.ErrNoRows) {
 		// Already gone; nothing to clean up.
-		return connect.NewResponse(&pgdozorv1.DeleteCollectorTokenResponse{}), nil
+		return connect.NewResponse(&querysheriffv1.DeleteCollectorTokenResponse{}), nil
 	}
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
@@ -123,19 +123,19 @@ func (s *AdminServer) DeleteCollectorToken(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return connect.NewResponse(&pgdozorv1.DeleteCollectorTokenResponse{}), nil
+	return connect.NewResponse(&querysheriffv1.DeleteCollectorTokenResponse{}), nil
 }
 
 func (s *AdminServer) ListUsers(
 	ctx context.Context,
-	_ *connect.Request[pgdozorv1.ListUsersRequest],
-) (*connect.Response[pgdozorv1.ListUsersResponse], error) {
+	_ *connect.Request[querysheriffv1.ListUsersRequest],
+) (*connect.Response[querysheriffv1.ListUsersResponse], error) {
 	rows, err := s.queries.ListUsers(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	users := make([]*pgdozorv1.User, len(rows))
+	users := make([]*querysheriffv1.User, len(rows))
 	for i, row := range rows {
 		users[i] = userProto(
 			row.ID,
@@ -147,13 +147,13 @@ func (s *AdminServer) ListUsers(
 		)
 	}
 
-	return connect.NewResponse(&pgdozorv1.ListUsersResponse{Users: users}), nil
+	return connect.NewResponse(&querysheriffv1.ListUsersResponse{Users: users}), nil
 }
 
 func (s *AdminServer) CreateUser(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.CreateUserRequest],
-) (*connect.Response[pgdozorv1.CreateUserResponse], error) {
+	req *connect.Request[querysheriffv1.CreateUserRequest],
+) (*connect.Response[querysheriffv1.CreateUserResponse], error) {
 	name := strings.TrimSpace(req.Msg.GetName())
 	email := strings.ToLower(strings.TrimSpace(req.Msg.GetEmail()))
 	password := req.Msg.GetPassword()
@@ -181,7 +181,7 @@ func (s *AdminServer) CreateUser(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return connect.NewResponse(&pgdozorv1.CreateUserResponse{
+	return connect.NewResponse(&querysheriffv1.CreateUserResponse{
 		User: userProto(
 			created.ID,
 			created.Name,
@@ -195,8 +195,8 @@ func (s *AdminServer) CreateUser(
 
 func (s *AdminServer) UpdateUser(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.UpdateUserRequest],
-) (*connect.Response[pgdozorv1.UpdateUserResponse], error) {
+	req *connect.Request[querysheriffv1.UpdateUserRequest],
+) (*connect.Response[querysheriffv1.UpdateUserResponse], error) {
 	id := req.Msg.GetId()
 	name := strings.TrimSpace(req.Msg.GetName())
 	email := strings.ToLower(strings.TrimSpace(req.Msg.GetEmail()))
@@ -232,7 +232,7 @@ func (s *AdminServer) UpdateUser(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return connect.NewResponse(&pgdozorv1.UpdateUserResponse{
+	return connect.NewResponse(&querysheriffv1.UpdateUserResponse{
 		User: userProto(
 			updated.ID,
 			updated.Name,
@@ -254,8 +254,8 @@ func orEmptyStrings(values []string) []string {
 
 func (s *AdminServer) DeleteUser(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.DeleteUserRequest],
-) (*connect.Response[pgdozorv1.DeleteUserResponse], error) {
+	req *connect.Request[querysheriffv1.DeleteUserRequest],
+) (*connect.Response[querysheriffv1.DeleteUserResponse], error) {
 	id := req.Msg.GetId()
 	if id == 0 {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("user id is required"))
@@ -277,5 +277,5 @@ func (s *AdminServer) DeleteUser(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return connect.NewResponse(&pgdozorv1.DeleteUserResponse{}), nil
+	return connect.NewResponse(&querysheriffv1.DeleteUserResponse{}), nil
 }

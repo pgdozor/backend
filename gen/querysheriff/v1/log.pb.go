@@ -2,9 +2,9 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        (unknown)
-// source: pgdozor/v1/log.proto
+// source: querysheriff/v1/log.proto
 
-package pgdozorv1
+package querysheriffv1
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -73,11 +73,11 @@ func (x LogEvent_LogLevel) String() string {
 }
 
 func (LogEvent_LogLevel) Descriptor() protoreflect.EnumDescriptor {
-	return file_pgdozor_v1_log_proto_enumTypes[0].Descriptor()
+	return file_querysheriff_v1_log_proto_enumTypes[0].Descriptor()
 }
 
 func (LogEvent_LogLevel) Type() protoreflect.EnumType {
-	return &file_pgdozor_v1_log_proto_enumTypes[0]
+	return &file_querysheriff_v1_log_proto_enumTypes[0]
 }
 
 func (x LogEvent_LogLevel) Number() protoreflect.EnumNumber {
@@ -86,7 +86,7 @@ func (x LogEvent_LogLevel) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use LogEvent_LogLevel.Descriptor instead.
 func (LogEvent_LogLevel) EnumDescriptor() ([]byte, []int) {
-	return file_pgdozor_v1_log_proto_rawDescGZIP(), []int{2, 0}
+	return file_querysheriff_v1_log_proto_rawDescGZIP(), []int{2, 0}
 }
 
 type LogEvent_LogClassification int32
@@ -410,11 +410,11 @@ func (x LogEvent_LogClassification) String() string {
 }
 
 func (LogEvent_LogClassification) Descriptor() protoreflect.EnumDescriptor {
-	return file_pgdozor_v1_log_proto_enumTypes[1].Descriptor()
+	return file_querysheriff_v1_log_proto_enumTypes[1].Descriptor()
 }
 
 func (LogEvent_LogClassification) Type() protoreflect.EnumType {
-	return &file_pgdozor_v1_log_proto_enumTypes[1]
+	return &file_querysheriff_v1_log_proto_enumTypes[1]
 }
 
 func (x LogEvent_LogClassification) Number() protoreflect.EnumNumber {
@@ -423,7 +423,7 @@ func (x LogEvent_LogClassification) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use LogEvent_LogClassification.Descriptor instead.
 func (LogEvent_LogClassification) EnumDescriptor() ([]byte, []int) {
-	return file_pgdozor_v1_log_proto_rawDescGZIP(), []int{2, 1}
+	return file_querysheriff_v1_log_proto_rawDescGZIP(), []int{2, 1}
 }
 
 type ReportLogsRequest struct {
@@ -436,7 +436,7 @@ type ReportLogsRequest struct {
 
 func (x *ReportLogsRequest) Reset() {
 	*x = ReportLogsRequest{}
-	mi := &file_pgdozor_v1_log_proto_msgTypes[0]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -448,7 +448,7 @@ func (x *ReportLogsRequest) String() string {
 func (*ReportLogsRequest) ProtoMessage() {}
 
 func (x *ReportLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_log_proto_msgTypes[0]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -461,7 +461,7 @@ func (x *ReportLogsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportLogsRequest.ProtoReflect.Descriptor instead.
 func (*ReportLogsRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_log_proto_rawDescGZIP(), []int{0}
+	return file_querysheriff_v1_log_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *ReportLogsRequest) GetCollectedAt() *timestamppb.Timestamp {
@@ -486,7 +486,7 @@ type ReportLogsResponse struct {
 
 func (x *ReportLogsResponse) Reset() {
 	*x = ReportLogsResponse{}
-	mi := &file_pgdozor_v1_log_proto_msgTypes[1]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -498,7 +498,7 @@ func (x *ReportLogsResponse) String() string {
 func (*ReportLogsResponse) ProtoMessage() {}
 
 func (x *ReportLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_log_proto_msgTypes[1]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -511,7 +511,7 @@ func (x *ReportLogsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportLogsResponse.ProtoReflect.Descriptor instead.
 func (*ReportLogsResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_log_proto_rawDescGZIP(), []int{1}
+	return file_querysheriff_v1_log_proto_rawDescGZIP(), []int{1}
 }
 
 type LogEvent struct {
@@ -519,7 +519,7 @@ type LogEvent struct {
 	// jsonlog 'timestamp'.
 	OccurredAt *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
 	// jsonlog 'error_severity'.
-	LogLevel LogEvent_LogLevel `protobuf:"varint,2,opt,name=log_level,json=logLevel,proto3,enum=pgdozor.v1.LogEvent_LogLevel" json:"log_level,omitempty"`
+	LogLevel LogEvent_LogLevel `protobuf:"varint,2,opt,name=log_level,json=logLevel,proto3,enum=querysheriff.v1.LogEvent_LogLevel" json:"log_level,omitempty"`
 	// jsonlog 'message'.
 	Message string `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	// jsonlog 'pid'.
@@ -544,7 +544,7 @@ type LogEvent struct {
 	BackendType string `protobuf:"bytes,13,opt,name=backend_type,json=backendType,proto3" json:"backend_type,omitempty"`
 	// jsonlog 'state_code'.
 	StateCode       string                     `protobuf:"bytes,14,opt,name=state_code,json=stateCode,proto3" json:"state_code,omitempty"`
-	Classification  LogEvent_LogClassification `protobuf:"varint,15,opt,name=classification,proto3,enum=pgdozor.v1.LogEvent_LogClassification" json:"classification,omitempty"`
+	Classification  LogEvent_LogClassification `protobuf:"varint,15,opt,name=classification,proto3,enum=querysheriff.v1.LogEvent_LogClassification" json:"classification,omitempty"`
 	StatementSample *LogStatementSample        `protobuf:"bytes,16,opt,name=statement_sample,json=statementSample,proto3" json:"statement_sample,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
@@ -552,7 +552,7 @@ type LogEvent struct {
 
 func (x *LogEvent) Reset() {
 	*x = LogEvent{}
-	mi := &file_pgdozor_v1_log_proto_msgTypes[2]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -564,7 +564,7 @@ func (x *LogEvent) String() string {
 func (*LogEvent) ProtoMessage() {}
 
 func (x *LogEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_log_proto_msgTypes[2]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -577,7 +577,7 @@ func (x *LogEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogEvent.ProtoReflect.Descriptor instead.
 func (*LogEvent) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_log_proto_rawDescGZIP(), []int{2}
+	return file_querysheriff_v1_log_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *LogEvent) GetOccurredAt() *timestamppb.Timestamp {
@@ -709,7 +709,7 @@ type LogStatementSample struct {
 
 func (x *LogStatementSample) Reset() {
 	*x = LogStatementSample{}
-	mi := &file_pgdozor_v1_log_proto_msgTypes[3]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -721,7 +721,7 @@ func (x *LogStatementSample) String() string {
 func (*LogStatementSample) ProtoMessage() {}
 
 func (x *LogStatementSample) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_log_proto_msgTypes[3]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -734,7 +734,7 @@ func (x *LogStatementSample) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogStatementSample.ProtoReflect.Descriptor instead.
 func (*LogStatementSample) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_log_proto_rawDescGZIP(), []int{3}
+	return file_querysheriff_v1_log_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *LogStatementSample) GetOccurredAt() *timestamppb.Timestamp {
@@ -786,9 +786,9 @@ type QueryLogsRequest struct {
 	To         *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=to,proto3" json:"to,omitempty"`
 	Filter     string                 `protobuf:"bytes,4,opt,name=filter,proto3" json:"filter,omitempty"`
 	// Empty means every level.
-	LogLevels []LogEvent_LogLevel `protobuf:"varint,5,rep,packed,name=log_levels,json=logLevels,proto3,enum=pgdozor.v1.LogEvent_LogLevel" json:"log_levels,omitempty"`
+	LogLevels []LogEvent_LogLevel `protobuf:"varint,5,rep,packed,name=log_levels,json=logLevels,proto3,enum=querysheriff.v1.LogEvent_LogLevel" json:"log_levels,omitempty"`
 	// Empty means every classification.
-	Classifications []LogEvent_LogClassification `protobuf:"varint,6,rep,packed,name=classifications,proto3,enum=pgdozor.v1.LogEvent_LogClassification" json:"classifications,omitempty"`
+	Classifications []LogEvent_LogClassification `protobuf:"varint,6,rep,packed,name=classifications,proto3,enum=querysheriff.v1.LogEvent_LogClassification" json:"classifications,omitempty"`
 	// Defaults to 50 when unset.
 	Limit         int32 `protobuf:"varint,7,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -797,7 +797,7 @@ type QueryLogsRequest struct {
 
 func (x *QueryLogsRequest) Reset() {
 	*x = QueryLogsRequest{}
-	mi := &file_pgdozor_v1_log_proto_msgTypes[4]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -809,7 +809,7 @@ func (x *QueryLogsRequest) String() string {
 func (*QueryLogsRequest) ProtoMessage() {}
 
 func (x *QueryLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_log_proto_msgTypes[4]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -822,7 +822,7 @@ func (x *QueryLogsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryLogsRequest.ProtoReflect.Descriptor instead.
 func (*QueryLogsRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_log_proto_rawDescGZIP(), []int{4}
+	return file_querysheriff_v1_log_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *QueryLogsRequest) GetServerName() string {
@@ -884,7 +884,7 @@ type QueryLogsResponse struct {
 
 func (x *QueryLogsResponse) Reset() {
 	*x = QueryLogsResponse{}
-	mi := &file_pgdozor_v1_log_proto_msgTypes[5]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -896,7 +896,7 @@ func (x *QueryLogsResponse) String() string {
 func (*QueryLogsResponse) ProtoMessage() {}
 
 func (x *QueryLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_log_proto_msgTypes[5]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -909,7 +909,7 @@ func (x *QueryLogsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryLogsResponse.ProtoReflect.Descriptor instead.
 func (*QueryLogsResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_log_proto_rawDescGZIP(), []int{5}
+	return file_querysheriff_v1_log_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *QueryLogsResponse) GetHistogram() *LogHistogram {
@@ -936,7 +936,7 @@ type LogHistogram struct {
 
 func (x *LogHistogram) Reset() {
 	*x = LogHistogram{}
-	mi := &file_pgdozor_v1_log_proto_msgTypes[6]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -948,7 +948,7 @@ func (x *LogHistogram) String() string {
 func (*LogHistogram) ProtoMessage() {}
 
 func (x *LogHistogram) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_log_proto_msgTypes[6]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -961,7 +961,7 @@ func (x *LogHistogram) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogHistogram.ProtoReflect.Descriptor instead.
 func (*LogHistogram) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_log_proto_rawDescGZIP(), []int{6}
+	return file_querysheriff_v1_log_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *LogHistogram) GetBuckets() []*LogHistogramBucket {
@@ -988,7 +988,7 @@ type LogHistogramBucket struct {
 
 func (x *LogHistogramBucket) Reset() {
 	*x = LogHistogramBucket{}
-	mi := &file_pgdozor_v1_log_proto_msgTypes[7]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1000,7 +1000,7 @@ func (x *LogHistogramBucket) String() string {
 func (*LogHistogramBucket) ProtoMessage() {}
 
 func (x *LogHistogramBucket) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_log_proto_msgTypes[7]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1013,7 +1013,7 @@ func (x *LogHistogramBucket) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogHistogramBucket.ProtoReflect.Descriptor instead.
 func (*LogHistogramBucket) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_log_proto_rawDescGZIP(), []int{7}
+	return file_querysheriff_v1_log_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *LogHistogramBucket) GetBucketStart() *timestamppb.Timestamp {
@@ -1032,7 +1032,7 @@ func (x *LogHistogramBucket) GetCounts() []*LogLevelCount {
 
 type LogLevelCount struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Level         LogEvent_LogLevel      `protobuf:"varint,1,opt,name=level,proto3,enum=pgdozor.v1.LogEvent_LogLevel" json:"level,omitempty"`
+	Level         LogEvent_LogLevel      `protobuf:"varint,1,opt,name=level,proto3,enum=querysheriff.v1.LogEvent_LogLevel" json:"level,omitempty"`
 	Count         int64                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1040,7 +1040,7 @@ type LogLevelCount struct {
 
 func (x *LogLevelCount) Reset() {
 	*x = LogLevelCount{}
-	mi := &file_pgdozor_v1_log_proto_msgTypes[8]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1052,7 +1052,7 @@ func (x *LogLevelCount) String() string {
 func (*LogLevelCount) ProtoMessage() {}
 
 func (x *LogLevelCount) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_log_proto_msgTypes[8]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1065,7 +1065,7 @@ func (x *LogLevelCount) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogLevelCount.ProtoReflect.Descriptor instead.
 func (*LogLevelCount) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_log_proto_rawDescGZIP(), []int{8}
+	return file_querysheriff_v1_log_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *LogLevelCount) GetLevel() LogEvent_LogLevel {
@@ -1086,8 +1086,8 @@ type LogRecord struct {
 	state           protoimpl.MessageState     `protogen:"open.v1"`
 	Id              int64                      `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	OccurredAt      *timestamppb.Timestamp     `protobuf:"bytes,2,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	LogLevel        LogEvent_LogLevel          `protobuf:"varint,3,opt,name=log_level,json=logLevel,proto3,enum=pgdozor.v1.LogEvent_LogLevel" json:"log_level,omitempty"`
-	Classification  LogEvent_LogClassification `protobuf:"varint,4,opt,name=classification,proto3,enum=pgdozor.v1.LogEvent_LogClassification" json:"classification,omitempty"`
+	LogLevel        LogEvent_LogLevel          `protobuf:"varint,3,opt,name=log_level,json=logLevel,proto3,enum=querysheriff.v1.LogEvent_LogLevel" json:"log_level,omitempty"`
+	Classification  LogEvent_LogClassification `protobuf:"varint,4,opt,name=classification,proto3,enum=querysheriff.v1.LogEvent_LogClassification" json:"classification,omitempty"`
 	Pid             int32                      `protobuf:"varint,5,opt,name=pid,proto3" json:"pid,omitempty"`
 	DatabaseName    string                     `protobuf:"bytes,6,opt,name=database_name,json=databaseName,proto3" json:"database_name,omitempty"`
 	Username        string                     `protobuf:"bytes,7,opt,name=username,proto3" json:"username,omitempty"`
@@ -1105,7 +1105,7 @@ type LogRecord struct {
 
 func (x *LogRecord) Reset() {
 	*x = LogRecord{}
-	mi := &file_pgdozor_v1_log_proto_msgTypes[9]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1117,7 +1117,7 @@ func (x *LogRecord) String() string {
 func (*LogRecord) ProtoMessage() {}
 
 func (x *LogRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_log_proto_msgTypes[9]
+	mi := &file_querysheriff_v1_log_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1130,7 +1130,7 @@ func (x *LogRecord) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogRecord.ProtoReflect.Descriptor instead.
 func (*LogRecord) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_log_proto_rawDescGZIP(), []int{9}
+	return file_querysheriff_v1_log_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *LogRecord) GetId() int64 {
@@ -1238,21 +1238,20 @@ func (x *LogRecord) GetStatement() string {
 	return ""
 }
 
-var File_pgdozor_v1_log_proto protoreflect.FileDescriptor
+var File_querysheriff_v1_log_proto protoreflect.FileDescriptor
 
-const file_pgdozor_v1_log_proto_rawDesc = "" +
+const file_querysheriff_v1_log_proto_rawDesc = "" +
 	"\n" +
-	"\x14pgdozor/v1/log.proto\x12\n" +
-	"pgdozor.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x87\x01\n" +
+	"\x19querysheriff/v1/log.proto\x12\x0fquerysheriff.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8c\x01\n" +
 	"\x11ReportLogsRequest\x12=\n" +
-	"\fcollected_at\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\vcollectedAt\x123\n" +
+	"\fcollected_at\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\vcollectedAt\x128\n" +
 	"\n" +
-	"log_events\x18\x02 \x03(\v2\x14.pgdozor.v1.LogEventR\tlogEvents\"\x14\n" +
-	"\x12ReportLogsResponse\"\xbd+\n" +
+	"log_events\x18\x02 \x03(\v2\x19.querysheriff.v1.LogEventR\tlogEvents\"\x14\n" +
+	"\x12ReportLogsResponse\"\xcc+\n" +
 	"\bLogEvent\x12;\n" +
 	"\voccurred_at\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"occurredAt\x12:\n" +
-	"\tlog_level\x18\x02 \x01(\x0e2\x1d.pgdozor.v1.LogEvent.LogLevelR\blogLevel\x12\x18\n" +
+	"occurredAt\x12?\n" +
+	"\tlog_level\x18\x02 \x01(\x0e2\".querysheriff.v1.LogEvent.LogLevelR\blogLevel\x12\x18\n" +
 	"\amessage\x18\x03 \x01(\tR\amessage\x12\x10\n" +
 	"\x03pid\x18\x04 \x01(\x05R\x03pid\x12\x1a\n" +
 	"\busername\x18\x05 \x01(\tR\busername\x12#\n" +
@@ -1266,9 +1265,9 @@ const file_pgdozor_v1_log_proto_rawDesc = "" +
 	"\bquery_id\x18\f \x01(\x03R\aqueryId\x12!\n" +
 	"\fbackend_type\x18\r \x01(\tR\vbackendType\x12\x1d\n" +
 	"\n" +
-	"state_code\x18\x0e \x01(\tR\tstateCode\x12N\n" +
-	"\x0eclassification\x18\x0f \x01(\x0e2&.pgdozor.v1.LogEvent.LogClassificationR\x0eclassification\x12I\n" +
-	"\x10statement_sample\x18\x10 \x01(\v2\x1e.pgdozor.v1.LogStatementSampleR\x0fstatementSample\"\xcd\x01\n" +
+	"state_code\x18\x0e \x01(\tR\tstateCode\x12S\n" +
+	"\x0eclassification\x18\x0f \x01(\x0e2+.querysheriff.v1.LogEvent.LogClassificationR\x0eclassification\x12N\n" +
+	"\x10statement_sample\x18\x10 \x01(\v2#.querysheriff.v1.LogStatementSampleR\x0fstatementSample\"\xcd\x01\n" +
 	"\bLogLevel\x12\x19\n" +
 	"\x15LOG_LEVEL_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fLOG_LEVEL_DEBUG\x10\x01\x12\x12\n" +
@@ -1379,7 +1378,7 @@ const file_pgdozor_v1_log_proto_rawDesc = "" +
 	"(LOG_CLASSIFICATION_INVALID_BYTE_SEQUENCE\x10_\x12:\n" +
 	"6LOG_CLASSIFICATION_COULD_NOT_SERIALIZE_REPEATABLE_READ\x10`\x127\n" +
 	"3LOG_CLASSIFICATION_COULD_NOT_SERIALIZE_SERIALIZABLE\x10a\x120\n" +
-	",LOG_CLASSIFICATION_INCONSISTENT_RANGE_BOUNDS\x10b\"\xcb\x02\n" +
+	",LOG_CLASSIFICATION_INCONSISTENT_RANGE_BOUNDS\x10b\"\xd0\x02\n" +
 	"\x12LogStatementSample\x12;\n" +
 	"\voccurred_at\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"occurredAt\x12\x14\n" +
@@ -1389,39 +1388,39 @@ const file_pgdozor_v1_log_proto_rawDesc = "" +
 	"\n" +
 	"parameters\x18\x04 \x03(\tR\n" +
 	"parameters\x12*\n" +
-	"\x11explain_plan_json\x18\x05 \x01(\tR\x0fexplainPlanJson\x12<\n" +
-	"\x04tags\x18\x06 \x03(\v2(.pgdozor.v1.LogStatementSample.TagsEntryR\x04tags\x1a7\n" +
+	"\x11explain_plan_json\x18\x05 \x01(\tR\x0fexplainPlanJson\x12A\n" +
+	"\x04tags\x18\x06 \x03(\v2-.querysheriff.v1.LogStatementSample.TagsEntryR\x04tags\x1a7\n" +
 	"\tTagsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xcd\x02\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xd7\x02\n" +
 	"\x10QueryLogsRequest\x12\x1f\n" +
 	"\vserver_name\x18\x01 \x01(\tR\n" +
 	"serverName\x12.\n" +
 	"\x04from\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x04from\x12*\n" +
 	"\x02to\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x02to\x12\x16\n" +
-	"\x06filter\x18\x04 \x01(\tR\x06filter\x12<\n" +
+	"\x06filter\x18\x04 \x01(\tR\x06filter\x12A\n" +
 	"\n" +
-	"log_levels\x18\x05 \x03(\x0e2\x1d.pgdozor.v1.LogEvent.LogLevelR\tlogLevels\x12P\n" +
-	"\x0fclassifications\x18\x06 \x03(\x0e2&.pgdozor.v1.LogEvent.LogClassificationR\x0fclassifications\x12\x14\n" +
-	"\x05limit\x18\a \x01(\x05R\x05limit\"|\n" +
-	"\x11QueryLogsResponse\x126\n" +
-	"\thistogram\x18\x01 \x01(\v2\x18.pgdozor.v1.LogHistogramR\thistogram\x12/\n" +
-	"\arecords\x18\x02 \x03(\v2\x15.pgdozor.v1.LogRecordR\arecords\"\x86\x01\n" +
-	"\fLogHistogram\x128\n" +
-	"\abuckets\x18\x01 \x03(\v2\x1e.pgdozor.v1.LogHistogramBucketR\abuckets\x12<\n" +
-	"\flevel_totals\x18\x02 \x03(\v2\x19.pgdozor.v1.LogLevelCountR\vlevelTotals\"\x86\x01\n" +
+	"log_levels\x18\x05 \x03(\x0e2\".querysheriff.v1.LogEvent.LogLevelR\tlogLevels\x12U\n" +
+	"\x0fclassifications\x18\x06 \x03(\x0e2+.querysheriff.v1.LogEvent.LogClassificationR\x0fclassifications\x12\x14\n" +
+	"\x05limit\x18\a \x01(\x05R\x05limit\"\x86\x01\n" +
+	"\x11QueryLogsResponse\x12;\n" +
+	"\thistogram\x18\x01 \x01(\v2\x1d.querysheriff.v1.LogHistogramR\thistogram\x124\n" +
+	"\arecords\x18\x02 \x03(\v2\x1a.querysheriff.v1.LogRecordR\arecords\"\x90\x01\n" +
+	"\fLogHistogram\x12=\n" +
+	"\abuckets\x18\x01 \x03(\v2#.querysheriff.v1.LogHistogramBucketR\abuckets\x12A\n" +
+	"\flevel_totals\x18\x02 \x03(\v2\x1e.querysheriff.v1.LogLevelCountR\vlevelTotals\"\x8b\x01\n" +
 	"\x12LogHistogramBucket\x12=\n" +
-	"\fbucket_start\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\vbucketStart\x121\n" +
-	"\x06counts\x18\x02 \x03(\v2\x19.pgdozor.v1.LogLevelCountR\x06counts\"Z\n" +
-	"\rLogLevelCount\x123\n" +
-	"\x05level\x18\x01 \x01(\x0e2\x1d.pgdozor.v1.LogEvent.LogLevelR\x05level\x12\x14\n" +
-	"\x05count\x18\x02 \x01(\x03R\x05count\"\xa2\x04\n" +
+	"\fbucket_start\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\vbucketStart\x126\n" +
+	"\x06counts\x18\x02 \x03(\v2\x1e.querysheriff.v1.LogLevelCountR\x06counts\"_\n" +
+	"\rLogLevelCount\x128\n" +
+	"\x05level\x18\x01 \x01(\x0e2\".querysheriff.v1.LogEvent.LogLevelR\x05level\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x03R\x05count\"\xac\x04\n" +
 	"\tLogRecord\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12;\n" +
 	"\voccurred_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"occurredAt\x12:\n" +
-	"\tlog_level\x18\x03 \x01(\x0e2\x1d.pgdozor.v1.LogEvent.LogLevelR\blogLevel\x12N\n" +
-	"\x0eclassification\x18\x04 \x01(\x0e2&.pgdozor.v1.LogEvent.LogClassificationR\x0eclassification\x12\x10\n" +
+	"occurredAt\x12?\n" +
+	"\tlog_level\x18\x03 \x01(\x0e2\".querysheriff.v1.LogEvent.LogLevelR\blogLevel\x12S\n" +
+	"\x0eclassification\x18\x04 \x01(\x0e2+.querysheriff.v1.LogEvent.LogClassificationR\x0eclassification\x12\x10\n" +
 	"\x03pid\x18\x05 \x01(\x05R\x03pid\x12#\n" +
 	"\rdatabase_name\x18\x06 \x01(\tR\fdatabaseName\x12\x1a\n" +
 	"\busername\x18\a \x01(\tR\busername\x12)\n" +
@@ -1434,70 +1433,70 @@ const file_pgdozor_v1_log_proto_rawDesc = "" +
 	"\x06detail\x18\f \x01(\tR\x06detail\x12\x12\n" +
 	"\x04hint\x18\r \x01(\tR\x04hint\x12\x18\n" +
 	"\acontext\x18\x0e \x01(\tR\acontext\x12\x1c\n" +
-	"\tstatement\x18\x0f \x01(\tR\tstatement2\xa7\x01\n" +
+	"\tstatement\x18\x0f \x01(\tR\tstatement2\xbb\x01\n" +
 	"\n" +
-	"LogService\x12M\n" +
+	"LogService\x12W\n" +
 	"\n" +
-	"ReportLogs\x12\x1d.pgdozor.v1.ReportLogsRequest\x1a\x1e.pgdozor.v1.ReportLogsResponse\"\x00\x12J\n" +
-	"\tQueryLogs\x12\x1c.pgdozor.v1.QueryLogsRequest\x1a\x1d.pgdozor.v1.QueryLogsResponse\"\x00B5Z3github.com/pgdozor/backend/gen/pgdozor/v1;pgdozorv1b\x06proto3"
+	"ReportLogs\x12\".querysheriff.v1.ReportLogsRequest\x1a#.querysheriff.v1.ReportLogsResponse\"\x00\x12T\n" +
+	"\tQueryLogs\x12!.querysheriff.v1.QueryLogsRequest\x1a\".querysheriff.v1.QueryLogsResponse\"\x00BDZBgithub.com/querysheriff/backend/gen/querysheriff/v1;querysheriffv1b\x06proto3"
 
 var (
-	file_pgdozor_v1_log_proto_rawDescOnce sync.Once
-	file_pgdozor_v1_log_proto_rawDescData []byte
+	file_querysheriff_v1_log_proto_rawDescOnce sync.Once
+	file_querysheriff_v1_log_proto_rawDescData []byte
 )
 
-func file_pgdozor_v1_log_proto_rawDescGZIP() []byte {
-	file_pgdozor_v1_log_proto_rawDescOnce.Do(func() {
-		file_pgdozor_v1_log_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pgdozor_v1_log_proto_rawDesc), len(file_pgdozor_v1_log_proto_rawDesc)))
+func file_querysheriff_v1_log_proto_rawDescGZIP() []byte {
+	file_querysheriff_v1_log_proto_rawDescOnce.Do(func() {
+		file_querysheriff_v1_log_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_querysheriff_v1_log_proto_rawDesc), len(file_querysheriff_v1_log_proto_rawDesc)))
 	})
-	return file_pgdozor_v1_log_proto_rawDescData
+	return file_querysheriff_v1_log_proto_rawDescData
 }
 
-var file_pgdozor_v1_log_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_pgdozor_v1_log_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
-var file_pgdozor_v1_log_proto_goTypes = []any{
-	(LogEvent_LogLevel)(0),          // 0: pgdozor.v1.LogEvent.LogLevel
-	(LogEvent_LogClassification)(0), // 1: pgdozor.v1.LogEvent.LogClassification
-	(*ReportLogsRequest)(nil),       // 2: pgdozor.v1.ReportLogsRequest
-	(*ReportLogsResponse)(nil),      // 3: pgdozor.v1.ReportLogsResponse
-	(*LogEvent)(nil),                // 4: pgdozor.v1.LogEvent
-	(*LogStatementSample)(nil),      // 5: pgdozor.v1.LogStatementSample
-	(*QueryLogsRequest)(nil),        // 6: pgdozor.v1.QueryLogsRequest
-	(*QueryLogsResponse)(nil),       // 7: pgdozor.v1.QueryLogsResponse
-	(*LogHistogram)(nil),            // 8: pgdozor.v1.LogHistogram
-	(*LogHistogramBucket)(nil),      // 9: pgdozor.v1.LogHistogramBucket
-	(*LogLevelCount)(nil),           // 10: pgdozor.v1.LogLevelCount
-	(*LogRecord)(nil),               // 11: pgdozor.v1.LogRecord
-	nil,                             // 12: pgdozor.v1.LogStatementSample.TagsEntry
+var file_querysheriff_v1_log_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_querysheriff_v1_log_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_querysheriff_v1_log_proto_goTypes = []any{
+	(LogEvent_LogLevel)(0),          // 0: querysheriff.v1.LogEvent.LogLevel
+	(LogEvent_LogClassification)(0), // 1: querysheriff.v1.LogEvent.LogClassification
+	(*ReportLogsRequest)(nil),       // 2: querysheriff.v1.ReportLogsRequest
+	(*ReportLogsResponse)(nil),      // 3: querysheriff.v1.ReportLogsResponse
+	(*LogEvent)(nil),                // 4: querysheriff.v1.LogEvent
+	(*LogStatementSample)(nil),      // 5: querysheriff.v1.LogStatementSample
+	(*QueryLogsRequest)(nil),        // 6: querysheriff.v1.QueryLogsRequest
+	(*QueryLogsResponse)(nil),       // 7: querysheriff.v1.QueryLogsResponse
+	(*LogHistogram)(nil),            // 8: querysheriff.v1.LogHistogram
+	(*LogHistogramBucket)(nil),      // 9: querysheriff.v1.LogHistogramBucket
+	(*LogLevelCount)(nil),           // 10: querysheriff.v1.LogLevelCount
+	(*LogRecord)(nil),               // 11: querysheriff.v1.LogRecord
+	nil,                             // 12: querysheriff.v1.LogStatementSample.TagsEntry
 	(*timestamppb.Timestamp)(nil),   // 13: google.protobuf.Timestamp
 }
-var file_pgdozor_v1_log_proto_depIdxs = []int32{
-	13, // 0: pgdozor.v1.ReportLogsRequest.collected_at:type_name -> google.protobuf.Timestamp
-	4,  // 1: pgdozor.v1.ReportLogsRequest.log_events:type_name -> pgdozor.v1.LogEvent
-	13, // 2: pgdozor.v1.LogEvent.occurred_at:type_name -> google.protobuf.Timestamp
-	0,  // 3: pgdozor.v1.LogEvent.log_level:type_name -> pgdozor.v1.LogEvent.LogLevel
-	1,  // 4: pgdozor.v1.LogEvent.classification:type_name -> pgdozor.v1.LogEvent.LogClassification
-	5,  // 5: pgdozor.v1.LogEvent.statement_sample:type_name -> pgdozor.v1.LogStatementSample
-	13, // 6: pgdozor.v1.LogStatementSample.occurred_at:type_name -> google.protobuf.Timestamp
-	12, // 7: pgdozor.v1.LogStatementSample.tags:type_name -> pgdozor.v1.LogStatementSample.TagsEntry
-	13, // 8: pgdozor.v1.QueryLogsRequest.from:type_name -> google.protobuf.Timestamp
-	13, // 9: pgdozor.v1.QueryLogsRequest.to:type_name -> google.protobuf.Timestamp
-	0,  // 10: pgdozor.v1.QueryLogsRequest.log_levels:type_name -> pgdozor.v1.LogEvent.LogLevel
-	1,  // 11: pgdozor.v1.QueryLogsRequest.classifications:type_name -> pgdozor.v1.LogEvent.LogClassification
-	8,  // 12: pgdozor.v1.QueryLogsResponse.histogram:type_name -> pgdozor.v1.LogHistogram
-	11, // 13: pgdozor.v1.QueryLogsResponse.records:type_name -> pgdozor.v1.LogRecord
-	9,  // 14: pgdozor.v1.LogHistogram.buckets:type_name -> pgdozor.v1.LogHistogramBucket
-	10, // 15: pgdozor.v1.LogHistogram.level_totals:type_name -> pgdozor.v1.LogLevelCount
-	13, // 16: pgdozor.v1.LogHistogramBucket.bucket_start:type_name -> google.protobuf.Timestamp
-	10, // 17: pgdozor.v1.LogHistogramBucket.counts:type_name -> pgdozor.v1.LogLevelCount
-	0,  // 18: pgdozor.v1.LogLevelCount.level:type_name -> pgdozor.v1.LogEvent.LogLevel
-	13, // 19: pgdozor.v1.LogRecord.occurred_at:type_name -> google.protobuf.Timestamp
-	0,  // 20: pgdozor.v1.LogRecord.log_level:type_name -> pgdozor.v1.LogEvent.LogLevel
-	1,  // 21: pgdozor.v1.LogRecord.classification:type_name -> pgdozor.v1.LogEvent.LogClassification
-	2,  // 22: pgdozor.v1.LogService.ReportLogs:input_type -> pgdozor.v1.ReportLogsRequest
-	6,  // 23: pgdozor.v1.LogService.QueryLogs:input_type -> pgdozor.v1.QueryLogsRequest
-	3,  // 24: pgdozor.v1.LogService.ReportLogs:output_type -> pgdozor.v1.ReportLogsResponse
-	7,  // 25: pgdozor.v1.LogService.QueryLogs:output_type -> pgdozor.v1.QueryLogsResponse
+var file_querysheriff_v1_log_proto_depIdxs = []int32{
+	13, // 0: querysheriff.v1.ReportLogsRequest.collected_at:type_name -> google.protobuf.Timestamp
+	4,  // 1: querysheriff.v1.ReportLogsRequest.log_events:type_name -> querysheriff.v1.LogEvent
+	13, // 2: querysheriff.v1.LogEvent.occurred_at:type_name -> google.protobuf.Timestamp
+	0,  // 3: querysheriff.v1.LogEvent.log_level:type_name -> querysheriff.v1.LogEvent.LogLevel
+	1,  // 4: querysheriff.v1.LogEvent.classification:type_name -> querysheriff.v1.LogEvent.LogClassification
+	5,  // 5: querysheriff.v1.LogEvent.statement_sample:type_name -> querysheriff.v1.LogStatementSample
+	13, // 6: querysheriff.v1.LogStatementSample.occurred_at:type_name -> google.protobuf.Timestamp
+	12, // 7: querysheriff.v1.LogStatementSample.tags:type_name -> querysheriff.v1.LogStatementSample.TagsEntry
+	13, // 8: querysheriff.v1.QueryLogsRequest.from:type_name -> google.protobuf.Timestamp
+	13, // 9: querysheriff.v1.QueryLogsRequest.to:type_name -> google.protobuf.Timestamp
+	0,  // 10: querysheriff.v1.QueryLogsRequest.log_levels:type_name -> querysheriff.v1.LogEvent.LogLevel
+	1,  // 11: querysheriff.v1.QueryLogsRequest.classifications:type_name -> querysheriff.v1.LogEvent.LogClassification
+	8,  // 12: querysheriff.v1.QueryLogsResponse.histogram:type_name -> querysheriff.v1.LogHistogram
+	11, // 13: querysheriff.v1.QueryLogsResponse.records:type_name -> querysheriff.v1.LogRecord
+	9,  // 14: querysheriff.v1.LogHistogram.buckets:type_name -> querysheriff.v1.LogHistogramBucket
+	10, // 15: querysheriff.v1.LogHistogram.level_totals:type_name -> querysheriff.v1.LogLevelCount
+	13, // 16: querysheriff.v1.LogHistogramBucket.bucket_start:type_name -> google.protobuf.Timestamp
+	10, // 17: querysheriff.v1.LogHistogramBucket.counts:type_name -> querysheriff.v1.LogLevelCount
+	0,  // 18: querysheriff.v1.LogLevelCount.level:type_name -> querysheriff.v1.LogEvent.LogLevel
+	13, // 19: querysheriff.v1.LogRecord.occurred_at:type_name -> google.protobuf.Timestamp
+	0,  // 20: querysheriff.v1.LogRecord.log_level:type_name -> querysheriff.v1.LogEvent.LogLevel
+	1,  // 21: querysheriff.v1.LogRecord.classification:type_name -> querysheriff.v1.LogEvent.LogClassification
+	2,  // 22: querysheriff.v1.LogService.ReportLogs:input_type -> querysheriff.v1.ReportLogsRequest
+	6,  // 23: querysheriff.v1.LogService.QueryLogs:input_type -> querysheriff.v1.QueryLogsRequest
+	3,  // 24: querysheriff.v1.LogService.ReportLogs:output_type -> querysheriff.v1.ReportLogsResponse
+	7,  // 25: querysheriff.v1.LogService.QueryLogs:output_type -> querysheriff.v1.QueryLogsResponse
 	24, // [24:26] is the sub-list for method output_type
 	22, // [22:24] is the sub-list for method input_type
 	22, // [22:22] is the sub-list for extension type_name
@@ -1505,27 +1504,27 @@ var file_pgdozor_v1_log_proto_depIdxs = []int32{
 	0,  // [0:22] is the sub-list for field type_name
 }
 
-func init() { file_pgdozor_v1_log_proto_init() }
-func file_pgdozor_v1_log_proto_init() {
-	if File_pgdozor_v1_log_proto != nil {
+func init() { file_querysheriff_v1_log_proto_init() }
+func file_querysheriff_v1_log_proto_init() {
+	if File_querysheriff_v1_log_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pgdozor_v1_log_proto_rawDesc), len(file_pgdozor_v1_log_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_querysheriff_v1_log_proto_rawDesc), len(file_querysheriff_v1_log_proto_rawDesc)),
 			NumEnums:      2,
 			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_pgdozor_v1_log_proto_goTypes,
-		DependencyIndexes: file_pgdozor_v1_log_proto_depIdxs,
-		EnumInfos:         file_pgdozor_v1_log_proto_enumTypes,
-		MessageInfos:      file_pgdozor_v1_log_proto_msgTypes,
+		GoTypes:           file_querysheriff_v1_log_proto_goTypes,
+		DependencyIndexes: file_querysheriff_v1_log_proto_depIdxs,
+		EnumInfos:         file_querysheriff_v1_log_proto_enumTypes,
+		MessageInfos:      file_querysheriff_v1_log_proto_msgTypes,
 	}.Build()
-	File_pgdozor_v1_log_proto = out.File
-	file_pgdozor_v1_log_proto_goTypes = nil
-	file_pgdozor_v1_log_proto_depIdxs = nil
+	File_querysheriff_v1_log_proto = out.File
+	file_querysheriff_v1_log_proto_goTypes = nil
+	file_querysheriff_v1_log_proto_depIdxs = nil
 }

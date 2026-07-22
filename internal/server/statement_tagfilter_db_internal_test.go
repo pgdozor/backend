@@ -9,8 +9,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
-	"github.com/pgdozor/backend/internal/db"
+	querysheriffv1 "github.com/querysheriff/backend/gen/querysheriff/v1"
+	"github.com/querysheriff/backend/internal/db"
 )
 
 // Each test owns a distinct server_name so the parallel cases cannot clobber
@@ -127,8 +127,8 @@ func TestFilterStatementIDsByTagsIsTimeScoped(t *testing.T) {
 		t.Fatalf("seed legacy sample: %v", err)
 	}
 
-	filters, err := buildTagFilterJSON([]*pgdozorv1.TagFilter{
-		tagFilter("legacy_flag", pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_EQUAL, "yes"),
+	filters, err := buildTagFilterJSON([]*querysheriffv1.TagFilter{
+		tagFilter("legacy_flag", querysheriffv1.TagFilterOperator_TAG_FILTER_OPERATOR_EQUAL, "yes"),
 	})
 	if err != nil {
 		t.Fatalf("buildTagFilterJSON: %v", err)
@@ -183,10 +183,10 @@ func TestFilterIgnoresTagsTheStatementDoesNotDisplay(t *testing.T) {
 	from := time.Now().Add(-24 * time.Hour)
 	to := time.Now()
 
-	matched := func(op pgdozorv1.TagFilterOperator, values ...string) int {
+	matched := func(op querysheriffv1.TagFilterOperator, values ...string) int {
 		t.Helper()
 
-		filters, err := buildTagFilterJSON([]*pgdozorv1.TagFilter{tagFilter("service", op, values...)})
+		filters, err := buildTagFilterJSON([]*querysheriffv1.TagFilter{tagFilter("service", op, values...)})
 		if err != nil {
 			t.Fatalf("buildTagFilterJSON: %v", err)
 		}
@@ -218,15 +218,15 @@ func TestFilterIgnoresTagsTheStatementDoesNotDisplay(t *testing.T) {
 		t.Errorf("ListTagValues suggested %d values for a key no statement displays, want 0", len(suggested))
 	}
 
-	if n := matched(pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_EQUAL, "payments"); n != 0 {
+	if n := matched(querysheriffv1.TagFilterOperator_TAG_FILTER_OPERATOR_EQUAL, "payments"); n != 0 {
 		t.Errorf("service=payments matched %d statements that never display it, want 0", n)
 	}
 
-	if n := matched(pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_EXISTS); n != 0 {
+	if n := matched(querysheriffv1.TagFilterOperator_TAG_FILTER_OPERATOR_EXISTS); n != 0 {
 		t.Errorf("service exists matched %d statements that display no service, want 0", n)
 	}
 
-	if n := matched(pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_NOT_EQUAL, "payments"); n != 1 {
+	if n := matched(querysheriffv1.TagFilterOperator_TAG_FILTER_OPERATOR_NOT_EQUAL, "payments"); n != 1 {
 		t.Errorf("service!=payments matched %d statements, want 1 (absent tag passes)", n)
 	}
 }

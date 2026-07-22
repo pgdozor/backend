@@ -9,15 +9,15 @@ func TestHashToken(t *testing.T) {
 	t.Parallel()
 
 	const (
-		input = "pgdc_x"
-		want  = "4c203fd60ae05d15fac3cc8e50dc47e6d2aa4b62d4295cfed34378d3a5d22b3b"
+		input = "qsc_x"
+		want  = "6a2fc0ccb94abd303a70ba0e54d9e9422efb337a59208383e8cbac1cafa44f2e"
 	)
 
 	if got := HashToken(input); got != want {
 		t.Fatalf("HashToken(%q) = %q, want %q", input, got, want)
 	}
 
-	if HashToken("pgdc_x") == HashToken("pgdc_y") {
+	if HashToken("qsc_x") == HashToken("qsc_y") {
 		t.Fatal("HashToken collided on distinct inputs")
 	}
 }

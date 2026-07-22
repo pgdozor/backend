@@ -2,9 +2,9 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        (unknown)
-// source: pgdozor/v1/admin.proto
+// source: querysheriff/v1/admin.proto
 
-package pgdozorv1
+package querysheriffv1
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -33,7 +33,7 @@ type CollectorToken struct {
 
 func (x *CollectorToken) Reset() {
 	*x = CollectorToken{}
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[0]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -45,7 +45,7 @@ func (x *CollectorToken) String() string {
 func (*CollectorToken) ProtoMessage() {}
 
 func (x *CollectorToken) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[0]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -58,7 +58,7 @@ func (x *CollectorToken) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CollectorToken.ProtoReflect.Descriptor instead.
 func (*CollectorToken) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_admin_proto_rawDescGZIP(), []int{0}
+	return file_querysheriff_v1_admin_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *CollectorToken) GetId() int64 {
@@ -90,7 +90,7 @@ type ListCollectorTokensRequest struct {
 
 func (x *ListCollectorTokensRequest) Reset() {
 	*x = ListCollectorTokensRequest{}
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[1]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -102,7 +102,7 @@ func (x *ListCollectorTokensRequest) String() string {
 func (*ListCollectorTokensRequest) ProtoMessage() {}
 
 func (x *ListCollectorTokensRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[1]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -115,7 +115,7 @@ func (x *ListCollectorTokensRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCollectorTokensRequest.ProtoReflect.Descriptor instead.
 func (*ListCollectorTokensRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_admin_proto_rawDescGZIP(), []int{1}
+	return file_querysheriff_v1_admin_proto_rawDescGZIP(), []int{1}
 }
 
 type ListCollectorTokensResponse struct {
@@ -127,7 +127,7 @@ type ListCollectorTokensResponse struct {
 
 func (x *ListCollectorTokensResponse) Reset() {
 	*x = ListCollectorTokensResponse{}
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[2]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -139,7 +139,7 @@ func (x *ListCollectorTokensResponse) String() string {
 func (*ListCollectorTokensResponse) ProtoMessage() {}
 
 func (x *ListCollectorTokensResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[2]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -152,7 +152,7 @@ func (x *ListCollectorTokensResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCollectorTokensResponse.ProtoReflect.Descriptor instead.
 func (*ListCollectorTokensResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_admin_proto_rawDescGZIP(), []int{2}
+	return file_querysheriff_v1_admin_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ListCollectorTokensResponse) GetTokens() []*CollectorToken {
@@ -171,7 +171,7 @@ type CreateCollectorTokenRequest struct {
 
 func (x *CreateCollectorTokenRequest) Reset() {
 	*x = CreateCollectorTokenRequest{}
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[3]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -183,7 +183,7 @@ func (x *CreateCollectorTokenRequest) String() string {
 func (*CreateCollectorTokenRequest) ProtoMessage() {}
 
 func (x *CreateCollectorTokenRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[3]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -196,7 +196,7 @@ func (x *CreateCollectorTokenRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCollectorTokenRequest.ProtoReflect.Descriptor instead.
 func (*CreateCollectorTokenRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_admin_proto_rawDescGZIP(), []int{3}
+	return file_querysheriff_v1_admin_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *CreateCollectorTokenRequest) GetServerName() string {
@@ -216,7 +216,7 @@ type CreateCollectorTokenResponse struct {
 
 func (x *CreateCollectorTokenResponse) Reset() {
 	*x = CreateCollectorTokenResponse{}
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[4]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -228,7 +228,7 @@ func (x *CreateCollectorTokenResponse) String() string {
 func (*CreateCollectorTokenResponse) ProtoMessage() {}
 
 func (x *CreateCollectorTokenResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[4]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -241,7 +241,7 @@ func (x *CreateCollectorTokenResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCollectorTokenResponse.ProtoReflect.Descriptor instead.
 func (*CreateCollectorTokenResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_admin_proto_rawDescGZIP(), []int{4}
+	return file_querysheriff_v1_admin_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CreateCollectorTokenResponse) GetToken() *CollectorToken {
@@ -267,7 +267,7 @@ type DeleteCollectorTokenRequest struct {
 
 func (x *DeleteCollectorTokenRequest) Reset() {
 	*x = DeleteCollectorTokenRequest{}
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[5]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -279,7 +279,7 @@ func (x *DeleteCollectorTokenRequest) String() string {
 func (*DeleteCollectorTokenRequest) ProtoMessage() {}
 
 func (x *DeleteCollectorTokenRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[5]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -292,7 +292,7 @@ func (x *DeleteCollectorTokenRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCollectorTokenRequest.ProtoReflect.Descriptor instead.
 func (*DeleteCollectorTokenRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_admin_proto_rawDescGZIP(), []int{5}
+	return file_querysheriff_v1_admin_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *DeleteCollectorTokenRequest) GetId() int64 {
@@ -310,7 +310,7 @@ type DeleteCollectorTokenResponse struct {
 
 func (x *DeleteCollectorTokenResponse) Reset() {
 	*x = DeleteCollectorTokenResponse{}
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[6]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -322,7 +322,7 @@ func (x *DeleteCollectorTokenResponse) String() string {
 func (*DeleteCollectorTokenResponse) ProtoMessage() {}
 
 func (x *DeleteCollectorTokenResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[6]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -335,7 +335,7 @@ func (x *DeleteCollectorTokenResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCollectorTokenResponse.ProtoReflect.Descriptor instead.
 func (*DeleteCollectorTokenResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_admin_proto_rawDescGZIP(), []int{6}
+	return file_querysheriff_v1_admin_proto_rawDescGZIP(), []int{6}
 }
 
 type ListUsersRequest struct {
@@ -346,7 +346,7 @@ type ListUsersRequest struct {
 
 func (x *ListUsersRequest) Reset() {
 	*x = ListUsersRequest{}
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[7]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -358,7 +358,7 @@ func (x *ListUsersRequest) String() string {
 func (*ListUsersRequest) ProtoMessage() {}
 
 func (x *ListUsersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[7]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -371,7 +371,7 @@ func (x *ListUsersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListUsersRequest.ProtoReflect.Descriptor instead.
 func (*ListUsersRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_admin_proto_rawDescGZIP(), []int{7}
+	return file_querysheriff_v1_admin_proto_rawDescGZIP(), []int{7}
 }
 
 type ListUsersResponse struct {
@@ -383,7 +383,7 @@ type ListUsersResponse struct {
 
 func (x *ListUsersResponse) Reset() {
 	*x = ListUsersResponse{}
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[8]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -395,7 +395,7 @@ func (x *ListUsersResponse) String() string {
 func (*ListUsersResponse) ProtoMessage() {}
 
 func (x *ListUsersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[8]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -408,7 +408,7 @@ func (x *ListUsersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListUsersResponse.ProtoReflect.Descriptor instead.
 func (*ListUsersResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_admin_proto_rawDescGZIP(), []int{8}
+	return file_querysheriff_v1_admin_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ListUsersResponse) GetUsers() []*User {
@@ -430,7 +430,7 @@ type CreateUserRequest struct {
 
 func (x *CreateUserRequest) Reset() {
 	*x = CreateUserRequest{}
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[9]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -442,7 +442,7 @@ func (x *CreateUserRequest) String() string {
 func (*CreateUserRequest) ProtoMessage() {}
 
 func (x *CreateUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[9]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -455,7 +455,7 @@ func (x *CreateUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateUserRequest.ProtoReflect.Descriptor instead.
 func (*CreateUserRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_admin_proto_rawDescGZIP(), []int{9}
+	return file_querysheriff_v1_admin_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *CreateUserRequest) GetName() string {
@@ -495,7 +495,7 @@ type CreateUserResponse struct {
 
 func (x *CreateUserResponse) Reset() {
 	*x = CreateUserResponse{}
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[10]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -507,7 +507,7 @@ func (x *CreateUserResponse) String() string {
 func (*CreateUserResponse) ProtoMessage() {}
 
 func (x *CreateUserResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[10]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -520,7 +520,7 @@ func (x *CreateUserResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateUserResponse.ProtoReflect.Descriptor instead.
 func (*CreateUserResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_admin_proto_rawDescGZIP(), []int{10}
+	return file_querysheriff_v1_admin_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *CreateUserResponse) GetUser() *User {
@@ -543,7 +543,7 @@ type UpdateUserRequest struct {
 
 func (x *UpdateUserRequest) Reset() {
 	*x = UpdateUserRequest{}
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[11]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -555,7 +555,7 @@ func (x *UpdateUserRequest) String() string {
 func (*UpdateUserRequest) ProtoMessage() {}
 
 func (x *UpdateUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[11]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -568,7 +568,7 @@ func (x *UpdateUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateUserRequest.ProtoReflect.Descriptor instead.
 func (*UpdateUserRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_admin_proto_rawDescGZIP(), []int{11}
+	return file_querysheriff_v1_admin_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *UpdateUserRequest) GetId() int64 {
@@ -615,7 +615,7 @@ type UpdateUserResponse struct {
 
 func (x *UpdateUserResponse) Reset() {
 	*x = UpdateUserResponse{}
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[12]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -627,7 +627,7 @@ func (x *UpdateUserResponse) String() string {
 func (*UpdateUserResponse) ProtoMessage() {}
 
 func (x *UpdateUserResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[12]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -640,7 +640,7 @@ func (x *UpdateUserResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateUserResponse.ProtoReflect.Descriptor instead.
 func (*UpdateUserResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_admin_proto_rawDescGZIP(), []int{12}
+	return file_querysheriff_v1_admin_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *UpdateUserResponse) GetUser() *User {
@@ -659,7 +659,7 @@ type DeleteUserRequest struct {
 
 func (x *DeleteUserRequest) Reset() {
 	*x = DeleteUserRequest{}
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[13]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -671,7 +671,7 @@ func (x *DeleteUserRequest) String() string {
 func (*DeleteUserRequest) ProtoMessage() {}
 
 func (x *DeleteUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[13]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -684,7 +684,7 @@ func (x *DeleteUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteUserRequest.ProtoReflect.Descriptor instead.
 func (*DeleteUserRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_admin_proto_rawDescGZIP(), []int{13}
+	return file_querysheriff_v1_admin_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *DeleteUserRequest) GetId() int64 {
@@ -702,7 +702,7 @@ type DeleteUserResponse struct {
 
 func (x *DeleteUserResponse) Reset() {
 	*x = DeleteUserResponse{}
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[14]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -714,7 +714,7 @@ func (x *DeleteUserResponse) String() string {
 func (*DeleteUserResponse) ProtoMessage() {}
 
 func (x *DeleteUserResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_admin_proto_msgTypes[14]
+	mi := &file_querysheriff_v1_admin_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -727,120 +727,119 @@ func (x *DeleteUserResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteUserResponse.ProtoReflect.Descriptor instead.
 func (*DeleteUserResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_admin_proto_rawDescGZIP(), []int{14}
+	return file_querysheriff_v1_admin_proto_rawDescGZIP(), []int{14}
 }
 
-var File_pgdozor_v1_admin_proto protoreflect.FileDescriptor
+var File_querysheriff_v1_admin_proto protoreflect.FileDescriptor
 
-const file_pgdozor_v1_admin_proto_rawDesc = "" +
+const file_querysheriff_v1_admin_proto_rawDesc = "" +
 	"\n" +
-	"\x16pgdozor/v1/admin.proto\x12\n" +
-	"pgdozor.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x15pgdozor/v1/auth.proto\"|\n" +
+	"\x1bquerysheriff/v1/admin.proto\x12\x0fquerysheriff.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1aquerysheriff/v1/auth.proto\"|\n" +
 	"\x0eCollectorToken\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1f\n" +
 	"\vserver_name\x18\x02 \x01(\tR\n" +
 	"serverName\x129\n" +
 	"\n" +
 	"created_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\x1c\n" +
-	"\x1aListCollectorTokensRequest\"Q\n" +
-	"\x1bListCollectorTokensResponse\x122\n" +
-	"\x06tokens\x18\x01 \x03(\v2\x1a.pgdozor.v1.CollectorTokenR\x06tokens\">\n" +
+	"\x1aListCollectorTokensRequest\"V\n" +
+	"\x1bListCollectorTokensResponse\x127\n" +
+	"\x06tokens\x18\x01 \x03(\v2\x1f.querysheriff.v1.CollectorTokenR\x06tokens\">\n" +
 	"\x1bCreateCollectorTokenRequest\x12\x1f\n" +
 	"\vserver_name\x18\x01 \x01(\tR\n" +
-	"serverName\"q\n" +
-	"\x1cCreateCollectorTokenResponse\x120\n" +
-	"\x05token\x18\x01 \x01(\v2\x1a.pgdozor.v1.CollectorTokenR\x05token\x12\x1f\n" +
+	"serverName\"v\n" +
+	"\x1cCreateCollectorTokenResponse\x125\n" +
+	"\x05token\x18\x01 \x01(\v2\x1f.querysheriff.v1.CollectorTokenR\x05token\x12\x1f\n" +
 	"\vtoken_value\x18\x02 \x01(\tR\n" +
 	"tokenValue\"-\n" +
 	"\x1bDeleteCollectorTokenRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\"\x1e\n" +
 	"\x1cDeleteCollectorTokenResponse\"\x12\n" +
-	"\x10ListUsersRequest\";\n" +
-	"\x11ListUsersResponse\x12&\n" +
-	"\x05users\x18\x01 \x03(\v2\x10.pgdozor.v1.UserR\x05users\"\x82\x01\n" +
+	"\x10ListUsersRequest\"@\n" +
+	"\x11ListUsersResponse\x12+\n" +
+	"\x05users\x18\x01 \x03(\v2\x15.querysheriff.v1.UserR\x05users\"\x82\x01\n" +
 	"\x11CreateUserRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x03 \x01(\tR\bpassword\x12'\n" +
-	"\x0fallowed_servers\x18\x04 \x03(\tR\x0eallowedServers\":\n" +
-	"\x12CreateUserResponse\x12$\n" +
-	"\x04user\x18\x01 \x01(\v2\x10.pgdozor.v1.UserR\x04user\"\x92\x01\n" +
+	"\x0fallowed_servers\x18\x04 \x03(\tR\x0eallowedServers\"?\n" +
+	"\x12CreateUserResponse\x12)\n" +
+	"\x04user\x18\x01 \x01(\v2\x15.querysheriff.v1.UserR\x04user\"\x92\x01\n" +
 	"\x11UpdateUserRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
 	"\x05email\x18\x03 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x04 \x01(\tR\bpassword\x12'\n" +
-	"\x0fallowed_servers\x18\x05 \x03(\tR\x0eallowedServers\":\n" +
-	"\x12UpdateUserResponse\x12$\n" +
-	"\x04user\x18\x01 \x01(\v2\x10.pgdozor.v1.UserR\x04user\"#\n" +
+	"\x0fallowed_servers\x18\x05 \x03(\tR\x0eallowedServers\"?\n" +
+	"\x12UpdateUserResponse\x12)\n" +
+	"\x04user\x18\x01 \x01(\v2\x15.querysheriff.v1.UserR\x04user\"#\n" +
 	"\x11DeleteUserRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\"\x14\n" +
-	"\x12DeleteUserResponse2\x8b\x05\n" +
-	"\fAdminService\x12h\n" +
-	"\x13ListCollectorTokens\x12&.pgdozor.v1.ListCollectorTokensRequest\x1a'.pgdozor.v1.ListCollectorTokensResponse\"\x00\x12k\n" +
-	"\x14CreateCollectorToken\x12'.pgdozor.v1.CreateCollectorTokenRequest\x1a(.pgdozor.v1.CreateCollectorTokenResponse\"\x00\x12k\n" +
-	"\x14DeleteCollectorToken\x12'.pgdozor.v1.DeleteCollectorTokenRequest\x1a(.pgdozor.v1.DeleteCollectorTokenResponse\"\x00\x12J\n" +
-	"\tListUsers\x12\x1c.pgdozor.v1.ListUsersRequest\x1a\x1d.pgdozor.v1.ListUsersResponse\"\x00\x12M\n" +
+	"\x12DeleteUserResponse2\xd1\x05\n" +
+	"\fAdminService\x12r\n" +
+	"\x13ListCollectorTokens\x12+.querysheriff.v1.ListCollectorTokensRequest\x1a,.querysheriff.v1.ListCollectorTokensResponse\"\x00\x12u\n" +
+	"\x14CreateCollectorToken\x12,.querysheriff.v1.CreateCollectorTokenRequest\x1a-.querysheriff.v1.CreateCollectorTokenResponse\"\x00\x12u\n" +
+	"\x14DeleteCollectorToken\x12,.querysheriff.v1.DeleteCollectorTokenRequest\x1a-.querysheriff.v1.DeleteCollectorTokenResponse\"\x00\x12T\n" +
+	"\tListUsers\x12!.querysheriff.v1.ListUsersRequest\x1a\".querysheriff.v1.ListUsersResponse\"\x00\x12W\n" +
 	"\n" +
-	"CreateUser\x12\x1d.pgdozor.v1.CreateUserRequest\x1a\x1e.pgdozor.v1.CreateUserResponse\"\x00\x12M\n" +
+	"CreateUser\x12\".querysheriff.v1.CreateUserRequest\x1a#.querysheriff.v1.CreateUserResponse\"\x00\x12W\n" +
 	"\n" +
-	"UpdateUser\x12\x1d.pgdozor.v1.UpdateUserRequest\x1a\x1e.pgdozor.v1.UpdateUserResponse\"\x00\x12M\n" +
+	"UpdateUser\x12\".querysheriff.v1.UpdateUserRequest\x1a#.querysheriff.v1.UpdateUserResponse\"\x00\x12W\n" +
 	"\n" +
-	"DeleteUser\x12\x1d.pgdozor.v1.DeleteUserRequest\x1a\x1e.pgdozor.v1.DeleteUserResponse\"\x00B5Z3github.com/pgdozor/backend/gen/pgdozor/v1;pgdozorv1b\x06proto3"
+	"DeleteUser\x12\".querysheriff.v1.DeleteUserRequest\x1a#.querysheriff.v1.DeleteUserResponse\"\x00BDZBgithub.com/querysheriff/backend/gen/querysheriff/v1;querysheriffv1b\x06proto3"
 
 var (
-	file_pgdozor_v1_admin_proto_rawDescOnce sync.Once
-	file_pgdozor_v1_admin_proto_rawDescData []byte
+	file_querysheriff_v1_admin_proto_rawDescOnce sync.Once
+	file_querysheriff_v1_admin_proto_rawDescData []byte
 )
 
-func file_pgdozor_v1_admin_proto_rawDescGZIP() []byte {
-	file_pgdozor_v1_admin_proto_rawDescOnce.Do(func() {
-		file_pgdozor_v1_admin_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pgdozor_v1_admin_proto_rawDesc), len(file_pgdozor_v1_admin_proto_rawDesc)))
+func file_querysheriff_v1_admin_proto_rawDescGZIP() []byte {
+	file_querysheriff_v1_admin_proto_rawDescOnce.Do(func() {
+		file_querysheriff_v1_admin_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_querysheriff_v1_admin_proto_rawDesc), len(file_querysheriff_v1_admin_proto_rawDesc)))
 	})
-	return file_pgdozor_v1_admin_proto_rawDescData
+	return file_querysheriff_v1_admin_proto_rawDescData
 }
 
-var file_pgdozor_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
-var file_pgdozor_v1_admin_proto_goTypes = []any{
-	(*CollectorToken)(nil),               // 0: pgdozor.v1.CollectorToken
-	(*ListCollectorTokensRequest)(nil),   // 1: pgdozor.v1.ListCollectorTokensRequest
-	(*ListCollectorTokensResponse)(nil),  // 2: pgdozor.v1.ListCollectorTokensResponse
-	(*CreateCollectorTokenRequest)(nil),  // 3: pgdozor.v1.CreateCollectorTokenRequest
-	(*CreateCollectorTokenResponse)(nil), // 4: pgdozor.v1.CreateCollectorTokenResponse
-	(*DeleteCollectorTokenRequest)(nil),  // 5: pgdozor.v1.DeleteCollectorTokenRequest
-	(*DeleteCollectorTokenResponse)(nil), // 6: pgdozor.v1.DeleteCollectorTokenResponse
-	(*ListUsersRequest)(nil),             // 7: pgdozor.v1.ListUsersRequest
-	(*ListUsersResponse)(nil),            // 8: pgdozor.v1.ListUsersResponse
-	(*CreateUserRequest)(nil),            // 9: pgdozor.v1.CreateUserRequest
-	(*CreateUserResponse)(nil),           // 10: pgdozor.v1.CreateUserResponse
-	(*UpdateUserRequest)(nil),            // 11: pgdozor.v1.UpdateUserRequest
-	(*UpdateUserResponse)(nil),           // 12: pgdozor.v1.UpdateUserResponse
-	(*DeleteUserRequest)(nil),            // 13: pgdozor.v1.DeleteUserRequest
-	(*DeleteUserResponse)(nil),           // 14: pgdozor.v1.DeleteUserResponse
+var file_querysheriff_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_querysheriff_v1_admin_proto_goTypes = []any{
+	(*CollectorToken)(nil),               // 0: querysheriff.v1.CollectorToken
+	(*ListCollectorTokensRequest)(nil),   // 1: querysheriff.v1.ListCollectorTokensRequest
+	(*ListCollectorTokensResponse)(nil),  // 2: querysheriff.v1.ListCollectorTokensResponse
+	(*CreateCollectorTokenRequest)(nil),  // 3: querysheriff.v1.CreateCollectorTokenRequest
+	(*CreateCollectorTokenResponse)(nil), // 4: querysheriff.v1.CreateCollectorTokenResponse
+	(*DeleteCollectorTokenRequest)(nil),  // 5: querysheriff.v1.DeleteCollectorTokenRequest
+	(*DeleteCollectorTokenResponse)(nil), // 6: querysheriff.v1.DeleteCollectorTokenResponse
+	(*ListUsersRequest)(nil),             // 7: querysheriff.v1.ListUsersRequest
+	(*ListUsersResponse)(nil),            // 8: querysheriff.v1.ListUsersResponse
+	(*CreateUserRequest)(nil),            // 9: querysheriff.v1.CreateUserRequest
+	(*CreateUserResponse)(nil),           // 10: querysheriff.v1.CreateUserResponse
+	(*UpdateUserRequest)(nil),            // 11: querysheriff.v1.UpdateUserRequest
+	(*UpdateUserResponse)(nil),           // 12: querysheriff.v1.UpdateUserResponse
+	(*DeleteUserRequest)(nil),            // 13: querysheriff.v1.DeleteUserRequest
+	(*DeleteUserResponse)(nil),           // 14: querysheriff.v1.DeleteUserResponse
 	(*timestamppb.Timestamp)(nil),        // 15: google.protobuf.Timestamp
-	(*User)(nil),                         // 16: pgdozor.v1.User
+	(*User)(nil),                         // 16: querysheriff.v1.User
 }
-var file_pgdozor_v1_admin_proto_depIdxs = []int32{
-	15, // 0: pgdozor.v1.CollectorToken.created_at:type_name -> google.protobuf.Timestamp
-	0,  // 1: pgdozor.v1.ListCollectorTokensResponse.tokens:type_name -> pgdozor.v1.CollectorToken
-	0,  // 2: pgdozor.v1.CreateCollectorTokenResponse.token:type_name -> pgdozor.v1.CollectorToken
-	16, // 3: pgdozor.v1.ListUsersResponse.users:type_name -> pgdozor.v1.User
-	16, // 4: pgdozor.v1.CreateUserResponse.user:type_name -> pgdozor.v1.User
-	16, // 5: pgdozor.v1.UpdateUserResponse.user:type_name -> pgdozor.v1.User
-	1,  // 6: pgdozor.v1.AdminService.ListCollectorTokens:input_type -> pgdozor.v1.ListCollectorTokensRequest
-	3,  // 7: pgdozor.v1.AdminService.CreateCollectorToken:input_type -> pgdozor.v1.CreateCollectorTokenRequest
-	5,  // 8: pgdozor.v1.AdminService.DeleteCollectorToken:input_type -> pgdozor.v1.DeleteCollectorTokenRequest
-	7,  // 9: pgdozor.v1.AdminService.ListUsers:input_type -> pgdozor.v1.ListUsersRequest
-	9,  // 10: pgdozor.v1.AdminService.CreateUser:input_type -> pgdozor.v1.CreateUserRequest
-	11, // 11: pgdozor.v1.AdminService.UpdateUser:input_type -> pgdozor.v1.UpdateUserRequest
-	13, // 12: pgdozor.v1.AdminService.DeleteUser:input_type -> pgdozor.v1.DeleteUserRequest
-	2,  // 13: pgdozor.v1.AdminService.ListCollectorTokens:output_type -> pgdozor.v1.ListCollectorTokensResponse
-	4,  // 14: pgdozor.v1.AdminService.CreateCollectorToken:output_type -> pgdozor.v1.CreateCollectorTokenResponse
-	6,  // 15: pgdozor.v1.AdminService.DeleteCollectorToken:output_type -> pgdozor.v1.DeleteCollectorTokenResponse
-	8,  // 16: pgdozor.v1.AdminService.ListUsers:output_type -> pgdozor.v1.ListUsersResponse
-	10, // 17: pgdozor.v1.AdminService.CreateUser:output_type -> pgdozor.v1.CreateUserResponse
-	12, // 18: pgdozor.v1.AdminService.UpdateUser:output_type -> pgdozor.v1.UpdateUserResponse
-	14, // 19: pgdozor.v1.AdminService.DeleteUser:output_type -> pgdozor.v1.DeleteUserResponse
+var file_querysheriff_v1_admin_proto_depIdxs = []int32{
+	15, // 0: querysheriff.v1.CollectorToken.created_at:type_name -> google.protobuf.Timestamp
+	0,  // 1: querysheriff.v1.ListCollectorTokensResponse.tokens:type_name -> querysheriff.v1.CollectorToken
+	0,  // 2: querysheriff.v1.CreateCollectorTokenResponse.token:type_name -> querysheriff.v1.CollectorToken
+	16, // 3: querysheriff.v1.ListUsersResponse.users:type_name -> querysheriff.v1.User
+	16, // 4: querysheriff.v1.CreateUserResponse.user:type_name -> querysheriff.v1.User
+	16, // 5: querysheriff.v1.UpdateUserResponse.user:type_name -> querysheriff.v1.User
+	1,  // 6: querysheriff.v1.AdminService.ListCollectorTokens:input_type -> querysheriff.v1.ListCollectorTokensRequest
+	3,  // 7: querysheriff.v1.AdminService.CreateCollectorToken:input_type -> querysheriff.v1.CreateCollectorTokenRequest
+	5,  // 8: querysheriff.v1.AdminService.DeleteCollectorToken:input_type -> querysheriff.v1.DeleteCollectorTokenRequest
+	7,  // 9: querysheriff.v1.AdminService.ListUsers:input_type -> querysheriff.v1.ListUsersRequest
+	9,  // 10: querysheriff.v1.AdminService.CreateUser:input_type -> querysheriff.v1.CreateUserRequest
+	11, // 11: querysheriff.v1.AdminService.UpdateUser:input_type -> querysheriff.v1.UpdateUserRequest
+	13, // 12: querysheriff.v1.AdminService.DeleteUser:input_type -> querysheriff.v1.DeleteUserRequest
+	2,  // 13: querysheriff.v1.AdminService.ListCollectorTokens:output_type -> querysheriff.v1.ListCollectorTokensResponse
+	4,  // 14: querysheriff.v1.AdminService.CreateCollectorToken:output_type -> querysheriff.v1.CreateCollectorTokenResponse
+	6,  // 15: querysheriff.v1.AdminService.DeleteCollectorToken:output_type -> querysheriff.v1.DeleteCollectorTokenResponse
+	8,  // 16: querysheriff.v1.AdminService.ListUsers:output_type -> querysheriff.v1.ListUsersResponse
+	10, // 17: querysheriff.v1.AdminService.CreateUser:output_type -> querysheriff.v1.CreateUserResponse
+	12, // 18: querysheriff.v1.AdminService.UpdateUser:output_type -> querysheriff.v1.UpdateUserResponse
+	14, // 19: querysheriff.v1.AdminService.DeleteUser:output_type -> querysheriff.v1.DeleteUserResponse
 	13, // [13:20] is the sub-list for method output_type
 	6,  // [6:13] is the sub-list for method input_type
 	6,  // [6:6] is the sub-list for extension type_name
@@ -848,27 +847,27 @@ var file_pgdozor_v1_admin_proto_depIdxs = []int32{
 	0,  // [0:6] is the sub-list for field type_name
 }
 
-func init() { file_pgdozor_v1_admin_proto_init() }
-func file_pgdozor_v1_admin_proto_init() {
-	if File_pgdozor_v1_admin_proto != nil {
+func init() { file_querysheriff_v1_admin_proto_init() }
+func file_querysheriff_v1_admin_proto_init() {
+	if File_querysheriff_v1_admin_proto != nil {
 		return
 	}
-	file_pgdozor_v1_auth_proto_init()
+	file_querysheriff_v1_auth_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pgdozor_v1_admin_proto_rawDesc), len(file_pgdozor_v1_admin_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_querysheriff_v1_admin_proto_rawDesc), len(file_querysheriff_v1_admin_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_pgdozor_v1_admin_proto_goTypes,
-		DependencyIndexes: file_pgdozor_v1_admin_proto_depIdxs,
-		MessageInfos:      file_pgdozor_v1_admin_proto_msgTypes,
+		GoTypes:           file_querysheriff_v1_admin_proto_goTypes,
+		DependencyIndexes: file_querysheriff_v1_admin_proto_depIdxs,
+		MessageInfos:      file_querysheriff_v1_admin_proto_msgTypes,
 	}.Build()
-	File_pgdozor_v1_admin_proto = out.File
-	file_pgdozor_v1_admin_proto_goTypes = nil
-	file_pgdozor_v1_admin_proto_depIdxs = nil
+	File_querysheriff_v1_admin_proto = out.File
+	file_querysheriff_v1_admin_proto_goTypes = nil
+	file_querysheriff_v1_admin_proto_depIdxs = nil
 }

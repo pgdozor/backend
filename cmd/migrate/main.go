@@ -9,7 +9,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 
-	"github.com/pgdozor/backend/db/migrations"
+	"github.com/querysheriff/backend/db/migrations"
 )
 
 func main() {

@@ -9,8 +9,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
-	"github.com/pgdozor/backend/internal/db"
+	querysheriffv1 "github.com/querysheriff/backend/gen/querysheriff/v1"
+	"github.com/querysheriff/backend/internal/db"
 )
 
 func TestStatementSeriesTotalMatchesTable(t *testing.T) {
@@ -55,10 +55,10 @@ func TestStatementSeriesTotalMatchesTable(t *testing.T) {
 		RowLimit: 100000,
 		Since:    pgtype.Timestamptz{Time: from.Add(-2 * bucket), Valid: true},
 		Until:    until,
-		Kinds: requestedKinds([]pgdozorv1.QueryKind{
-			pgdozorv1.QueryKind_QUERY_KIND_READS,
-			pgdozorv1.QueryKind_QUERY_KIND_WRITES,
-			pgdozorv1.QueryKind_QUERY_KIND_OTHERS,
+		Kinds: requestedKinds([]querysheriffv1.QueryKind{
+			querysheriffv1.QueryKind_QUERY_KIND_READS,
+			querysheriffv1.QueryKind_QUERY_KIND_WRITES,
+			querysheriffv1.QueryKind_QUERY_KIND_OTHERS,
 		}),
 	})
 	if err != nil {

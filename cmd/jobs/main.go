@@ -12,10 +12,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 
-	"github.com/pgdozor/backend/internal/alerts"
-	"github.com/pgdozor/backend/internal/config"
-	"github.com/pgdozor/backend/internal/db"
-	"github.com/pgdozor/backend/internal/retention"
+	"github.com/querysheriff/backend/internal/alerts"
+	"github.com/querysheriff/backend/internal/config"
+	"github.com/querysheriff/backend/internal/db"
+	"github.com/querysheriff/backend/internal/retention"
 )
 
 const connectTimeout = 10 * time.Second
@@ -56,7 +56,7 @@ func run(logger *slog.Logger) error {
 		func(c context.Context) { alerts.RunScheduler(c, queries, notifier, logger) },
 	}
 
-	logger.InfoContext(ctx, "pgdozor jobs started")
+	logger.InfoContext(ctx, "querysheriff jobs started")
 
 	var wg sync.WaitGroup
 	wg.Add(len(jobs))
@@ -69,7 +69,7 @@ func run(logger *slog.Logger) error {
 	}
 
 	wg.Wait()
-	logger.InfoContext(ctx, "pgdozor jobs stopped")
+	logger.InfoContext(ctx, "querysheriff jobs stopped")
 
 	return nil
 }

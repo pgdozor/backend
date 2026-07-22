@@ -6,8 +6,8 @@ import (
 	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5/pgtype"
 
-	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
-	"github.com/pgdozor/backend/internal/db"
+	querysheriffv1 "github.com/querysheriff/backend/gen/querysheriff/v1"
+	"github.com/querysheriff/backend/internal/db"
 )
 
 type HealthServer struct {
@@ -20,8 +20,8 @@ func NewHealthServer(queries *db.Queries) *HealthServer {
 
 func (s *HealthServer) ReportHealth(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.ReportHealthRequest],
-) (*connect.Response[pgdozorv1.ReportHealthResponse], error) {
+	req *connect.Request[querysheriffv1.ReportHealthRequest],
+) (*connect.Response[querysheriffv1.ReportHealthResponse], error) {
 	msg := req.Msg
 
 	if err := requireTimestamp(msg.GetCollectedAt()); err != nil {
@@ -42,13 +42,13 @@ func (s *HealthServer) ReportHealth(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return connect.NewResponse(&pgdozorv1.ReportHealthResponse{}), nil
+	return connect.NewResponse(&querysheriffv1.ReportHealthResponse{}), nil
 }
 
 func (s *HealthServer) QueryServers(
 	ctx context.Context,
-	_ *connect.Request[pgdozorv1.QueryServersRequest],
-) (*connect.Response[pgdozorv1.QueryServersResponse], error) {
+	_ *connect.Request[querysheriffv1.QueryServersRequest],
+) (*connect.Response[querysheriffv1.QueryServersResponse], error) {
 	principal, err := requirePrincipal(ctx)
 	if err != nil {
 		return nil, err
@@ -61,11 +61,11 @@ func (s *HealthServer) QueryServers(
 		return nil, err
 	}
 
-	return connect.NewResponse(&pgdozorv1.QueryServersResponse{Servers: servers}), nil
+	return connect.NewResponse(&querysheriffv1.QueryServersResponse{Servers: servers}), nil
 }
 
-func decodeMonitoredServer(row db.CollectorHealth) (*pgdozorv1.MonitoredServer, error) {
-	return &pgdozorv1.MonitoredServer{
+func decodeMonitoredServer(row db.CollectorHealth) (*querysheriffv1.MonitoredServer, error) {
+	return &querysheriffv1.MonitoredServer{
 		ServerName:  row.ServerName,
 		CollectedAt: protoFromTimestamptz(row.CollectedAt),
 		Databases:   row.Databases,

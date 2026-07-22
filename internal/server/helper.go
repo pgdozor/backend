@@ -5,7 +5,7 @@ import (
 
 	"connectrpc.com/connect"
 
-	"github.com/pgdozor/backend/internal/db"
+	"github.com/querysheriff/backend/internal/db"
 )
 
 type statementIDBatch interface {

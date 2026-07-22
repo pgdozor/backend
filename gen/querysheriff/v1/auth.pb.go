@@ -2,9 +2,9 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        (unknown)
-// source: pgdozor/v1/auth.proto
+// source: querysheriff/v1/auth.proto
 
-package pgdozorv1
+package querysheriffv1
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -36,7 +36,7 @@ type User struct {
 
 func (x *User) Reset() {
 	*x = User{}
-	mi := &file_pgdozor_v1_auth_proto_msgTypes[0]
+	mi := &file_querysheriff_v1_auth_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -48,7 +48,7 @@ func (x *User) String() string {
 func (*User) ProtoMessage() {}
 
 func (x *User) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_auth_proto_msgTypes[0]
+	mi := &file_querysheriff_v1_auth_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -61,7 +61,7 @@ func (x *User) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use User.ProtoReflect.Descriptor instead.
 func (*User) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_auth_proto_rawDescGZIP(), []int{0}
+	return file_querysheriff_v1_auth_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *User) GetId() int64 {
@@ -116,7 +116,7 @@ type LoginRequest struct {
 
 func (x *LoginRequest) Reset() {
 	*x = LoginRequest{}
-	mi := &file_pgdozor_v1_auth_proto_msgTypes[1]
+	mi := &file_querysheriff_v1_auth_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -128,7 +128,7 @@ func (x *LoginRequest) String() string {
 func (*LoginRequest) ProtoMessage() {}
 
 func (x *LoginRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_auth_proto_msgTypes[1]
+	mi := &file_querysheriff_v1_auth_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -141,7 +141,7 @@ func (x *LoginRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoginRequest.ProtoReflect.Descriptor instead.
 func (*LoginRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_auth_proto_rawDescGZIP(), []int{1}
+	return file_querysheriff_v1_auth_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *LoginRequest) GetEmail() string {
@@ -167,7 +167,7 @@ type LoginResponse struct {
 
 func (x *LoginResponse) Reset() {
 	*x = LoginResponse{}
-	mi := &file_pgdozor_v1_auth_proto_msgTypes[2]
+	mi := &file_querysheriff_v1_auth_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -179,7 +179,7 @@ func (x *LoginResponse) String() string {
 func (*LoginResponse) ProtoMessage() {}
 
 func (x *LoginResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_auth_proto_msgTypes[2]
+	mi := &file_querysheriff_v1_auth_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -192,7 +192,7 @@ func (x *LoginResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoginResponse.ProtoReflect.Descriptor instead.
 func (*LoginResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_auth_proto_rawDescGZIP(), []int{2}
+	return file_querysheriff_v1_auth_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *LoginResponse) GetUser() *User {
@@ -210,7 +210,7 @@ type LogoutRequest struct {
 
 func (x *LogoutRequest) Reset() {
 	*x = LogoutRequest{}
-	mi := &file_pgdozor_v1_auth_proto_msgTypes[3]
+	mi := &file_querysheriff_v1_auth_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -222,7 +222,7 @@ func (x *LogoutRequest) String() string {
 func (*LogoutRequest) ProtoMessage() {}
 
 func (x *LogoutRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_auth_proto_msgTypes[3]
+	mi := &file_querysheriff_v1_auth_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -235,7 +235,7 @@ func (x *LogoutRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogoutRequest.ProtoReflect.Descriptor instead.
 func (*LogoutRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_auth_proto_rawDescGZIP(), []int{3}
+	return file_querysheriff_v1_auth_proto_rawDescGZIP(), []int{3}
 }
 
 type LogoutResponse struct {
@@ -246,7 +246,7 @@ type LogoutResponse struct {
 
 func (x *LogoutResponse) Reset() {
 	*x = LogoutResponse{}
-	mi := &file_pgdozor_v1_auth_proto_msgTypes[4]
+	mi := &file_querysheriff_v1_auth_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -258,7 +258,7 @@ func (x *LogoutResponse) String() string {
 func (*LogoutResponse) ProtoMessage() {}
 
 func (x *LogoutResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_auth_proto_msgTypes[4]
+	mi := &file_querysheriff_v1_auth_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -271,7 +271,7 @@ func (x *LogoutResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogoutResponse.ProtoReflect.Descriptor instead.
 func (*LogoutResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_auth_proto_rawDescGZIP(), []int{4}
+	return file_querysheriff_v1_auth_proto_rawDescGZIP(), []int{4}
 }
 
 type CurrentUserRequest struct {
@@ -282,7 +282,7 @@ type CurrentUserRequest struct {
 
 func (x *CurrentUserRequest) Reset() {
 	*x = CurrentUserRequest{}
-	mi := &file_pgdozor_v1_auth_proto_msgTypes[5]
+	mi := &file_querysheriff_v1_auth_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -294,7 +294,7 @@ func (x *CurrentUserRequest) String() string {
 func (*CurrentUserRequest) ProtoMessage() {}
 
 func (x *CurrentUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_auth_proto_msgTypes[5]
+	mi := &file_querysheriff_v1_auth_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -307,7 +307,7 @@ func (x *CurrentUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CurrentUserRequest.ProtoReflect.Descriptor instead.
 func (*CurrentUserRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_auth_proto_rawDescGZIP(), []int{5}
+	return file_querysheriff_v1_auth_proto_rawDescGZIP(), []int{5}
 }
 
 type CurrentUserResponse struct {
@@ -319,7 +319,7 @@ type CurrentUserResponse struct {
 
 func (x *CurrentUserResponse) Reset() {
 	*x = CurrentUserResponse{}
-	mi := &file_pgdozor_v1_auth_proto_msgTypes[6]
+	mi := &file_querysheriff_v1_auth_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -331,7 +331,7 @@ func (x *CurrentUserResponse) String() string {
 func (*CurrentUserResponse) ProtoMessage() {}
 
 func (x *CurrentUserResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_auth_proto_msgTypes[6]
+	mi := &file_querysheriff_v1_auth_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -344,7 +344,7 @@ func (x *CurrentUserResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CurrentUserResponse.ProtoReflect.Descriptor instead.
 func (*CurrentUserResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_auth_proto_rawDescGZIP(), []int{6}
+	return file_querysheriff_v1_auth_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *CurrentUserResponse) GetUser() *User {
@@ -354,12 +354,11 @@ func (x *CurrentUserResponse) GetUser() *User {
 	return nil
 }
 
-var File_pgdozor_v1_auth_proto protoreflect.FileDescriptor
+var File_querysheriff_v1_auth_proto protoreflect.FileDescriptor
 
-const file_pgdozor_v1_auth_proto_rawDesc = "" +
+const file_querysheriff_v1_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x15pgdozor/v1/auth.proto\x12\n" +
-	"pgdozor.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xca\x01\n" +
+	"\x1aquerysheriff/v1/auth.proto\x12\x0fquerysheriff.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xca\x01\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
@@ -370,52 +369,52 @@ const file_pgdozor_v1_auth_proto_rawDesc = "" +
 	"\x0fallowed_servers\x18\x06 \x03(\tR\x0eallowedServers\"@\n" +
 	"\fLoginRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
-	"\bpassword\x18\x02 \x01(\tR\bpassword\"5\n" +
-	"\rLoginResponse\x12$\n" +
-	"\x04user\x18\x01 \x01(\v2\x10.pgdozor.v1.UserR\x04user\"\x0f\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\":\n" +
+	"\rLoginResponse\x12)\n" +
+	"\x04user\x18\x01 \x01(\v2\x15.querysheriff.v1.UserR\x04user\"\x0f\n" +
 	"\rLogoutRequest\"\x10\n" +
 	"\x0eLogoutResponse\"\x14\n" +
-	"\x12CurrentUserRequest\";\n" +
-	"\x13CurrentUserResponse\x12$\n" +
-	"\x04user\x18\x01 \x01(\v2\x10.pgdozor.v1.UserR\x04user2\xe2\x01\n" +
-	"\vAuthService\x12>\n" +
-	"\x05Login\x12\x18.pgdozor.v1.LoginRequest\x1a\x19.pgdozor.v1.LoginResponse\"\x00\x12A\n" +
-	"\x06Logout\x12\x19.pgdozor.v1.LogoutRequest\x1a\x1a.pgdozor.v1.LogoutResponse\"\x00\x12P\n" +
-	"\vCurrentUser\x12\x1e.pgdozor.v1.CurrentUserRequest\x1a\x1f.pgdozor.v1.CurrentUserResponse\"\x00B5Z3github.com/pgdozor/backend/gen/pgdozor/v1;pgdozorv1b\x06proto3"
+	"\x12CurrentUserRequest\"@\n" +
+	"\x13CurrentUserResponse\x12)\n" +
+	"\x04user\x18\x01 \x01(\v2\x15.querysheriff.v1.UserR\x04user2\x80\x02\n" +
+	"\vAuthService\x12H\n" +
+	"\x05Login\x12\x1d.querysheriff.v1.LoginRequest\x1a\x1e.querysheriff.v1.LoginResponse\"\x00\x12K\n" +
+	"\x06Logout\x12\x1e.querysheriff.v1.LogoutRequest\x1a\x1f.querysheriff.v1.LogoutResponse\"\x00\x12Z\n" +
+	"\vCurrentUser\x12#.querysheriff.v1.CurrentUserRequest\x1a$.querysheriff.v1.CurrentUserResponse\"\x00BDZBgithub.com/querysheriff/backend/gen/querysheriff/v1;querysheriffv1b\x06proto3"
 
 var (
-	file_pgdozor_v1_auth_proto_rawDescOnce sync.Once
-	file_pgdozor_v1_auth_proto_rawDescData []byte
+	file_querysheriff_v1_auth_proto_rawDescOnce sync.Once
+	file_querysheriff_v1_auth_proto_rawDescData []byte
 )
 
-func file_pgdozor_v1_auth_proto_rawDescGZIP() []byte {
-	file_pgdozor_v1_auth_proto_rawDescOnce.Do(func() {
-		file_pgdozor_v1_auth_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pgdozor_v1_auth_proto_rawDesc), len(file_pgdozor_v1_auth_proto_rawDesc)))
+func file_querysheriff_v1_auth_proto_rawDescGZIP() []byte {
+	file_querysheriff_v1_auth_proto_rawDescOnce.Do(func() {
+		file_querysheriff_v1_auth_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_querysheriff_v1_auth_proto_rawDesc), len(file_querysheriff_v1_auth_proto_rawDesc)))
 	})
-	return file_pgdozor_v1_auth_proto_rawDescData
+	return file_querysheriff_v1_auth_proto_rawDescData
 }
 
-var file_pgdozor_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
-var file_pgdozor_v1_auth_proto_goTypes = []any{
-	(*User)(nil),                  // 0: pgdozor.v1.User
-	(*LoginRequest)(nil),          // 1: pgdozor.v1.LoginRequest
-	(*LoginResponse)(nil),         // 2: pgdozor.v1.LoginResponse
-	(*LogoutRequest)(nil),         // 3: pgdozor.v1.LogoutRequest
-	(*LogoutResponse)(nil),        // 4: pgdozor.v1.LogoutResponse
-	(*CurrentUserRequest)(nil),    // 5: pgdozor.v1.CurrentUserRequest
-	(*CurrentUserResponse)(nil),   // 6: pgdozor.v1.CurrentUserResponse
+var file_querysheriff_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_querysheriff_v1_auth_proto_goTypes = []any{
+	(*User)(nil),                  // 0: querysheriff.v1.User
+	(*LoginRequest)(nil),          // 1: querysheriff.v1.LoginRequest
+	(*LoginResponse)(nil),         // 2: querysheriff.v1.LoginResponse
+	(*LogoutRequest)(nil),         // 3: querysheriff.v1.LogoutRequest
+	(*LogoutResponse)(nil),        // 4: querysheriff.v1.LogoutResponse
+	(*CurrentUserRequest)(nil),    // 5: querysheriff.v1.CurrentUserRequest
+	(*CurrentUserResponse)(nil),   // 6: querysheriff.v1.CurrentUserResponse
 	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
 }
-var file_pgdozor_v1_auth_proto_depIdxs = []int32{
-	7, // 0: pgdozor.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	0, // 1: pgdozor.v1.LoginResponse.user:type_name -> pgdozor.v1.User
-	0, // 2: pgdozor.v1.CurrentUserResponse.user:type_name -> pgdozor.v1.User
-	1, // 3: pgdozor.v1.AuthService.Login:input_type -> pgdozor.v1.LoginRequest
-	3, // 4: pgdozor.v1.AuthService.Logout:input_type -> pgdozor.v1.LogoutRequest
-	5, // 5: pgdozor.v1.AuthService.CurrentUser:input_type -> pgdozor.v1.CurrentUserRequest
-	2, // 6: pgdozor.v1.AuthService.Login:output_type -> pgdozor.v1.LoginResponse
-	4, // 7: pgdozor.v1.AuthService.Logout:output_type -> pgdozor.v1.LogoutResponse
-	6, // 8: pgdozor.v1.AuthService.CurrentUser:output_type -> pgdozor.v1.CurrentUserResponse
+var file_querysheriff_v1_auth_proto_depIdxs = []int32{
+	7, // 0: querysheriff.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	0, // 1: querysheriff.v1.LoginResponse.user:type_name -> querysheriff.v1.User
+	0, // 2: querysheriff.v1.CurrentUserResponse.user:type_name -> querysheriff.v1.User
+	1, // 3: querysheriff.v1.AuthService.Login:input_type -> querysheriff.v1.LoginRequest
+	3, // 4: querysheriff.v1.AuthService.Logout:input_type -> querysheriff.v1.LogoutRequest
+	5, // 5: querysheriff.v1.AuthService.CurrentUser:input_type -> querysheriff.v1.CurrentUserRequest
+	2, // 6: querysheriff.v1.AuthService.Login:output_type -> querysheriff.v1.LoginResponse
+	4, // 7: querysheriff.v1.AuthService.Logout:output_type -> querysheriff.v1.LogoutResponse
+	6, // 8: querysheriff.v1.AuthService.CurrentUser:output_type -> querysheriff.v1.CurrentUserResponse
 	6, // [6:9] is the sub-list for method output_type
 	3, // [3:6] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
@@ -423,26 +422,26 @@ var file_pgdozor_v1_auth_proto_depIdxs = []int32{
 	0, // [0:3] is the sub-list for field type_name
 }
 
-func init() { file_pgdozor_v1_auth_proto_init() }
-func file_pgdozor_v1_auth_proto_init() {
-	if File_pgdozor_v1_auth_proto != nil {
+func init() { file_querysheriff_v1_auth_proto_init() }
+func file_querysheriff_v1_auth_proto_init() {
+	if File_querysheriff_v1_auth_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pgdozor_v1_auth_proto_rawDesc), len(file_pgdozor_v1_auth_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_querysheriff_v1_auth_proto_rawDesc), len(file_querysheriff_v1_auth_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_pgdozor_v1_auth_proto_goTypes,
-		DependencyIndexes: file_pgdozor_v1_auth_proto_depIdxs,
-		MessageInfos:      file_pgdozor_v1_auth_proto_msgTypes,
+		GoTypes:           file_querysheriff_v1_auth_proto_goTypes,
+		DependencyIndexes: file_querysheriff_v1_auth_proto_depIdxs,
+		MessageInfos:      file_querysheriff_v1_auth_proto_msgTypes,
 	}.Build()
-	File_pgdozor_v1_auth_proto = out.File
-	file_pgdozor_v1_auth_proto_goTypes = nil
-	file_pgdozor_v1_auth_proto_depIdxs = nil
+	File_querysheriff_v1_auth_proto = out.File
+	file_querysheriff_v1_auth_proto_goTypes = nil
+	file_querysheriff_v1_auth_proto_depIdxs = nil
 }

@@ -2,9 +2,9 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        (unknown)
-// source: pgdozor/v1/health.proto
+// source: querysheriff/v1/health.proto
 
-package pgdozorv1
+package querysheriffv1
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -32,7 +32,7 @@ type ReportHealthRequest struct {
 
 func (x *ReportHealthRequest) Reset() {
 	*x = ReportHealthRequest{}
-	mi := &file_pgdozor_v1_health_proto_msgTypes[0]
+	mi := &file_querysheriff_v1_health_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -44,7 +44,7 @@ func (x *ReportHealthRequest) String() string {
 func (*ReportHealthRequest) ProtoMessage() {}
 
 func (x *ReportHealthRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_health_proto_msgTypes[0]
+	mi := &file_querysheriff_v1_health_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -57,7 +57,7 @@ func (x *ReportHealthRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportHealthRequest.ProtoReflect.Descriptor instead.
 func (*ReportHealthRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_health_proto_rawDescGZIP(), []int{0}
+	return file_querysheriff_v1_health_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *ReportHealthRequest) GetCollectedAt() *timestamppb.Timestamp {
@@ -82,7 +82,7 @@ type ReportHealthResponse struct {
 
 func (x *ReportHealthResponse) Reset() {
 	*x = ReportHealthResponse{}
-	mi := &file_pgdozor_v1_health_proto_msgTypes[1]
+	mi := &file_querysheriff_v1_health_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -94,7 +94,7 @@ func (x *ReportHealthResponse) String() string {
 func (*ReportHealthResponse) ProtoMessage() {}
 
 func (x *ReportHealthResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_health_proto_msgTypes[1]
+	mi := &file_querysheriff_v1_health_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -107,7 +107,7 @@ func (x *ReportHealthResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportHealthResponse.ProtoReflect.Descriptor instead.
 func (*ReportHealthResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_health_proto_rawDescGZIP(), []int{1}
+	return file_querysheriff_v1_health_proto_rawDescGZIP(), []int{1}
 }
 
 type QueryServersRequest struct {
@@ -118,7 +118,7 @@ type QueryServersRequest struct {
 
 func (x *QueryServersRequest) Reset() {
 	*x = QueryServersRequest{}
-	mi := &file_pgdozor_v1_health_proto_msgTypes[2]
+	mi := &file_querysheriff_v1_health_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -130,7 +130,7 @@ func (x *QueryServersRequest) String() string {
 func (*QueryServersRequest) ProtoMessage() {}
 
 func (x *QueryServersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_health_proto_msgTypes[2]
+	mi := &file_querysheriff_v1_health_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -143,7 +143,7 @@ func (x *QueryServersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryServersRequest.ProtoReflect.Descriptor instead.
 func (*QueryServersRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_health_proto_rawDescGZIP(), []int{2}
+	return file_querysheriff_v1_health_proto_rawDescGZIP(), []int{2}
 }
 
 type QueryServersResponse struct {
@@ -155,7 +155,7 @@ type QueryServersResponse struct {
 
 func (x *QueryServersResponse) Reset() {
 	*x = QueryServersResponse{}
-	mi := &file_pgdozor_v1_health_proto_msgTypes[3]
+	mi := &file_querysheriff_v1_health_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -167,7 +167,7 @@ func (x *QueryServersResponse) String() string {
 func (*QueryServersResponse) ProtoMessage() {}
 
 func (x *QueryServersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_health_proto_msgTypes[3]
+	mi := &file_querysheriff_v1_health_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -180,7 +180,7 @@ func (x *QueryServersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryServersResponse.ProtoReflect.Descriptor instead.
 func (*QueryServersResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_health_proto_rawDescGZIP(), []int{3}
+	return file_querysheriff_v1_health_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *QueryServersResponse) GetServers() []*MonitoredServer {
@@ -201,7 +201,7 @@ type MonitoredServer struct {
 
 func (x *MonitoredServer) Reset() {
 	*x = MonitoredServer{}
-	mi := &file_pgdozor_v1_health_proto_msgTypes[4]
+	mi := &file_querysheriff_v1_health_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -213,7 +213,7 @@ func (x *MonitoredServer) String() string {
 func (*MonitoredServer) ProtoMessage() {}
 
 func (x *MonitoredServer) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_health_proto_msgTypes[4]
+	mi := &file_querysheriff_v1_health_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -226,7 +226,7 @@ func (x *MonitoredServer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MonitoredServer.ProtoReflect.Descriptor instead.
 func (*MonitoredServer) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_health_proto_rawDescGZIP(), []int{4}
+	return file_querysheriff_v1_health_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *MonitoredServer) GetServerName() string {
@@ -250,57 +250,56 @@ func (x *MonitoredServer) GetDatabases() []string {
 	return nil
 }
 
-var File_pgdozor_v1_health_proto protoreflect.FileDescriptor
+var File_querysheriff_v1_health_proto protoreflect.FileDescriptor
 
-const file_pgdozor_v1_health_proto_rawDesc = "" +
+const file_querysheriff_v1_health_proto_rawDesc = "" +
 	"\n" +
-	"\x17pgdozor/v1/health.proto\x12\n" +
-	"pgdozor.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"r\n" +
+	"\x1cquerysheriff/v1/health.proto\x12\x0fquerysheriff.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"r\n" +
 	"\x13ReportHealthRequest\x12=\n" +
 	"\fcollected_at\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\vcollectedAt\x12\x1c\n" +
 	"\tdatabases\x18\x02 \x03(\tR\tdatabases\"\x16\n" +
 	"\x14ReportHealthResponse\"\x15\n" +
-	"\x13QueryServersRequest\"M\n" +
-	"\x14QueryServersResponse\x125\n" +
-	"\aservers\x18\x01 \x03(\v2\x1b.pgdozor.v1.MonitoredServerR\aservers\"\x8f\x01\n" +
+	"\x13QueryServersRequest\"R\n" +
+	"\x14QueryServersResponse\x12:\n" +
+	"\aservers\x18\x01 \x03(\v2 .querysheriff.v1.MonitoredServerR\aservers\"\x8f\x01\n" +
 	"\x0fMonitoredServer\x12\x1f\n" +
 	"\vserver_name\x18\x01 \x01(\tR\n" +
 	"serverName\x12=\n" +
 	"\fcollected_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\vcollectedAt\x12\x1c\n" +
-	"\tdatabases\x18\x03 \x03(\tR\tdatabases2\xb9\x01\n" +
-	"\rHealthService\x12S\n" +
-	"\fReportHealth\x12\x1f.pgdozor.v1.ReportHealthRequest\x1a .pgdozor.v1.ReportHealthResponse\"\x00\x12S\n" +
-	"\fQueryServers\x12\x1f.pgdozor.v1.QueryServersRequest\x1a .pgdozor.v1.QueryServersResponse\"\x00B5Z3github.com/pgdozor/backend/gen/pgdozor/v1;pgdozorv1b\x06proto3"
+	"\tdatabases\x18\x03 \x03(\tR\tdatabases2\xcd\x01\n" +
+	"\rHealthService\x12]\n" +
+	"\fReportHealth\x12$.querysheriff.v1.ReportHealthRequest\x1a%.querysheriff.v1.ReportHealthResponse\"\x00\x12]\n" +
+	"\fQueryServers\x12$.querysheriff.v1.QueryServersRequest\x1a%.querysheriff.v1.QueryServersResponse\"\x00BDZBgithub.com/querysheriff/backend/gen/querysheriff/v1;querysheriffv1b\x06proto3"
 
 var (
-	file_pgdozor_v1_health_proto_rawDescOnce sync.Once
-	file_pgdozor_v1_health_proto_rawDescData []byte
+	file_querysheriff_v1_health_proto_rawDescOnce sync.Once
+	file_querysheriff_v1_health_proto_rawDescData []byte
 )
 
-func file_pgdozor_v1_health_proto_rawDescGZIP() []byte {
-	file_pgdozor_v1_health_proto_rawDescOnce.Do(func() {
-		file_pgdozor_v1_health_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pgdozor_v1_health_proto_rawDesc), len(file_pgdozor_v1_health_proto_rawDesc)))
+func file_querysheriff_v1_health_proto_rawDescGZIP() []byte {
+	file_querysheriff_v1_health_proto_rawDescOnce.Do(func() {
+		file_querysheriff_v1_health_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_querysheriff_v1_health_proto_rawDesc), len(file_querysheriff_v1_health_proto_rawDesc)))
 	})
-	return file_pgdozor_v1_health_proto_rawDescData
+	return file_querysheriff_v1_health_proto_rawDescData
 }
 
-var file_pgdozor_v1_health_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
-var file_pgdozor_v1_health_proto_goTypes = []any{
-	(*ReportHealthRequest)(nil),   // 0: pgdozor.v1.ReportHealthRequest
-	(*ReportHealthResponse)(nil),  // 1: pgdozor.v1.ReportHealthResponse
-	(*QueryServersRequest)(nil),   // 2: pgdozor.v1.QueryServersRequest
-	(*QueryServersResponse)(nil),  // 3: pgdozor.v1.QueryServersResponse
-	(*MonitoredServer)(nil),       // 4: pgdozor.v1.MonitoredServer
+var file_querysheriff_v1_health_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_querysheriff_v1_health_proto_goTypes = []any{
+	(*ReportHealthRequest)(nil),   // 0: querysheriff.v1.ReportHealthRequest
+	(*ReportHealthResponse)(nil),  // 1: querysheriff.v1.ReportHealthResponse
+	(*QueryServersRequest)(nil),   // 2: querysheriff.v1.QueryServersRequest
+	(*QueryServersResponse)(nil),  // 3: querysheriff.v1.QueryServersResponse
+	(*MonitoredServer)(nil),       // 4: querysheriff.v1.MonitoredServer
 	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
 }
-var file_pgdozor_v1_health_proto_depIdxs = []int32{
-	5, // 0: pgdozor.v1.ReportHealthRequest.collected_at:type_name -> google.protobuf.Timestamp
-	4, // 1: pgdozor.v1.QueryServersResponse.servers:type_name -> pgdozor.v1.MonitoredServer
-	5, // 2: pgdozor.v1.MonitoredServer.collected_at:type_name -> google.protobuf.Timestamp
-	0, // 3: pgdozor.v1.HealthService.ReportHealth:input_type -> pgdozor.v1.ReportHealthRequest
-	2, // 4: pgdozor.v1.HealthService.QueryServers:input_type -> pgdozor.v1.QueryServersRequest
-	1, // 5: pgdozor.v1.HealthService.ReportHealth:output_type -> pgdozor.v1.ReportHealthResponse
-	3, // 6: pgdozor.v1.HealthService.QueryServers:output_type -> pgdozor.v1.QueryServersResponse
+var file_querysheriff_v1_health_proto_depIdxs = []int32{
+	5, // 0: querysheriff.v1.ReportHealthRequest.collected_at:type_name -> google.protobuf.Timestamp
+	4, // 1: querysheriff.v1.QueryServersResponse.servers:type_name -> querysheriff.v1.MonitoredServer
+	5, // 2: querysheriff.v1.MonitoredServer.collected_at:type_name -> google.protobuf.Timestamp
+	0, // 3: querysheriff.v1.HealthService.ReportHealth:input_type -> querysheriff.v1.ReportHealthRequest
+	2, // 4: querysheriff.v1.HealthService.QueryServers:input_type -> querysheriff.v1.QueryServersRequest
+	1, // 5: querysheriff.v1.HealthService.ReportHealth:output_type -> querysheriff.v1.ReportHealthResponse
+	3, // 6: querysheriff.v1.HealthService.QueryServers:output_type -> querysheriff.v1.QueryServersResponse
 	5, // [5:7] is the sub-list for method output_type
 	3, // [3:5] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
@@ -308,26 +307,26 @@ var file_pgdozor_v1_health_proto_depIdxs = []int32{
 	0, // [0:3] is the sub-list for field type_name
 }
 
-func init() { file_pgdozor_v1_health_proto_init() }
-func file_pgdozor_v1_health_proto_init() {
-	if File_pgdozor_v1_health_proto != nil {
+func init() { file_querysheriff_v1_health_proto_init() }
+func file_querysheriff_v1_health_proto_init() {
+	if File_querysheriff_v1_health_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pgdozor_v1_health_proto_rawDesc), len(file_pgdozor_v1_health_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_querysheriff_v1_health_proto_rawDesc), len(file_querysheriff_v1_health_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_pgdozor_v1_health_proto_goTypes,
-		DependencyIndexes: file_pgdozor_v1_health_proto_depIdxs,
-		MessageInfos:      file_pgdozor_v1_health_proto_msgTypes,
+		GoTypes:           file_querysheriff_v1_health_proto_goTypes,
+		DependencyIndexes: file_querysheriff_v1_health_proto_depIdxs,
+		MessageInfos:      file_querysheriff_v1_health_proto_msgTypes,
 	}.Build()
-	File_pgdozor_v1_health_proto = out.File
-	file_pgdozor_v1_health_proto_goTypes = nil
-	file_pgdozor_v1_health_proto_depIdxs = nil
+	File_querysheriff_v1_health_proto = out.File
+	file_querysheriff_v1_health_proto_goTypes = nil
+	file_querysheriff_v1_health_proto_depIdxs = nil
 }

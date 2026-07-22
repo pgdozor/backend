@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
+	querysheriffv1 "github.com/querysheriff/backend/gen/querysheriff/v1"
 )
 
 func TestEventStatus(t *testing.T) {
@@ -13,7 +13,7 @@ func TestEventStatus(t *testing.T) {
 	cases := []struct {
 		name       string
 		state      string
-		wantStatus pgdozorv1.TransactionEventStatus
+		wantStatus querysheriffv1.TransactionEventStatus
 	}{
 		{
 			name:       "active",

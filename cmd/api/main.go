@@ -16,11 +16,11 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 
-	"github.com/pgdozor/backend/gen/pgdozor/v1/pgdozorv1connect"
-	"github.com/pgdozor/backend/internal/alerts"
-	"github.com/pgdozor/backend/internal/config"
-	"github.com/pgdozor/backend/internal/db"
-	"github.com/pgdozor/backend/internal/server"
+	"github.com/querysheriff/backend/gen/querysheriff/v1/querysheriffv1connect"
+	"github.com/querysheriff/backend/internal/alerts"
+	"github.com/querysheriff/backend/internal/config"
+	"github.com/querysheriff/backend/internal/db"
+	"github.com/querysheriff/backend/internal/server"
 )
 
 const (
@@ -67,34 +67,34 @@ func run(logger *slog.Logger) error {
 
 	apiMux := http.NewServeMux()
 
-	activityPath, activityHandler := pgdozorv1connect.NewActivityServiceHandler(
+	activityPath, activityHandler := querysheriffv1connect.NewActivityServiceHandler(
 		server.NewActivityServer(pool, notifier),
 		interceptors,
 	)
 	apiMux.Handle(activityPath, activityHandler)
 
-	statementPath, statementHandler := pgdozorv1connect.NewStatementServiceHandler(
+	statementPath, statementHandler := querysheriffv1connect.NewStatementServiceHandler(
 		server.NewStatementServer(queries, notifier),
 		interceptors,
 	)
 	apiMux.Handle(statementPath, statementHandler)
 
-	logPath, logHandler := pgdozorv1connect.NewLogServiceHandler(server.NewLogServer(queries, notifier), interceptors)
+	logPath, logHandler := querysheriffv1connect.NewLogServiceHandler(server.NewLogServer(queries, notifier), interceptors)
 	apiMux.Handle(logPath, logHandler)
 
-	healthPath, healthHandler := pgdozorv1connect.NewHealthServiceHandler(server.NewHealthServer(queries), interceptors)
+	healthPath, healthHandler := querysheriffv1connect.NewHealthServiceHandler(server.NewHealthServer(queries), interceptors)
 	apiMux.Handle(healthPath, healthHandler)
 
-	authPath, authHandler := pgdozorv1connect.NewAuthServiceHandler(
+	authPath, authHandler := querysheriffv1connect.NewAuthServiceHandler(
 		server.NewAuthServer(pool, cfg.CookieSecure),
 		interceptors,
 	)
 	apiMux.Handle(authPath, authHandler)
 
-	adminPath, adminHandler := pgdozorv1connect.NewAdminServiceHandler(server.NewAdminServer(pool), interceptors)
+	adminPath, adminHandler := querysheriffv1connect.NewAdminServiceHandler(server.NewAdminServer(pool), interceptors)
 	apiMux.Handle(adminPath, adminHandler)
 
-	alertPath, alertHandler := pgdozorv1connect.NewAlertServiceHandler(server.NewAlertServer(pool), interceptors)
+	alertPath, alertHandler := querysheriffv1connect.NewAlertServiceHandler(server.NewAlertServer(pool), interceptors)
 	apiMux.Handle(alertPath, alertHandler)
 
 	mux := http.NewServeMux()
@@ -113,7 +113,7 @@ func run(logger *slog.Logger) error {
 		Protocols:         &protocols,
 	}
 
-	logger.InfoContext(ctx, "pgdozor api listening", "addr", cfg.ListenAddr)
+	logger.InfoContext(ctx, "querysheriff api listening", "addr", cfg.ListenAddr)
 
 	serveErr := make(chan error, 1)
 	go func() { serveErr <- httpServer.ListenAndServe() }()

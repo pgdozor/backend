@@ -13,9 +13,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
-	"github.com/pgdozor/backend/internal/auth"
-	"github.com/pgdozor/backend/internal/db"
+	querysheriffv1 "github.com/querysheriff/backend/gen/querysheriff/v1"
+	"github.com/querysheriff/backend/internal/auth"
+	"github.com/querysheriff/backend/internal/db"
 )
 
 const (
@@ -34,8 +34,8 @@ func NewAuthServer(pool *pgxpool.Pool, cookieSecure bool) *AuthServer {
 
 func (s *AuthServer) Login(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.LoginRequest],
-) (*connect.Response[pgdozorv1.LoginResponse], error) {
+	req *connect.Request[querysheriffv1.LoginRequest],
+) (*connect.Response[querysheriffv1.LoginResponse], error) {
 	email := strings.ToLower(strings.TrimSpace(req.Msg.GetEmail()))
 	password := req.Msg.GetPassword()
 	if email == "" || password == "" {
@@ -61,7 +61,7 @@ func (s *AuthServer) Login(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	resp := connect.NewResponse(&pgdozorv1.LoginResponse{User: principalProto(principal)})
+	resp := connect.NewResponse(&querysheriffv1.LoginResponse{User: principalProto(principal)})
 	resp.Header().Set("Set-Cookie", sessionCookie(token, s.cookieSecure).String())
 
 	return resp, nil
@@ -69,15 +69,15 @@ func (s *AuthServer) Login(
 
 func (s *AuthServer) Logout(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.LogoutRequest],
-) (*connect.Response[pgdozorv1.LogoutResponse], error) {
+	req *connect.Request[querysheriffv1.LogoutRequest],
+) (*connect.Response[querysheriffv1.LogoutResponse], error) {
 	if token := sessionTokenFromHeader(req.Header()); token != "" {
 		if err := s.queries.DeleteSession(ctx, auth.HashToken(token)); err != nil {
 			return nil, connect.NewError(connect.CodeInternal, err)
 		}
 	}
 
-	resp := connect.NewResponse(&pgdozorv1.LogoutResponse{})
+	resp := connect.NewResponse(&querysheriffv1.LogoutResponse{})
 	resp.Header().Set("Set-Cookie", clearedSessionCookie(s.cookieSecure).String())
 
 	return resp, nil
@@ -85,14 +85,14 @@ func (s *AuthServer) Logout(
 
 func (s *AuthServer) CurrentUser(
 	ctx context.Context,
-	_ *connect.Request[pgdozorv1.CurrentUserRequest],
-) (*connect.Response[pgdozorv1.CurrentUserResponse], error) {
+	_ *connect.Request[querysheriffv1.CurrentUserRequest],
+) (*connect.Response[querysheriffv1.CurrentUserResponse], error) {
 	principal, err := requirePrincipal(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return connect.NewResponse(&pgdozorv1.CurrentUserResponse{User: principalProto(principal)}), nil
+	return connect.NewResponse(&querysheriffv1.CurrentUserResponse{User: principalProto(principal)}), nil
 }
 
 func (s *AuthServer) authenticate(ctx context.Context, email, password string) (*auth.Principal, error) {
@@ -157,7 +157,7 @@ func (s *AuthServer) bootstrapSuperAdmin(ctx context.Context, email, password st
 	}, nil
 }
 
-func principalProto(principal *auth.Principal) *pgdozorv1.User {
+func principalProto(principal *auth.Principal) *querysheriffv1.User {
 	return userProto(
 		principal.UserID,
 		principal.Name,
@@ -174,8 +174,8 @@ func userProto(
 	isSuperAdmin bool,
 	createdAt *timestamppb.Timestamp,
 	allowedServers []string,
-) *pgdozorv1.User {
-	return &pgdozorv1.User{
+) *querysheriffv1.User {
+	return &querysheriffv1.User{
 		Id:             id,
 		Name:           name,
 		Email:          email,

@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	CollectorTokenPrefix = "pgdc_"
+	CollectorTokenPrefix = "qsc_"
 	SessionTokenPrefix   = "pgds_"
 	tokenRandomBytes     = 20
 	base62Base           = 62

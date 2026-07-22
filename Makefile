@@ -3,7 +3,7 @@ BUF := go run github.com/bufbuild/buf/cmd/buf@v1.70.0
 SQLC := go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1
 GOOSE := go run github.com/pressly/goose/v3/cmd/goose@v3.27.1
 
-DATABASE_URL ?= postgres://pgdozor_backend:pgdozor_backend@localhost:5432/pgdozor?sslmode=disable
+DATABASE_URL ?= postgres://querysheriff_backend:querysheriff_backend@localhost:5432/querysheriff?sslmode=disable
 MIGRATIONS_DIR := db/migrations
 
 .PHONY: check

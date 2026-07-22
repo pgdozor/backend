@@ -13,11 +13,11 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
-	"github.com/pgdozor/backend/internal/alerts"
-	"github.com/pgdozor/backend/internal/auth"
-	"github.com/pgdozor/backend/internal/db"
-	"github.com/pgdozor/backend/internal/sqltext"
+	querysheriffv1 "github.com/querysheriff/backend/gen/querysheriff/v1"
+	"github.com/querysheriff/backend/internal/alerts"
+	"github.com/querysheriff/backend/internal/auth"
+	"github.com/querysheriff/backend/internal/db"
+	"github.com/querysheriff/backend/internal/sqltext"
 )
 
 const (
@@ -42,8 +42,8 @@ func NewStatementServer(queries *db.Queries, notifier *alerts.Notifier) *Stateme
 
 func (s *StatementServer) ReportStatements(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.ReportStatementsRequest],
-) (*connect.Response[pgdozorv1.ReportStatementsResponse], error) {
+	req *connect.Request[querysheriffv1.ReportStatementsRequest],
+) (*connect.Response[querysheriffv1.ReportStatementsResponse], error) {
 	msg := req.Msg
 
 	if err := requireTimestamp(msg.GetCollectedAt()); err != nil {
@@ -52,7 +52,7 @@ func (s *StatementServer) ReportStatements(
 
 	deltas := msg.GetStatementDeltas()
 	if len(deltas) == 0 {
-		return connect.NewResponse(&pgdozorv1.ReportStatementsResponse{}), nil
+		return connect.NewResponse(&querysheriffv1.ReportStatementsResponse{}), nil
 	}
 
 	serverName, err := requireCollectorServer(ctx)
@@ -104,15 +104,15 @@ func (s *StatementServer) ReportStatements(
 		s.notifier.Fire(serverName, alerts.KeyNewSlowQuery, "A previously unseen statement entered the slow list.")
 	}
 
-	return connect.NewResponse(&pgdozorv1.ReportStatementsResponse{
+	return connect.NewResponse(&querysheriffv1.ReportStatementsResponse{
 		UnknownStatements: unknownStatementsToProto(missing),
 	}), nil
 }
 
-func unknownStatementsToProto(rows []db.ListStatementsMissingTextRow) []*pgdozorv1.StatementIdentity {
-	out := make([]*pgdozorv1.StatementIdentity, len(rows))
+func unknownStatementsToProto(rows []db.ListStatementsMissingTextRow) []*querysheriffv1.StatementIdentity {
+	out := make([]*querysheriffv1.StatementIdentity, len(rows))
 	for i, row := range rows {
-		out[i] = &pgdozorv1.StatementIdentity{
+		out[i] = &querysheriffv1.StatementIdentity{
 			UserName:     row.UserName,
 			DatabaseName: row.DatabaseName,
 			QueryId:      row.QueryID,
@@ -124,11 +124,11 @@ func unknownStatementsToProto(rows []db.ListStatementsMissingTextRow) []*pgdozor
 
 func (s *StatementServer) ReportStatementTexts(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.ReportStatementTextsRequest],
-) (*connect.Response[pgdozorv1.ReportStatementTextsResponse], error) {
+	req *connect.Request[querysheriffv1.ReportStatementTextsRequest],
+) (*connect.Response[querysheriffv1.ReportStatementTextsResponse], error) {
 	texts := req.Msg.GetStatementTexts()
 	if len(texts) == 0 {
-		return connect.NewResponse(&pgdozorv1.ReportStatementTextsResponse{}), nil
+		return connect.NewResponse(&querysheriffv1.ReportStatementTextsResponse{}), nil
 	}
 
 	serverName, err := requireCollectorServer(ctx)
@@ -155,7 +155,7 @@ func (s *StatementServer) ReportStatementTexts(
 		return nil, err
 	}
 
-	return connect.NewResponse(&pgdozorv1.ReportStatementTextsResponse{}), nil
+	return connect.NewResponse(&querysheriffv1.ReportStatementTextsResponse{}), nil
 }
 
 func drainFillTextBatch(results *db.FillStatementTextBatchResults) error {
@@ -177,7 +177,7 @@ func drainFillTextBatch(results *db.FillStatementTextBatchResults) error {
 func (s *StatementServer) detectNewSlowQuery(
 	ctx context.Context,
 	serverName string,
-	deltas []*pgdozorv1.StatementDelta,
+	deltas []*querysheriffv1.StatementDelta,
 ) bool {
 	queryIDs := make([]int64, 0, len(deltas))
 	for _, delta := range deltas {
@@ -221,8 +221,8 @@ func (s *StatementServer) detectNewSlowQuery(
 
 func (s *StatementServer) QueryStatements(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.QueryStatementsRequest],
-) (*connect.Response[pgdozorv1.QueryStatementsResponse], error) {
+	req *connect.Request[querysheriffv1.QueryStatementsRequest],
+) (*connect.Response[querysheriffv1.QueryStatementsResponse], error) {
 	msg := req.Msg
 
 	principal, err := s.authorizeStatementQuery(ctx, msg.GetServerName(), msg.GetFrom(), msg.GetTo())
@@ -247,7 +247,7 @@ func (s *StatementServer) QueryStatements(
 		return nil, err
 	}
 
-	return connect.NewResponse(&pgdozorv1.QueryStatementsResponse{
+	return connect.NewResponse(&querysheriffv1.QueryStatementsResponse{
 		Statements: statements,
 		HasMore:    hasMore,
 	}), nil
@@ -255,8 +255,8 @@ func (s *StatementServer) QueryStatements(
 
 func (s *StatementServer) QueryStatementMetrics(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.QueryStatementMetricsRequest],
-) (*connect.Response[pgdozorv1.QueryStatementMetricsResponse], error) {
+	req *connect.Request[querysheriffv1.QueryStatementMetricsRequest],
+) (*connect.Response[querysheriffv1.QueryStatementMetricsResponse], error) {
 	msg := req.Msg
 
 	principal, err := s.authorizeStatementQuery(ctx, msg.GetServerName(), msg.GetFrom(), msg.GetTo())
@@ -283,7 +283,7 @@ func (s *StatementServer) QueryStatementMetrics(
 		return nil, err
 	}
 
-	return connect.NewResponse(&pgdozorv1.QueryStatementMetricsResponse{Metrics: metrics}), nil
+	return connect.NewResponse(&querysheriffv1.QueryStatementMetricsResponse{Metrics: metrics}), nil
 }
 
 func (s *StatementServer) authorizeStatementQuery(
@@ -309,8 +309,8 @@ func (s *StatementServer) authorizeStatementQuery(
 
 func (s *StatementServer) QueryStatementDetail(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.QueryStatementDetailRequest],
-) (*connect.Response[pgdozorv1.QueryStatementDetailResponse], error) {
+	req *connect.Request[querysheriffv1.QueryStatementDetailRequest],
+) (*connect.Response[querysheriffv1.QueryStatementDetailResponse], error) {
 	msg := req.Msg
 
 	id := msg.GetId()
@@ -346,7 +346,7 @@ func (s *StatementServer) QueryStatementDetail(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return connect.NewResponse(&pgdozorv1.QueryStatementDetailResponse{
+	return connect.NewResponse(&querysheriffv1.QueryStatementDetailResponse{
 		Query:        detail.Query,
 		ServerName:   detail.ServerName,
 		DatabaseName: detail.DatabaseName,
@@ -356,8 +356,8 @@ func (s *StatementServer) QueryStatementDetail(
 
 func (s *StatementServer) QueryStatementDetailMetrics(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.QueryStatementDetailMetricsRequest],
-) (*connect.Response[pgdozorv1.QueryStatementDetailMetricsResponse], error) {
+	req *connect.Request[querysheriffv1.QueryStatementDetailMetricsRequest],
+) (*connect.Response[querysheriffv1.QueryStatementDetailMetricsResponse], error) {
 	msg := req.Msg
 
 	id := msg.GetId()
@@ -389,13 +389,13 @@ func (s *StatementServer) QueryStatementDetailMetrics(
 		return nil, err
 	}
 
-	return connect.NewResponse(&pgdozorv1.QueryStatementDetailMetricsResponse{Metrics: metrics}), nil
+	return connect.NewResponse(&querysheriffv1.QueryStatementDetailMetricsResponse{Metrics: metrics}), nil
 }
 
 func (s *StatementServer) QueryStatementSamples(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.QueryStatementSamplesRequest],
-) (*connect.Response[pgdozorv1.QueryStatementSamplesResponse], error) {
+	req *connect.Request[querysheriffv1.QueryStatementSamplesRequest],
+) (*connect.Response[querysheriffv1.QueryStatementSamplesResponse], error) {
 	msg := req.Msg
 
 	id := msg.GetId()
@@ -432,7 +432,7 @@ func (s *StatementServer) QueryStatementSamples(
 		rows = rows[:limit]
 	}
 
-	samples := make([]*pgdozorv1.StatementSample, len(rows))
+	samples := make([]*querysheriffv1.StatementSample, len(rows))
 	for i, row := range rows {
 		sample, sampleErr := statementSampleToProto(row)
 		if sampleErr != nil {
@@ -441,19 +441,19 @@ func (s *StatementServer) QueryStatementSamples(
 		samples[i] = sample
 	}
 
-	return connect.NewResponse(&pgdozorv1.QueryStatementSamplesResponse{
+	return connect.NewResponse(&querysheriffv1.QueryStatementSamplesResponse{
 		Samples: samples,
 		HasMore: hasMore,
 	}), nil
 }
 
-func statementSampleToProto(row db.ListStatementSamplesRow) (*pgdozorv1.StatementSample, error) {
+func statementSampleToProto(row db.ListStatementSamplesRow) (*querysheriffv1.StatementSample, error) {
 	tags, err := protoFromJSONB(row.Tags)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return &pgdozorv1.StatementSample{
+	return &querysheriffv1.StatementSample{
 		Id:         row.ID,
 		OccurredAt: protoFromTimestamptz(row.OccurredAt),
 		Query:      sqltext.SamplePreview(row.Query, row.Parameters),
@@ -465,8 +465,8 @@ func statementSampleToProto(row db.ListStatementSamplesRow) (*pgdozorv1.Statemen
 
 func (s *StatementServer) GetStatementSamplePlan(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.GetStatementSamplePlanRequest],
-) (*connect.Response[pgdozorv1.GetStatementSamplePlanResponse], error) {
+	req *connect.Request[querysheriffv1.GetStatementSamplePlanRequest],
+) (*connect.Response[querysheriffv1.GetStatementSamplePlanResponse], error) {
 	sampleID := req.Msg.GetSampleId()
 	if sampleID == 0 {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("sample_id is required"))
@@ -488,7 +488,7 @@ func (s *StatementServer) GetStatementSamplePlan(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return connect.NewResponse(&pgdozorv1.GetStatementSamplePlanResponse{
+	return connect.NewResponse(&querysheriffv1.GetStatementSamplePlanResponse{
 		Query:    sqltext.Concretize(plan.Query, plan.Parameters),
 		PlanJson: protoFromText(plan.ExplainPlanJson),
 	}), nil
@@ -496,8 +496,8 @@ func (s *StatementServer) GetStatementSamplePlan(
 
 func (s *StatementServer) GetStatementSampleText(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.GetStatementSampleTextRequest],
-) (*connect.Response[pgdozorv1.GetStatementSampleTextResponse], error) {
+	req *connect.Request[querysheriffv1.GetStatementSampleTextRequest],
+) (*connect.Response[querysheriffv1.GetStatementSampleTextResponse], error) {
 	sampleID := req.Msg.GetSampleId()
 	if sampleID == 0 {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("sample_id is required"))
@@ -519,15 +519,15 @@ func (s *StatementServer) GetStatementSampleText(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return connect.NewResponse(&pgdozorv1.GetStatementSampleTextResponse{
+	return connect.NewResponse(&querysheriffv1.GetStatementSampleTextResponse{
 		Query: sqltext.Concretize(sample.Query, sample.Parameters),
 	}), nil
 }
 
 func (s *StatementServer) GetStatementText(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.GetStatementTextRequest],
-) (*connect.Response[pgdozorv1.GetStatementTextResponse], error) {
+	req *connect.Request[querysheriffv1.GetStatementTextRequest],
+) (*connect.Response[querysheriffv1.GetStatementTextResponse], error) {
 	id := req.Msg.GetId()
 	if id == 0 {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("id is required"))
@@ -549,7 +549,7 @@ func (s *StatementServer) GetStatementText(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return connect.NewResponse(&pgdozorv1.GetStatementTextResponse{Query: query}), nil
+	return connect.NewResponse(&querysheriffv1.GetStatementTextResponse{Query: query}), nil
 }
 
 type statementFilter struct {
@@ -564,20 +564,20 @@ type tagFilterJSON struct {
 	Values []string `json:"values"`
 }
 
-func tagFilterOp(tf *pgdozorv1.TagFilter) (string, error) {
+func tagFilterOp(tf *querysheriffv1.TagFilter) (string, error) {
 	switch tf.GetOp() {
-	case pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_EXISTS:
+	case querysheriffv1.TagFilterOperator_TAG_FILTER_OPERATOR_EXISTS:
 		if len(tf.GetValues()) != 0 {
 			return "", connect.NewError(connect.CodeInvalidArgument,
 				errors.New("an exists tag filter must not carry values"))
 		}
 
 		return "exists", nil
-	case pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_EQUAL:
+	case querysheriffv1.TagFilterOperator_TAG_FILTER_OPERATOR_EQUAL:
 		return "eq", validateTagValues(tf.GetValues())
-	case pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_NOT_EQUAL:
+	case querysheriffv1.TagFilterOperator_TAG_FILTER_OPERATOR_NOT_EQUAL:
 		return "ne", validateTagValues(tf.GetValues())
-	case pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_UNSPECIFIED:
+	case querysheriffv1.TagFilterOperator_TAG_FILTER_OPERATOR_UNSPECIFIED:
 		return "", connect.NewError(connect.CodeInvalidArgument, errors.New("tag filter op is required"))
 	}
 
@@ -623,7 +623,7 @@ func validTagKey(s string) bool {
 	return true
 }
 
-func buildTagFilterJSON(filters []*pgdozorv1.TagFilter) ([]byte, error) {
+func buildTagFilterJSON(filters []*querysheriffv1.TagFilter) ([]byte, error) {
 	if len(filters) == 0 {
 		return nil, nil
 	}
@@ -665,7 +665,7 @@ func buildTagFilterJSON(filters []*pgdozorv1.TagFilter) ([]byte, error) {
 func (s *StatementServer) resolveStatementFilter(
 	ctx context.Context,
 	queryText string,
-	filters []*pgdozorv1.TagFilter,
+	filters []*querysheriffv1.TagFilter,
 	serverName, databaseName pgtype.Text,
 	from, to time.Time,
 	allowedServers []string,
@@ -701,7 +701,7 @@ func (s *StatementServer) resolveStatementFilter(
 	return filter, nil
 }
 
-func requestedKinds(kinds []pgdozorv1.QueryKind) []int32 {
+func requestedKinds(kinds []querysheriffv1.QueryKind) []int32 {
 	out := make([]int32, len(kinds))
 	for i, k := range kinds {
 		out[i] = int32(k)
@@ -711,11 +711,11 @@ func requestedKinds(kinds []pgdozorv1.QueryKind) []int32 {
 
 func (s *StatementServer) listStatements(
 	ctx context.Context,
-	msg *pgdozorv1.QueryStatementsRequest,
+	msg *querysheriffv1.QueryStatementsRequest,
 	serverName, databaseName pgtype.Text,
 	filter statementFilter,
 	allowedServers []string,
-) ([]*pgdozorv1.StatementStat, bool, error) {
+) ([]*querysheriffv1.StatementStat, bool, error) {
 	limit := resolveLimit(msg.GetLimit())
 
 	rows, err := s.queries.ListStatementStats(ctx, db.ListStatementStatsParams{
@@ -741,14 +741,14 @@ func (s *StatementServer) listStatements(
 		rows = rows[:limit]
 	}
 
-	statements := make([]*pgdozorv1.StatementStat, len(rows))
+	statements := make([]*querysheriffv1.StatementStat, len(rows))
 	for i, row := range rows {
 		tags, tagErr := protoFromJSONB(row.Tags)
 		if tagErr != nil {
 			return nil, false, connect.NewError(connect.CodeInternal, tagErr)
 		}
 
-		statements[i] = &pgdozorv1.StatementStat{
+		statements[i] = &querysheriffv1.StatementStat{
 			Id:            row.ID,
 			Preview:       row.Preview,
 			UserName:      row.UserName,
@@ -765,22 +765,22 @@ func (s *StatementServer) listStatements(
 	return statements, hasMore, nil
 }
 
-func sortKey(col pgdozorv1.StatementSortColumn) string {
+func sortKey(col querysheriffv1.StatementSortColumn) string {
 	switch col {
-	case pgdozorv1.StatementSortColumn_STATEMENT_SORT_COLUMN_QUERY:
+	case querysheriffv1.StatementSortColumn_STATEMENT_SORT_COLUMN_QUERY:
 		return "query"
-	case pgdozorv1.StatementSortColumn_STATEMENT_SORT_COLUMN_USER:
+	case querysheriffv1.StatementSortColumn_STATEMENT_SORT_COLUMN_USER:
 		return "user"
-	case pgdozorv1.StatementSortColumn_STATEMENT_SORT_COLUMN_AVG:
+	case querysheriffv1.StatementSortColumn_STATEMENT_SORT_COLUMN_AVG:
 		return "avg"
-	case pgdozorv1.StatementSortColumn_STATEMENT_SORT_COLUMN_CALLS:
+	case querysheriffv1.StatementSortColumn_STATEMENT_SORT_COLUMN_CALLS:
 		return "calls"
-	case pgdozorv1.StatementSortColumn_STATEMENT_SORT_COLUMN_ROWS_PER_CALL:
+	case querysheriffv1.StatementSortColumn_STATEMENT_SORT_COLUMN_ROWS_PER_CALL:
 		return "rows_per_call"
-	case pgdozorv1.StatementSortColumn_STATEMENT_SORT_COLUMN_PCT_IO:
+	case querysheriffv1.StatementSortColumn_STATEMENT_SORT_COLUMN_PCT_IO:
 		return "pct_io"
-	case pgdozorv1.StatementSortColumn_STATEMENT_SORT_COLUMN_PCT_TIME,
-		pgdozorv1.StatementSortColumn_STATEMENT_SORT_COLUMN_UNSPECIFIED:
+	case querysheriffv1.StatementSortColumn_STATEMENT_SORT_COLUMN_PCT_TIME,
+		querysheriffv1.StatementSortColumn_STATEMENT_SORT_COLUMN_UNSPECIFIED:
 		return "pct_time"
 	}
 
@@ -794,7 +794,7 @@ func (s *StatementServer) statementMetrics(
 	filter statementFilter,
 	from, to time.Time,
 	allowedServers []string,
-) (*pgdozorv1.StatementMetrics, error) {
+) (*querysheriffv1.StatementMetrics, error) {
 	duration := to.Sub(from)
 	bucket := metricBucket(duration)
 
@@ -814,18 +814,18 @@ func (s *StatementServer) statementMetrics(
 	}
 
 	n := len(buckets)
-	calls := make([]*pgdozorv1.MetricPoint, n)
-	avg := make([]*pgdozorv1.MetricPoint, n)
-	avgIo := make([]*pgdozorv1.MetricPoint, n)
+	calls := make([]*querysheriffv1.MetricPoint, n)
+	avg := make([]*querysheriffv1.MetricPoint, n)
+	avgIo := make([]*querysheriffv1.MetricPoint, n)
 
 	for i, b := range buckets {
 		at := protoFromTimestamptz(b.BucketEnd)
-		calls[i] = &pgdozorv1.MetricPoint{At: at, Value: float64(b.Calls)}
-		avg[i] = &pgdozorv1.MetricPoint{At: at, Value: avgExecTime(b.TotalExecTime, b.Calls)}
-		avgIo[i] = &pgdozorv1.MetricPoint{At: at, Value: avgExecTime(b.TotalIoTime, b.Calls)}
+		calls[i] = &querysheriffv1.MetricPoint{At: at, Value: float64(b.Calls)}
+		avg[i] = &querysheriffv1.MetricPoint{At: at, Value: avgExecTime(b.TotalExecTime, b.Calls)}
+		avgIo[i] = &querysheriffv1.MetricPoint{At: at, Value: avgExecTime(b.TotalIoTime, b.Calls)}
 	}
 
-	return &pgdozorv1.StatementMetrics{
+	return &querysheriffv1.StatementMetrics{
 		Calls:    statementMetric(calls),
 		Avg:      statementMetric(avg),
 		AvgIo:    statementMetric(avgIo),
@@ -839,7 +839,7 @@ func (s *StatementServer) statementPercentiles(
 	filter statementFilter,
 	from, to time.Time,
 	allowedServers []string,
-) (*pgdozorv1.StatementMetric, *pgdozorv1.StatementMetric, *pgdozorv1.StatementMetric, error) {
+) (*querysheriffv1.StatementMetric, *querysheriffv1.StatementMetric, *querysheriffv1.StatementMetric, error) {
 	bucket := metricBucket(to.Sub(from))
 
 	rows, err := s.queries.StatementPercentileSeries(ctx, db.StatementPercentileSeriesParams{
@@ -858,15 +858,15 @@ func (s *StatementServer) statementPercentiles(
 	}
 
 	n := len(rows)
-	s90 := make([]*pgdozorv1.MetricPoint, n)
-	s95 := make([]*pgdozorv1.MetricPoint, n)
-	s99 := make([]*pgdozorv1.MetricPoint, n)
+	s90 := make([]*querysheriffv1.MetricPoint, n)
+	s95 := make([]*querysheriffv1.MetricPoint, n)
+	s99 := make([]*querysheriffv1.MetricPoint, n)
 
 	for i, r := range rows {
 		at := protoFromTimestamptz(r.BucketEnd)
-		s90[i] = &pgdozorv1.MetricPoint{At: at, Value: r.P90}
-		s95[i] = &pgdozorv1.MetricPoint{At: at, Value: r.P95}
-		s99[i] = &pgdozorv1.MetricPoint{At: at, Value: r.P99}
+		s90[i] = &querysheriffv1.MetricPoint{At: at, Value: r.P90}
+		s95[i] = &querysheriffv1.MetricPoint{At: at, Value: r.P95}
+		s99[i] = &querysheriffv1.MetricPoint{At: at, Value: r.P99}
 	}
 
 	return statementMetric(s90), statementMetric(s95), statementMetric(s99), nil
@@ -889,14 +889,14 @@ func avgExecTime(totalExecTime float64, calls int64) float64 {
 	return totalExecTime / float64(calls)
 }
 
-func statementMetric(series []*pgdozorv1.MetricPoint) *pgdozorv1.StatementMetric {
-	return &pgdozorv1.StatementMetric{Series: series}
+func statementMetric(series []*querysheriffv1.MetricPoint) *querysheriffv1.StatementMetric {
+	return &querysheriffv1.StatementMetric{Series: series}
 }
 
 func (s *StatementServer) ListTagKeys(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.ListTagKeysRequest],
-) (*connect.Response[pgdozorv1.ListTagKeysResponse], error) {
+	req *connect.Request[querysheriffv1.ListTagKeysRequest],
+) (*connect.Response[querysheriffv1.ListTagKeysResponse], error) {
 	msg := req.Msg
 
 	principal, err := requirePrincipal(ctx)
@@ -924,18 +924,18 @@ func (s *StatementServer) ListTagKeys(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	keys := make([]*pgdozorv1.TagKey, len(rows))
+	keys := make([]*querysheriffv1.TagKey, len(rows))
 	for i, row := range rows {
-		keys[i] = &pgdozorv1.TagKey{Key: row.Key, ValueCount: row.ValueCount}
+		keys[i] = &querysheriffv1.TagKey{Key: row.Key, ValueCount: row.ValueCount}
 	}
 
-	return connect.NewResponse(&pgdozorv1.ListTagKeysResponse{Keys: keys}), nil
+	return connect.NewResponse(&querysheriffv1.ListTagKeysResponse{Keys: keys}), nil
 }
 
 func (s *StatementServer) ListTagValues(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.ListTagValuesRequest],
-) (*connect.Response[pgdozorv1.ListTagValuesResponse], error) {
+	req *connect.Request[querysheriffv1.ListTagValuesRequest],
+) (*connect.Response[querysheriffv1.ListTagValuesResponse], error) {
 	msg := req.Msg
 
 	principal, err := requirePrincipal(ctx)
@@ -970,10 +970,10 @@ func (s *StatementServer) ListTagValues(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	values := make([]*pgdozorv1.TagValue, len(rows))
+	values := make([]*querysheriffv1.TagValue, len(rows))
 	for i, row := range rows {
-		values[i] = &pgdozorv1.TagValue{Value: row.Value, StatementCount: row.StatementCount}
+		values[i] = &querysheriffv1.TagValue{Value: row.Value, StatementCount: row.StatementCount}
 	}
 
-	return connect.NewResponse(&pgdozorv1.ListTagValuesResponse{Values: values}), nil
+	return connect.NewResponse(&querysheriffv1.ListTagValuesResponse{Values: values}), nil
 }

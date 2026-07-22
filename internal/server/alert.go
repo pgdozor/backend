@@ -10,9 +10,9 @@ import (
 	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
-	"github.com/pgdozor/backend/internal/alerts"
-	"github.com/pgdozor/backend/internal/db"
+	querysheriffv1 "github.com/querysheriff/backend/gen/querysheriff/v1"
+	"github.com/querysheriff/backend/internal/alerts"
+	"github.com/querysheriff/backend/internal/db"
 )
 
 const slackWebhookHost = "hooks.slack.com"
@@ -28,8 +28,8 @@ func NewAlertServer(pool *pgxpool.Pool) *AlertServer {
 
 func (s *AlertServer) QueryAlerts(
 	ctx context.Context,
-	_ *connect.Request[pgdozorv1.QueryAlertsRequest],
-) (*connect.Response[pgdozorv1.QueryAlertsResponse], error) {
+	_ *connect.Request[querysheriffv1.QueryAlertsRequest],
+) (*connect.Response[querysheriffv1.QueryAlertsResponse], error) {
 	principal, err := requirePrincipal(ctx)
 	if err != nil {
 		return nil, err
@@ -65,22 +65,22 @@ func (s *AlertServer) QueryAlerts(
 		togglesByServer[toggle.ServerName][toggle.AlertKey] = toggle.Enabled
 	}
 
-	result := make([]*pgdozorv1.ServerAlertSettings, len(servers))
+	result := make([]*querysheriffv1.ServerAlertSettings, len(servers))
 	for i, server := range servers {
-		result[i] = &pgdozorv1.ServerAlertSettings{
+		result[i] = &querysheriffv1.ServerAlertSettings{
 			ServerName:      server.ServerName,
 			SlackWebhookUrl: webhookByServer[server.ServerName],
 			Alerts:          alertSettings(togglesByServer[server.ServerName]),
 		}
 	}
 
-	return connect.NewResponse(&pgdozorv1.QueryAlertsResponse{Servers: result}), nil
+	return connect.NewResponse(&querysheriffv1.QueryAlertsResponse{Servers: result}), nil
 }
 
 func (s *AlertServer) UpdateAlertSettings(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.UpdateAlertSettingsRequest],
-) (*connect.Response[pgdozorv1.UpdateAlertSettingsResponse], error) {
+	req *connect.Request[querysheriffv1.UpdateAlertSettingsRequest],
+) (*connect.Response[querysheriffv1.UpdateAlertSettingsResponse], error) {
 	msg := req.Msg
 
 	principal, err := requirePrincipal(ctx)
@@ -142,7 +142,7 @@ func (s *AlertServer) UpdateAlertSettings(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return connect.NewResponse(&pgdozorv1.UpdateAlertSettingsResponse{}), nil
+	return connect.NewResponse(&querysheriffv1.UpdateAlertSettingsResponse{}), nil
 }
 
 func validateWebhookURL(raw string) (string, error) {
@@ -166,16 +166,16 @@ func validateWebhookURL(raw string) (string, error) {
 	return trimmed, nil
 }
 
-func alertSettings(overrides map[string]bool) []*pgdozorv1.AlertSetting {
+func alertSettings(overrides map[string]bool) []*querysheriffv1.AlertSetting {
 	catalog := alerts.Catalog()
-	settings := make([]*pgdozorv1.AlertSetting, len(catalog))
+	settings := make([]*querysheriffv1.AlertSetting, len(catalog))
 	for i, def := range catalog {
 		enabled := true
 		if override, ok := overrides[def.Key]; ok {
 			enabled = override
 		}
 
-		settings[i] = &pgdozorv1.AlertSetting{
+		settings[i] = &querysheriffv1.AlertSetting{
 			Key:         def.Key,
 			Title:       def.Title,
 			Description: def.Description,
@@ -187,16 +187,16 @@ func alertSettings(overrides map[string]bool) []*pgdozorv1.AlertSetting {
 	return settings
 }
 
-func alertLevelProto(level alerts.Level) pgdozorv1.AlertLevel {
+func alertLevelProto(level alerts.Level) querysheriffv1.AlertLevel {
 	switch level {
 	case alerts.LevelCritical:
-		return pgdozorv1.AlertLevel_ALERT_LEVEL_CRITICAL
+		return querysheriffv1.AlertLevel_ALERT_LEVEL_CRITICAL
 	case alerts.LevelWarning:
-		return pgdozorv1.AlertLevel_ALERT_LEVEL_WARNING
+		return querysheriffv1.AlertLevel_ALERT_LEVEL_WARNING
 	case alerts.LevelInfo:
-		return pgdozorv1.AlertLevel_ALERT_LEVEL_INFO
+		return querysheriffv1.AlertLevel_ALERT_LEVEL_INFO
 	default:
-		return pgdozorv1.AlertLevel_ALERT_LEVEL_UNSPECIFIED
+		return querysheriffv1.AlertLevel_ALERT_LEVEL_UNSPECIFIED
 	}
 }
 

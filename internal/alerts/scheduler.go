@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pgdozor/backend/internal/db"
+	"github.com/querysheriff/backend/internal/db"
 )
 
 const (

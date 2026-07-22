@@ -2,9 +2,9 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        (unknown)
-// source: pgdozor/v1/alert.proto
+// source: querysheriff/v1/alert.proto
 
-package pgdozorv1
+package querysheriffv1
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -57,11 +57,11 @@ func (x AlertLevel) String() string {
 }
 
 func (AlertLevel) Descriptor() protoreflect.EnumDescriptor {
-	return file_pgdozor_v1_alert_proto_enumTypes[0].Descriptor()
+	return file_querysheriff_v1_alert_proto_enumTypes[0].Descriptor()
 }
 
 func (AlertLevel) Type() protoreflect.EnumType {
-	return &file_pgdozor_v1_alert_proto_enumTypes[0]
+	return &file_querysheriff_v1_alert_proto_enumTypes[0]
 }
 
 func (x AlertLevel) Number() protoreflect.EnumNumber {
@@ -70,7 +70,7 @@ func (x AlertLevel) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use AlertLevel.Descriptor instead.
 func (AlertLevel) EnumDescriptor() ([]byte, []int) {
-	return file_pgdozor_v1_alert_proto_rawDescGZIP(), []int{0}
+	return file_querysheriff_v1_alert_proto_rawDescGZIP(), []int{0}
 }
 
 type QueryAlertsRequest struct {
@@ -81,7 +81,7 @@ type QueryAlertsRequest struct {
 
 func (x *QueryAlertsRequest) Reset() {
 	*x = QueryAlertsRequest{}
-	mi := &file_pgdozor_v1_alert_proto_msgTypes[0]
+	mi := &file_querysheriff_v1_alert_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -93,7 +93,7 @@ func (x *QueryAlertsRequest) String() string {
 func (*QueryAlertsRequest) ProtoMessage() {}
 
 func (x *QueryAlertsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_alert_proto_msgTypes[0]
+	mi := &file_querysheriff_v1_alert_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -106,7 +106,7 @@ func (x *QueryAlertsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryAlertsRequest.ProtoReflect.Descriptor instead.
 func (*QueryAlertsRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_alert_proto_rawDescGZIP(), []int{0}
+	return file_querysheriff_v1_alert_proto_rawDescGZIP(), []int{0}
 }
 
 type QueryAlertsResponse struct {
@@ -118,7 +118,7 @@ type QueryAlertsResponse struct {
 
 func (x *QueryAlertsResponse) Reset() {
 	*x = QueryAlertsResponse{}
-	mi := &file_pgdozor_v1_alert_proto_msgTypes[1]
+	mi := &file_querysheriff_v1_alert_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -130,7 +130,7 @@ func (x *QueryAlertsResponse) String() string {
 func (*QueryAlertsResponse) ProtoMessage() {}
 
 func (x *QueryAlertsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_alert_proto_msgTypes[1]
+	mi := &file_querysheriff_v1_alert_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -143,7 +143,7 @@ func (x *QueryAlertsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryAlertsResponse.ProtoReflect.Descriptor instead.
 func (*QueryAlertsResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_alert_proto_rawDescGZIP(), []int{1}
+	return file_querysheriff_v1_alert_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *QueryAlertsResponse) GetServers() []*ServerAlertSettings {
@@ -164,7 +164,7 @@ type ServerAlertSettings struct {
 
 func (x *ServerAlertSettings) Reset() {
 	*x = ServerAlertSettings{}
-	mi := &file_pgdozor_v1_alert_proto_msgTypes[2]
+	mi := &file_querysheriff_v1_alert_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -176,7 +176,7 @@ func (x *ServerAlertSettings) String() string {
 func (*ServerAlertSettings) ProtoMessage() {}
 
 func (x *ServerAlertSettings) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_alert_proto_msgTypes[2]
+	mi := &file_querysheriff_v1_alert_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -189,7 +189,7 @@ func (x *ServerAlertSettings) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServerAlertSettings.ProtoReflect.Descriptor instead.
 func (*ServerAlertSettings) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_alert_proto_rawDescGZIP(), []int{2}
+	return file_querysheriff_v1_alert_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ServerAlertSettings) GetServerName() string {
@@ -218,7 +218,7 @@ type AlertSetting struct {
 	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Level         AlertLevel             `protobuf:"varint,4,opt,name=level,proto3,enum=pgdozor.v1.AlertLevel" json:"level,omitempty"`
+	Level         AlertLevel             `protobuf:"varint,4,opt,name=level,proto3,enum=querysheriff.v1.AlertLevel" json:"level,omitempty"`
 	Enabled       bool                   `protobuf:"varint,5,opt,name=enabled,proto3" json:"enabled,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -226,7 +226,7 @@ type AlertSetting struct {
 
 func (x *AlertSetting) Reset() {
 	*x = AlertSetting{}
-	mi := &file_pgdozor_v1_alert_proto_msgTypes[3]
+	mi := &file_querysheriff_v1_alert_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -238,7 +238,7 @@ func (x *AlertSetting) String() string {
 func (*AlertSetting) ProtoMessage() {}
 
 func (x *AlertSetting) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_alert_proto_msgTypes[3]
+	mi := &file_querysheriff_v1_alert_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -251,7 +251,7 @@ func (x *AlertSetting) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AlertSetting.ProtoReflect.Descriptor instead.
 func (*AlertSetting) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_alert_proto_rawDescGZIP(), []int{3}
+	return file_querysheriff_v1_alert_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *AlertSetting) GetKey() string {
@@ -300,7 +300,7 @@ type UpdateAlertSettingsRequest struct {
 
 func (x *UpdateAlertSettingsRequest) Reset() {
 	*x = UpdateAlertSettingsRequest{}
-	mi := &file_pgdozor_v1_alert_proto_msgTypes[4]
+	mi := &file_querysheriff_v1_alert_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -312,7 +312,7 @@ func (x *UpdateAlertSettingsRequest) String() string {
 func (*UpdateAlertSettingsRequest) ProtoMessage() {}
 
 func (x *UpdateAlertSettingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_alert_proto_msgTypes[4]
+	mi := &file_querysheriff_v1_alert_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -325,7 +325,7 @@ func (x *UpdateAlertSettingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAlertSettingsRequest.ProtoReflect.Descriptor instead.
 func (*UpdateAlertSettingsRequest) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_alert_proto_rawDescGZIP(), []int{4}
+	return file_querysheriff_v1_alert_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *UpdateAlertSettingsRequest) GetServerName() string {
@@ -359,7 +359,7 @@ type AlertToggle struct {
 
 func (x *AlertToggle) Reset() {
 	*x = AlertToggle{}
-	mi := &file_pgdozor_v1_alert_proto_msgTypes[5]
+	mi := &file_querysheriff_v1_alert_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -371,7 +371,7 @@ func (x *AlertToggle) String() string {
 func (*AlertToggle) ProtoMessage() {}
 
 func (x *AlertToggle) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_alert_proto_msgTypes[5]
+	mi := &file_querysheriff_v1_alert_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -384,7 +384,7 @@ func (x *AlertToggle) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AlertToggle.ProtoReflect.Descriptor instead.
 func (*AlertToggle) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_alert_proto_rawDescGZIP(), []int{5}
+	return file_querysheriff_v1_alert_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *AlertToggle) GetKey() string {
@@ -409,7 +409,7 @@ type UpdateAlertSettingsResponse struct {
 
 func (x *UpdateAlertSettingsResponse) Reset() {
 	*x = UpdateAlertSettingsResponse{}
-	mi := &file_pgdozor_v1_alert_proto_msgTypes[6]
+	mi := &file_querysheriff_v1_alert_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -421,7 +421,7 @@ func (x *UpdateAlertSettingsResponse) String() string {
 func (*UpdateAlertSettingsResponse) ProtoMessage() {}
 
 func (x *UpdateAlertSettingsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pgdozor_v1_alert_proto_msgTypes[6]
+	mi := &file_querysheriff_v1_alert_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -434,34 +434,33 @@ func (x *UpdateAlertSettingsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAlertSettingsResponse.ProtoReflect.Descriptor instead.
 func (*UpdateAlertSettingsResponse) Descriptor() ([]byte, []int) {
-	return file_pgdozor_v1_alert_proto_rawDescGZIP(), []int{6}
+	return file_querysheriff_v1_alert_proto_rawDescGZIP(), []int{6}
 }
 
-var File_pgdozor_v1_alert_proto protoreflect.FileDescriptor
+var File_querysheriff_v1_alert_proto protoreflect.FileDescriptor
 
-const file_pgdozor_v1_alert_proto_rawDesc = "" +
+const file_querysheriff_v1_alert_proto_rawDesc = "" +
 	"\n" +
-	"\x16pgdozor/v1/alert.proto\x12\n" +
-	"pgdozor.v1\"\x14\n" +
-	"\x12QueryAlertsRequest\"P\n" +
-	"\x13QueryAlertsResponse\x129\n" +
-	"\aservers\x18\x01 \x03(\v2\x1f.pgdozor.v1.ServerAlertSettingsR\aservers\"\x94\x01\n" +
+	"\x1bquerysheriff/v1/alert.proto\x12\x0fquerysheriff.v1\"\x14\n" +
+	"\x12QueryAlertsRequest\"U\n" +
+	"\x13QueryAlertsResponse\x12>\n" +
+	"\aservers\x18\x01 \x03(\v2$.querysheriff.v1.ServerAlertSettingsR\aservers\"\x99\x01\n" +
 	"\x13ServerAlertSettings\x12\x1f\n" +
 	"\vserver_name\x18\x01 \x01(\tR\n" +
 	"serverName\x12*\n" +
-	"\x11slack_webhook_url\x18\x02 \x01(\tR\x0fslackWebhookUrl\x120\n" +
-	"\x06alerts\x18\x03 \x03(\v2\x18.pgdozor.v1.AlertSettingR\x06alerts\"\xa0\x01\n" +
+	"\x11slack_webhook_url\x18\x02 \x01(\tR\x0fslackWebhookUrl\x125\n" +
+	"\x06alerts\x18\x03 \x03(\v2\x1d.querysheriff.v1.AlertSettingR\x06alerts\"\xa5\x01\n" +
 	"\fAlertSetting\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription\x12,\n" +
-	"\x05level\x18\x04 \x01(\x0e2\x16.pgdozor.v1.AlertLevelR\x05level\x12\x18\n" +
-	"\aenabled\x18\x05 \x01(\bR\aenabled\"\x9c\x01\n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x121\n" +
+	"\x05level\x18\x04 \x01(\x0e2\x1b.querysheriff.v1.AlertLevelR\x05level\x12\x18\n" +
+	"\aenabled\x18\x05 \x01(\bR\aenabled\"\xa1\x01\n" +
 	"\x1aUpdateAlertSettingsRequest\x12\x1f\n" +
 	"\vserver_name\x18\x01 \x01(\tR\n" +
 	"serverName\x12*\n" +
-	"\x11slack_webhook_url\x18\x02 \x01(\tR\x0fslackWebhookUrl\x121\n" +
-	"\atoggles\x18\x03 \x03(\v2\x17.pgdozor.v1.AlertToggleR\atoggles\"9\n" +
+	"\x11slack_webhook_url\x18\x02 \x01(\tR\x0fslackWebhookUrl\x126\n" +
+	"\atoggles\x18\x03 \x03(\v2\x1c.querysheriff.v1.AlertToggleR\atoggles\"9\n" +
 	"\vAlertToggle\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x18\n" +
 	"\aenabled\x18\x02 \x01(\bR\aenabled\"\x1d\n" +
@@ -471,44 +470,44 @@ const file_pgdozor_v1_alert_proto_rawDesc = "" +
 	"\x17ALERT_LEVEL_UNSPECIFIED\x10\x00\x12\x14\n" +
 	"\x10ALERT_LEVEL_INFO\x10\x01\x12\x17\n" +
 	"\x13ALERT_LEVEL_WARNING\x10\x02\x12\x18\n" +
-	"\x14ALERT_LEVEL_CRITICAL\x10\x032\xca\x01\n" +
-	"\fAlertService\x12P\n" +
-	"\vQueryAlerts\x12\x1e.pgdozor.v1.QueryAlertsRequest\x1a\x1f.pgdozor.v1.QueryAlertsResponse\"\x00\x12h\n" +
-	"\x13UpdateAlertSettings\x12&.pgdozor.v1.UpdateAlertSettingsRequest\x1a'.pgdozor.v1.UpdateAlertSettingsResponse\"\x00B5Z3github.com/pgdozor/backend/gen/pgdozor/v1;pgdozorv1b\x06proto3"
+	"\x14ALERT_LEVEL_CRITICAL\x10\x032\xde\x01\n" +
+	"\fAlertService\x12Z\n" +
+	"\vQueryAlerts\x12#.querysheriff.v1.QueryAlertsRequest\x1a$.querysheriff.v1.QueryAlertsResponse\"\x00\x12r\n" +
+	"\x13UpdateAlertSettings\x12+.querysheriff.v1.UpdateAlertSettingsRequest\x1a,.querysheriff.v1.UpdateAlertSettingsResponse\"\x00BDZBgithub.com/querysheriff/backend/gen/querysheriff/v1;querysheriffv1b\x06proto3"
 
 var (
-	file_pgdozor_v1_alert_proto_rawDescOnce sync.Once
-	file_pgdozor_v1_alert_proto_rawDescData []byte
+	file_querysheriff_v1_alert_proto_rawDescOnce sync.Once
+	file_querysheriff_v1_alert_proto_rawDescData []byte
 )
 
-func file_pgdozor_v1_alert_proto_rawDescGZIP() []byte {
-	file_pgdozor_v1_alert_proto_rawDescOnce.Do(func() {
-		file_pgdozor_v1_alert_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pgdozor_v1_alert_proto_rawDesc), len(file_pgdozor_v1_alert_proto_rawDesc)))
+func file_querysheriff_v1_alert_proto_rawDescGZIP() []byte {
+	file_querysheriff_v1_alert_proto_rawDescOnce.Do(func() {
+		file_querysheriff_v1_alert_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_querysheriff_v1_alert_proto_rawDesc), len(file_querysheriff_v1_alert_proto_rawDesc)))
 	})
-	return file_pgdozor_v1_alert_proto_rawDescData
+	return file_querysheriff_v1_alert_proto_rawDescData
 }
 
-var file_pgdozor_v1_alert_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_pgdozor_v1_alert_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
-var file_pgdozor_v1_alert_proto_goTypes = []any{
-	(AlertLevel)(0),                     // 0: pgdozor.v1.AlertLevel
-	(*QueryAlertsRequest)(nil),          // 1: pgdozor.v1.QueryAlertsRequest
-	(*QueryAlertsResponse)(nil),         // 2: pgdozor.v1.QueryAlertsResponse
-	(*ServerAlertSettings)(nil),         // 3: pgdozor.v1.ServerAlertSettings
-	(*AlertSetting)(nil),                // 4: pgdozor.v1.AlertSetting
-	(*UpdateAlertSettingsRequest)(nil),  // 5: pgdozor.v1.UpdateAlertSettingsRequest
-	(*AlertToggle)(nil),                 // 6: pgdozor.v1.AlertToggle
-	(*UpdateAlertSettingsResponse)(nil), // 7: pgdozor.v1.UpdateAlertSettingsResponse
+var file_querysheriff_v1_alert_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_querysheriff_v1_alert_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_querysheriff_v1_alert_proto_goTypes = []any{
+	(AlertLevel)(0),                     // 0: querysheriff.v1.AlertLevel
+	(*QueryAlertsRequest)(nil),          // 1: querysheriff.v1.QueryAlertsRequest
+	(*QueryAlertsResponse)(nil),         // 2: querysheriff.v1.QueryAlertsResponse
+	(*ServerAlertSettings)(nil),         // 3: querysheriff.v1.ServerAlertSettings
+	(*AlertSetting)(nil),                // 4: querysheriff.v1.AlertSetting
+	(*UpdateAlertSettingsRequest)(nil),  // 5: querysheriff.v1.UpdateAlertSettingsRequest
+	(*AlertToggle)(nil),                 // 6: querysheriff.v1.AlertToggle
+	(*UpdateAlertSettingsResponse)(nil), // 7: querysheriff.v1.UpdateAlertSettingsResponse
 }
-var file_pgdozor_v1_alert_proto_depIdxs = []int32{
-	3, // 0: pgdozor.v1.QueryAlertsResponse.servers:type_name -> pgdozor.v1.ServerAlertSettings
-	4, // 1: pgdozor.v1.ServerAlertSettings.alerts:type_name -> pgdozor.v1.AlertSetting
-	0, // 2: pgdozor.v1.AlertSetting.level:type_name -> pgdozor.v1.AlertLevel
-	6, // 3: pgdozor.v1.UpdateAlertSettingsRequest.toggles:type_name -> pgdozor.v1.AlertToggle
-	1, // 4: pgdozor.v1.AlertService.QueryAlerts:input_type -> pgdozor.v1.QueryAlertsRequest
-	5, // 5: pgdozor.v1.AlertService.UpdateAlertSettings:input_type -> pgdozor.v1.UpdateAlertSettingsRequest
-	2, // 6: pgdozor.v1.AlertService.QueryAlerts:output_type -> pgdozor.v1.QueryAlertsResponse
-	7, // 7: pgdozor.v1.AlertService.UpdateAlertSettings:output_type -> pgdozor.v1.UpdateAlertSettingsResponse
+var file_querysheriff_v1_alert_proto_depIdxs = []int32{
+	3, // 0: querysheriff.v1.QueryAlertsResponse.servers:type_name -> querysheriff.v1.ServerAlertSettings
+	4, // 1: querysheriff.v1.ServerAlertSettings.alerts:type_name -> querysheriff.v1.AlertSetting
+	0, // 2: querysheriff.v1.AlertSetting.level:type_name -> querysheriff.v1.AlertLevel
+	6, // 3: querysheriff.v1.UpdateAlertSettingsRequest.toggles:type_name -> querysheriff.v1.AlertToggle
+	1, // 4: querysheriff.v1.AlertService.QueryAlerts:input_type -> querysheriff.v1.QueryAlertsRequest
+	5, // 5: querysheriff.v1.AlertService.UpdateAlertSettings:input_type -> querysheriff.v1.UpdateAlertSettingsRequest
+	2, // 6: querysheriff.v1.AlertService.QueryAlerts:output_type -> querysheriff.v1.QueryAlertsResponse
+	7, // 7: querysheriff.v1.AlertService.UpdateAlertSettings:output_type -> querysheriff.v1.UpdateAlertSettingsResponse
 	6, // [6:8] is the sub-list for method output_type
 	4, // [4:6] is the sub-list for method input_type
 	4, // [4:4] is the sub-list for extension type_name
@@ -516,27 +515,27 @@ var file_pgdozor_v1_alert_proto_depIdxs = []int32{
 	0, // [0:4] is the sub-list for field type_name
 }
 
-func init() { file_pgdozor_v1_alert_proto_init() }
-func file_pgdozor_v1_alert_proto_init() {
-	if File_pgdozor_v1_alert_proto != nil {
+func init() { file_querysheriff_v1_alert_proto_init() }
+func file_querysheriff_v1_alert_proto_init() {
+	if File_querysheriff_v1_alert_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pgdozor_v1_alert_proto_rawDesc), len(file_pgdozor_v1_alert_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_querysheriff_v1_alert_proto_rawDesc), len(file_querysheriff_v1_alert_proto_rawDesc)),
 			NumEnums:      1,
 			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_pgdozor_v1_alert_proto_goTypes,
-		DependencyIndexes: file_pgdozor_v1_alert_proto_depIdxs,
-		EnumInfos:         file_pgdozor_v1_alert_proto_enumTypes,
-		MessageInfos:      file_pgdozor_v1_alert_proto_msgTypes,
+		GoTypes:           file_querysheriff_v1_alert_proto_goTypes,
+		DependencyIndexes: file_querysheriff_v1_alert_proto_depIdxs,
+		EnumInfos:         file_querysheriff_v1_alert_proto_enumTypes,
+		MessageInfos:      file_querysheriff_v1_alert_proto_msgTypes,
 	}.Build()
-	File_pgdozor_v1_alert_proto = out.File
-	file_pgdozor_v1_alert_proto_goTypes = nil
-	file_pgdozor_v1_alert_proto_depIdxs = nil
+	File_querysheriff_v1_alert_proto = out.File
+	file_querysheriff_v1_alert_proto_goTypes = nil
+	file_querysheriff_v1_alert_proto_depIdxs = nil
 }

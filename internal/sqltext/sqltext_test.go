@@ -5,8 +5,8 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
-	"github.com/pgdozor/backend/internal/sqltext"
+	querysheriffv1 "github.com/querysheriff/backend/gen/querysheriff/v1"
+	"github.com/querysheriff/backend/internal/sqltext"
 )
 
 func TestProcessPreviewTruncatesLongQuery(t *testing.T) {
@@ -49,19 +49,19 @@ func TestProcessCleanStripsComments(t *testing.T) {
 func TestProcessKind(t *testing.T) {
 	t.Parallel()
 
-	cases := map[string]pgdozorv1.QueryKind{
-		"SELECT id FROM users WHERE id = $1":                         pgdozorv1.QueryKind_QUERY_KIND_READS,
-		"WITH x AS (SELECT 1) SELECT * FROM x":                       pgdozorv1.QueryKind_QUERY_KIND_READS,
-		"INSERT INTO t (a) VALUES ($1)":                              pgdozorv1.QueryKind_QUERY_KIND_WRITES,
-		"INSERT INTO archive SELECT * FROM events":                   pgdozorv1.QueryKind_QUERY_KIND_WRITES,
-		"UPDATE users SET name = $1 WHERE id = $2":                   pgdozorv1.QueryKind_QUERY_KIND_WRITES,
-		"DELETE FROM sessions WHERE id = $1":                         pgdozorv1.QueryKind_QUERY_KIND_WRITES,
-		"MERGE INTO t USING s ON t.id=s.id WHEN MATCHED THEN DELETE": pgdozorv1.QueryKind_QUERY_KIND_WRITES,
-		"VACUUM users":                      pgdozorv1.QueryKind_QUERY_KIND_OTHERS,
-		"CREATE INDEX idx ON users (email)": pgdozorv1.QueryKind_QUERY_KIND_OTHERS,
-		"TRUNCATE users":                    pgdozorv1.QueryKind_QUERY_KIND_OTHERS,
-		"ANALYZE users":                     pgdozorv1.QueryKind_QUERY_KIND_OTHERS,
-		"totally not valid sql":             pgdozorv1.QueryKind_QUERY_KIND_OTHERS,
+	cases := map[string]querysheriffv1.QueryKind{
+		"SELECT id FROM users WHERE id = $1":                         querysheriffv1.QueryKind_QUERY_KIND_READS,
+		"WITH x AS (SELECT 1) SELECT * FROM x":                       querysheriffv1.QueryKind_QUERY_KIND_READS,
+		"INSERT INTO t (a) VALUES ($1)":                              querysheriffv1.QueryKind_QUERY_KIND_WRITES,
+		"INSERT INTO archive SELECT * FROM events":                   querysheriffv1.QueryKind_QUERY_KIND_WRITES,
+		"UPDATE users SET name = $1 WHERE id = $2":                   querysheriffv1.QueryKind_QUERY_KIND_WRITES,
+		"DELETE FROM sessions WHERE id = $1":                         querysheriffv1.QueryKind_QUERY_KIND_WRITES,
+		"MERGE INTO t USING s ON t.id=s.id WHEN MATCHED THEN DELETE": querysheriffv1.QueryKind_QUERY_KIND_WRITES,
+		"VACUUM users":                      querysheriffv1.QueryKind_QUERY_KIND_OTHERS,
+		"CREATE INDEX idx ON users (email)": querysheriffv1.QueryKind_QUERY_KIND_OTHERS,
+		"TRUNCATE users":                    querysheriffv1.QueryKind_QUERY_KIND_OTHERS,
+		"ANALYZE users":                     querysheriffv1.QueryKind_QUERY_KIND_OTHERS,
+		"totally not valid sql":             querysheriffv1.QueryKind_QUERY_KIND_OTHERS,
 	}
 	for sql, want := range cases {
 		if got := sqltext.Process(sql).Kind; got != want {
@@ -77,7 +77,7 @@ func TestProcessUnparseableFallback(t *testing.T) {
 	if r.Clean != "this is not valid sql" || r.Preview != "this is not valid sql" {
 		t.Errorf("fallback mismatch: clean=%q preview=%q", r.Clean, r.Preview)
 	}
-	if r.Kind != pgdozorv1.QueryKind_QUERY_KIND_OTHERS {
+	if r.Kind != querysheriffv1.QueryKind_QUERY_KIND_OTHERS {
 		t.Errorf("unparseable input should classify as utility (others), got %v", r.Kind)
 	}
 }

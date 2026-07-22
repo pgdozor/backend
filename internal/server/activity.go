@@ -9,9 +9,9 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
-	"github.com/pgdozor/backend/internal/alerts"
-	"github.com/pgdozor/backend/internal/db"
+	querysheriffv1 "github.com/querysheriff/backend/gen/querysheriff/v1"
+	"github.com/querysheriff/backend/internal/alerts"
+	"github.com/querysheriff/backend/internal/db"
 )
 
 const (
@@ -32,15 +32,15 @@ func NewActivityServer(pool *pgxpool.Pool, notifier *alerts.Notifier) *ActivityS
 
 func (s *ActivityServer) ReportActivity(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.ReportActivityRequest],
-) (*connect.Response[pgdozorv1.ReportActivityResponse], error) {
+	req *connect.Request[querysheriffv1.ReportActivityRequest],
+) (*connect.Response[querysheriffv1.ReportActivityResponse], error) {
 	msg := req.Msg
 
 	if err := requireTimestamp(msg.GetCollectedAt()); err != nil {
 		return nil, err
 	}
 
-	txnSnapshots := make([]*pgdozorv1.ActivitySnapshot, 0, len(msg.GetActivitySnapshots()))
+	txnSnapshots := make([]*querysheriffv1.ActivitySnapshot, 0, len(msg.GetActivitySnapshots()))
 	for _, snap := range msg.GetActivitySnapshots() {
 		if snap.GetXactStart() != nil && snap.GetBackendStart() != nil {
 			txnSnapshots = append(txnSnapshots, snap)
@@ -48,7 +48,7 @@ func (s *ActivityServer) ReportActivity(
 	}
 
 	if len(txnSnapshots) == 0 {
-		return connect.NewResponse(&pgdozorv1.ReportActivityResponse{}), nil
+		return connect.NewResponse(&querysheriffv1.ReportActivityResponse{}), nil
 	}
 
 	serverName, err := requireCollectorServer(ctx)
@@ -86,14 +86,14 @@ func (s *ActivityServer) ReportActivity(
 
 	s.evaluateAlerts(serverName, msg.GetCollectedAt().AsTime(), txnSnapshots)
 
-	return connect.NewResponse(&pgdozorv1.ReportActivityResponse{}), nil
+	return connect.NewResponse(&querysheriffv1.ReportActivityResponse{}), nil
 }
 
 // evaluateAlerts raises the blocking-transaction and long-running-query alerts.
 func (s *ActivityServer) evaluateAlerts(
 	serverName string,
 	collectedAt time.Time,
-	snapshots []*pgdozorv1.ActivitySnapshot,
+	snapshots []*querysheriffv1.ActivitySnapshot,
 ) {
 	var blocking, longQuery bool
 	for _, snap := range snapshots {
@@ -126,8 +126,8 @@ func (s *ActivityServer) evaluateAlerts(
 
 func (s *ActivityServer) QueryTransactions(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.QueryTransactionsRequest],
-) (*connect.Response[pgdozorv1.QueryTransactionsResponse], error) {
+	req *connect.Request[querysheriffv1.QueryTransactionsRequest],
+) (*connect.Response[querysheriffv1.QueryTransactionsResponse], error) {
 	msg := req.Msg
 
 	principal, err := requirePrincipal(ctx)
@@ -159,7 +159,7 @@ func (s *ActivityServer) QueryTransactions(
 	}
 
 	if len(rows) == 0 {
-		return connect.NewResponse(&pgdozorv1.QueryTransactionsResponse{}), nil
+		return connect.NewResponse(&querysheriffv1.QueryTransactionsResponse{}), nil
 	}
 
 	ids := make([]int64, len(rows))
@@ -184,10 +184,10 @@ func (s *ActivityServer) QueryTransactions(
 		eventsByTxn[row.TransactionID] = append(eventsByTxn[row.TransactionID], event)
 	}
 
-	transactions := make([]*pgdozorv1.Transaction, len(rows))
+	transactions := make([]*querysheriffv1.Transaction, len(rows))
 	for i, row := range rows {
 		events := eventsByTxn[row.ID]
-		transactions[i] = &pgdozorv1.Transaction{
+		transactions[i] = &querysheriffv1.Transaction{
 			Pid:             row.Pid,
 			ApplicationName: row.ApplicationName,
 			Start:           protoFromTimestamptz(row.XactStart),
@@ -196,13 +196,13 @@ func (s *ActivityServer) QueryTransactions(
 		}
 	}
 
-	return connect.NewResponse(&pgdozorv1.QueryTransactionsResponse{Transactions: transactions}), nil
+	return connect.NewResponse(&querysheriffv1.QueryTransactionsResponse{Transactions: transactions}), nil
 }
 
 func (s *ActivityServer) QueryBlocking(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.QueryBlockingRequest],
-) (*connect.Response[pgdozorv1.QueryBlockingResponse], error) {
+	req *connect.Request[querysheriffv1.QueryBlockingRequest],
+) (*connect.Response[querysheriffv1.QueryBlockingResponse], error) {
 	msg := req.Msg
 
 	principal, err := requirePrincipal(ctx)
@@ -230,13 +230,13 @@ func (s *ActivityServer) QueryBlocking(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return connect.NewResponse(&pgdozorv1.QueryBlockingResponse{Trees: buildBlockingTrees(rows)}), nil
+	return connect.NewResponse(&querysheriffv1.QueryBlockingResponse{Trees: buildBlockingTrees(rows)}), nil
 }
 
 func transactionEventParams(
 	serverName string,
 	collectedAt pgtype.Timestamptz,
-	snap *pgdozorv1.ActivitySnapshot,
+	snap *querysheriffv1.ActivitySnapshot,
 ) (db.RecordTransactionEventParams, error) {
 	tags, err := jsonbFromStringMap(snap.GetQueryTags())
 	if err != nil {

@@ -6,8 +6,8 @@ import (
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
-	"github.com/pgdozor/backend/internal/db"
+	querysheriffv1 "github.com/querysheriff/backend/gen/querysheriff/v1"
+	"github.com/querysheriff/backend/internal/db"
 )
 
 type blockedEvent struct {
@@ -154,7 +154,7 @@ func groupByRoot(events []blockedEvent, blockerOf map[int32]int32) []*blockingGr
 	return order
 }
 
-func buildBlockingTrees(rows []db.ListBlockedEventsRow) []*pgdozorv1.BlockingTree {
+func buildBlockingTrees(rows []db.ListBlockedEventsRow) []*querysheriffv1.BlockingTree {
 	if len(rows) == 0 {
 		return nil
 	}
@@ -163,11 +163,11 @@ func buildBlockingTrees(rows []db.ListBlockedEventsRow) []*pgdozorv1.BlockingTre
 	blockerOf, appOf := indexBlockedEvents(events)
 	groups := groupByRoot(events, blockerOf)
 
-	trees := make([]*pgdozorv1.BlockingTree, len(groups))
+	trees := make([]*querysheriffv1.BlockingTree, len(groups))
 	for i, g := range groups {
-		blocked := make([]*pgdozorv1.BlockedEvent, len(g.events))
+		blocked := make([]*querysheriffv1.BlockedEvent, len(g.events))
 		for j, e := range g.events {
-			blocked[j] = &pgdozorv1.BlockedEvent{
+			blocked[j] = &querysheriffv1.BlockedEvent{
 				Pid:             e.pid,
 				ApplicationName: e.app,
 				StartedWaiting:  timestamppb.New(e.startedWait),
@@ -177,7 +177,7 @@ func buildBlockingTrees(rows []db.ListBlockedEventsRow) []*pgdozorv1.BlockingTre
 				LastSeen:        timestamppb.New(e.lastSeen),
 			}
 		}
-		trees[i] = &pgdozorv1.BlockingTree{
+		trees[i] = &querysheriffv1.BlockingTree{
 			RootPid:             g.root,
 			RootApplicationName: appOf[g.root],
 			RootStartedBlocking: timestamppb.New(g.minWait),

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pgdozor/backend/gen/pgdozor/v1/pgdozorv1connect"
+	"github.com/querysheriff/backend/gen/querysheriff/v1/querysheriffv1connect"
 )
 
 func TestIsCollectorProcedure(t *testing.T) {
@@ -14,15 +14,15 @@ func TestIsCollectorProcedure(t *testing.T) {
 		procedure string
 		want      bool
 	}{
-		{pgdozorv1connect.ActivityServiceReportActivityProcedure, true},
-		{pgdozorv1connect.StatementServiceReportStatementsProcedure, true},
-		{pgdozorv1connect.StatementServiceReportStatementTextsProcedure, true},
-		{pgdozorv1connect.LogServiceReportLogsProcedure, true},
-		{pgdozorv1connect.HealthServiceReportHealthProcedure, true},
-		{pgdozorv1connect.ActivityServiceQueryTransactionsProcedure, false},
-		{pgdozorv1connect.LogServiceQueryLogsProcedure, false},
-		{pgdozorv1connect.AuthServiceLoginProcedure, false},
-		{pgdozorv1connect.AdminServiceCreateUserProcedure, false},
+		{querysheriffv1connect.ActivityServiceReportActivityProcedure, true},
+		{querysheriffv1connect.StatementServiceReportStatementsProcedure, true},
+		{querysheriffv1connect.StatementServiceReportStatementTextsProcedure, true},
+		{querysheriffv1connect.LogServiceReportLogsProcedure, true},
+		{querysheriffv1connect.HealthServiceReportHealthProcedure, true},
+		{querysheriffv1connect.ActivityServiceQueryTransactionsProcedure, false},
+		{querysheriffv1connect.LogServiceQueryLogsProcedure, false},
+		{querysheriffv1connect.AuthServiceLoginProcedure, false},
+		{querysheriffv1connect.AdminServiceCreateUserProcedure, false},
 	}
 
 	for _, c := range cases {
@@ -36,13 +36,13 @@ func TestAdminServicePrefixMatchesGeneratedNamespace(t *testing.T) {
 	t.Parallel()
 
 	admin := []string{
-		pgdozorv1connect.AdminServiceCreateUserProcedure,
-		pgdozorv1connect.AdminServiceUpdateUserProcedure,
-		pgdozorv1connect.AdminServiceDeleteUserProcedure,
-		pgdozorv1connect.AdminServiceListUsersProcedure,
-		pgdozorv1connect.AdminServiceCreateCollectorTokenProcedure,
-		pgdozorv1connect.AdminServiceListCollectorTokensProcedure,
-		pgdozorv1connect.AdminServiceDeleteCollectorTokenProcedure,
+		querysheriffv1connect.AdminServiceCreateUserProcedure,
+		querysheriffv1connect.AdminServiceUpdateUserProcedure,
+		querysheriffv1connect.AdminServiceDeleteUserProcedure,
+		querysheriffv1connect.AdminServiceListUsersProcedure,
+		querysheriffv1connect.AdminServiceCreateCollectorTokenProcedure,
+		querysheriffv1connect.AdminServiceListCollectorTokensProcedure,
+		querysheriffv1connect.AdminServiceDeleteCollectorTokenProcedure,
 	}
 	for _, procedure := range admin {
 		if !strings.HasPrefix(procedure, adminServicePrefix) {
@@ -51,9 +51,9 @@ func TestAdminServicePrefixMatchesGeneratedNamespace(t *testing.T) {
 	}
 
 	nonAdmin := []string{
-		pgdozorv1connect.ActivityServiceQueryTransactionsProcedure,
-		pgdozorv1connect.AlertServiceUpdateAlertSettingsProcedure,
-		pgdozorv1connect.AuthServiceCurrentUserProcedure,
+		querysheriffv1connect.ActivityServiceQueryTransactionsProcedure,
+		querysheriffv1connect.AlertServiceUpdateAlertSettingsProcedure,
+		querysheriffv1connect.AuthServiceCurrentUserProcedure,
 	}
 	for _, procedure := range nonAdmin {
 		if strings.HasPrefix(procedure, adminServicePrefix) {

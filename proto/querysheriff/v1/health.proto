@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package pgdozor.v1;
+package querysheriff.v1;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/pgdozor/backend/gen/pgdozor/v1;pgdozorv1";
+option go_package = "github.com/querysheriff/backend/gen/querysheriff/v1;querysheriffv1";
 
 service HealthService {
   rpc ReportHealth(ReportHealthRequest) returns (ReportHealthResponse) {}

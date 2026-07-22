@@ -10,9 +10,9 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
-	"github.com/pgdozor/backend/internal/alerts"
-	"github.com/pgdozor/backend/internal/db"
+	querysheriffv1 "github.com/querysheriff/backend/gen/querysheriff/v1"
+	"github.com/querysheriff/backend/internal/alerts"
+	"github.com/querysheriff/backend/internal/db"
 )
 
 type LogServer struct {
@@ -26,8 +26,8 @@ func NewLogServer(queries *db.Queries, notifier *alerts.Notifier) *LogServer {
 
 func (s *LogServer) ReportLogs(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.ReportLogsRequest],
-) (*connect.Response[pgdozorv1.ReportLogsResponse], error) {
+	req *connect.Request[querysheriffv1.ReportLogsRequest],
+) (*connect.Response[querysheriffv1.ReportLogsResponse], error) {
 	msg := req.Msg
 
 	if err := requireTimestamp(msg.GetCollectedAt()); err != nil {
@@ -36,7 +36,7 @@ func (s *LogServer) ReportLogs(
 
 	events := msg.GetLogEvents()
 	if len(events) == 0 {
-		return connect.NewResponse(&pgdozorv1.ReportLogsResponse{}), nil
+		return connect.NewResponse(&querysheriffv1.ReportLogsResponse{}), nil
 	}
 
 	serverName, err := requireCollectorServer(ctx)
@@ -57,13 +57,13 @@ func (s *LogServer) ReportLogs(
 
 	s.evaluateAlerts(serverName, events)
 
-	return connect.NewResponse(&pgdozorv1.ReportLogsResponse{}), nil
+	return connect.NewResponse(&querysheriffv1.ReportLogsResponse{}), nil
 }
 
-func (s *LogServer) evaluateAlerts(serverName string, events []*pgdozorv1.LogEvent) {
+func (s *LogServer) evaluateAlerts(serverName string, events []*querysheriffv1.LogEvent) {
 	for _, event := range events {
 		level := event.GetLogLevel()
-		if level == pgdozorv1.LogEvent_LOG_LEVEL_FATAL || level == pgdozorv1.LogEvent_LOG_LEVEL_PANIC {
+		if level == querysheriffv1.LogEvent_LOG_LEVEL_FATAL || level == querysheriffv1.LogEvent_LOG_LEVEL_PANIC {
 			s.notifier.Fire(serverName, alerts.KeyFatalPanic, fatalPanicMessage(event))
 
 			return
@@ -71,9 +71,9 @@ func (s *LogServer) evaluateAlerts(serverName string, events []*pgdozorv1.LogEve
 	}
 }
 
-func fatalPanicMessage(event *pgdozorv1.LogEvent) string {
+func fatalPanicMessage(event *querysheriffv1.LogEvent) string {
 	level := "FATAL"
-	if event.GetLogLevel() == pgdozorv1.LogEvent_LOG_LEVEL_PANIC {
+	if event.GetLogLevel() == querysheriffv1.LogEvent_LOG_LEVEL_PANIC {
 		level = "PANIC"
 	}
 
@@ -82,8 +82,8 @@ func fatalPanicMessage(event *pgdozorv1.LogEvent) string {
 
 func (s *LogServer) QueryLogs(
 	ctx context.Context,
-	req *connect.Request[pgdozorv1.QueryLogsRequest],
-) (*connect.Response[pgdozorv1.QueryLogsResponse], error) {
+	req *connect.Request[querysheriffv1.QueryLogsRequest],
+) (*connect.Response[querysheriffv1.QueryLogsResponse], error) {
 	msg := req.Msg
 
 	principal, err := requirePrincipal(ctx)
@@ -135,12 +135,12 @@ func (s *LogServer) QueryLogs(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	records := make([]*pgdozorv1.LogRecord, len(rows))
+	records := make([]*querysheriffv1.LogRecord, len(rows))
 	for i, row := range rows {
 		records[i] = logRecordFromRow(row)
 	}
 
-	return connect.NewResponse(&pgdozorv1.QueryLogsResponse{
+	return connect.NewResponse(&querysheriffv1.QueryLogsResponse{
 		Histogram: histogram,
 		Records:   records,
 	}), nil
@@ -154,7 +154,7 @@ func (s *LogServer) logHistogram(
 	classifications []int32,
 	search pgtype.Text,
 	allowedServers []string,
-) (*pgdozorv1.LogHistogram, error) {
+) (*querysheriffv1.LogHistogram, error) {
 	bucketWidth := metricBucket(to.Sub(from))
 
 	rows, err := s.queries.LogEventHistogram(ctx, db.LogEventHistogramParams{
@@ -188,25 +188,25 @@ func (s *LogServer) logHistogram(
 		totals[row.LogLevel] += row.N
 	}
 
-	buckets := make([]*pgdozorv1.LogHistogramBucket, slots)
+	buckets := make([]*querysheriffv1.LogHistogramBucket, slots)
 	for i := range buckets {
-		buckets[i] = &pgdozorv1.LogHistogramBucket{
+		buckets[i] = &querysheriffv1.LogHistogramBucket{
 			BucketStart: timestamppb.New(from.Add(time.Duration(i) * bucketDur)),
 			Counts:      levelCounts(perBucket[i]),
 		}
 	}
 
-	return &pgdozorv1.LogHistogram{
+	return &querysheriffv1.LogHistogram{
 		Buckets:     buckets,
 		LevelTotals: levelCounts(totals),
 	}, nil
 }
 
-func levelCounts(counts map[int32]int64) []*pgdozorv1.LogLevelCount {
-	out := make([]*pgdozorv1.LogLevelCount, 0, len(counts))
+func levelCounts(counts map[int32]int64) []*querysheriffv1.LogLevelCount {
+	out := make([]*querysheriffv1.LogLevelCount, 0, len(counts))
 	for level, count := range counts {
-		out = append(out, &pgdozorv1.LogLevelCount{
-			Level: pgdozorv1.LogEvent_LogLevel(level),
+		out = append(out, &querysheriffv1.LogLevelCount{
+			Level: querysheriffv1.LogEvent_LogLevel(level),
 			Count: count,
 		})
 	}
@@ -215,12 +215,12 @@ func levelCounts(counts map[int32]int64) []*pgdozorv1.LogLevelCount {
 	return out
 }
 
-func logRecordFromRow(row db.ListLogEventsRow) *pgdozorv1.LogRecord {
-	return &pgdozorv1.LogRecord{
+func logRecordFromRow(row db.ListLogEventsRow) *querysheriffv1.LogRecord {
+	return &querysheriffv1.LogRecord{
 		Id:              row.ID,
 		OccurredAt:      protoFromTimestamptz(row.OccurredAt),
-		LogLevel:        pgdozorv1.LogEvent_LogLevel(row.LogLevel),
-		Classification:  pgdozorv1.LogEvent_LogClassification(row.Classification),
+		LogLevel:        querysheriffv1.LogEvent_LogLevel(row.LogLevel),
+		Classification:  querysheriffv1.LogEvent_LogClassification(row.Classification),
 		Pid:             protoFromInt4(row.Pid),
 		DatabaseName:    protoFromText(row.DatabaseName),
 		Username:        protoFromText(row.Username),
@@ -252,7 +252,7 @@ func (s *LogServer) insertLogEvents(
 	ctx context.Context,
 	serverName string,
 	collectedAt pgtype.Timestamptz,
-	events []*pgdozorv1.LogEvent,
+	events []*querysheriffv1.LogEvent,
 ) ([]int64, error) {
 	params := make([]db.InsertLogEventsParams, len(events))
 	for i, event := range events {
@@ -283,7 +283,7 @@ func (s *LogServer) insertLogEvents(
 }
 
 type sampleEntry struct {
-	sample         *pgdozorv1.LogStatementSample
+	sample         *querysheriffv1.LogStatementSample
 	logEventID     int64
 	statementIndex int
 }
@@ -292,7 +292,7 @@ func (s *LogServer) insertStatementSamples(
 	ctx context.Context,
 	serverName string,
 	collectedAt pgtype.Timestamptz,
-	events []*pgdozorv1.LogEvent,
+	events []*querysheriffv1.LogEvent,
 	eventIDs []int64,
 ) error {
 	var (
@@ -361,7 +361,7 @@ func (s *LogServer) insertStatementSamples(
 func logEventInsertParams(
 	serverName string,
 	collectedAt pgtype.Timestamptz,
-	event *pgdozorv1.LogEvent,
+	event *querysheriffv1.LogEvent,
 ) db.InsertLogEventsParams {
 	return db.InsertLogEventsParams{
 		ServerName:      serverName,
@@ -388,7 +388,7 @@ func statementSampleInsertParams(
 	collectedAt pgtype.Timestamptz,
 	logEventID int64,
 	statementID pgtype.Int8,
-	sample *pgdozorv1.LogStatementSample,
+	sample *querysheriffv1.LogStatementSample,
 ) (db.InsertStatementSamplesParams, error) {
 	tags, err := jsonbFromStringMap(sample.GetTags())
 	if err != nil {

@@ -1,4 +1,4 @@
-module github.com/pgdozor/backend
+module github.com/querysheriff/backend
 
 go 1.26.3
 

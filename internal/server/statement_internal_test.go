@@ -6,53 +6,53 @@ import (
 
 	"connectrpc.com/connect"
 
-	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
+	querysheriffv1 "github.com/querysheriff/backend/gen/querysheriff/v1"
 )
 
-func tagFilter(key string, op pgdozorv1.TagFilterOperator, values ...string) *pgdozorv1.TagFilter {
-	return &pgdozorv1.TagFilter{Key: key, Op: op, Values: values}
+func tagFilter(key string, op querysheriffv1.TagFilterOperator, values ...string) *querysheriffv1.TagFilter {
+	return &querysheriffv1.TagFilter{Key: key, Op: op, Values: values}
 }
 
 func TestBuildTagFilterJSON(t *testing.T) {
 	t.Parallel()
 
 	const (
-		eq     = pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_EQUAL
-		ne     = pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_NOT_EQUAL
-		exists = pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_EXISTS
-		unspec = pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_UNSPECIFIED
+		eq     = querysheriffv1.TagFilterOperator_TAG_FILTER_OPERATOR_EQUAL
+		ne     = querysheriffv1.TagFilterOperator_TAG_FILTER_OPERATOR_NOT_EQUAL
+		exists = querysheriffv1.TagFilterOperator_TAG_FILTER_OPERATOR_EXISTS
+		unspec = querysheriffv1.TagFilterOperator_TAG_FILTER_OPERATOR_UNSPECIFIED
 	)
 
 	cases := []struct {
 		name    string
-		filters []*pgdozorv1.TagFilter
+		filters []*querysheriffv1.TagFilter
 		want    string
 		wantErr bool
 	}{
 		{name: "no filters yields a nil param", filters: nil, want: ""},
 		{
 			name:    "equal with one value",
-			filters: []*pgdozorv1.TagFilter{tagFilter("service", eq, "payments")},
+			filters: []*querysheriffv1.TagFilter{tagFilter("service", eq, "payments")},
 			want:    `[{"key":"service","op":"eq","values":["payments"]}]`,
 		},
 		{
 			name:    "equal ors its values",
-			filters: []*pgdozorv1.TagFilter{tagFilter("service", eq, "payments", "billing")},
+			filters: []*querysheriffv1.TagFilter{tagFilter("service", eq, "payments", "billing")},
 			want:    `[{"key":"service","op":"eq","values":["payments","billing"]}]`,
 		},
 		{
 			name:    "not equal",
-			filters: []*pgdozorv1.TagFilter{tagFilter("operation", ne, "deliver_email")},
+			filters: []*querysheriffv1.TagFilter{tagFilter("operation", ne, "deliver_email")},
 			want:    `[{"key":"operation","op":"ne","values":["deliver_email"]}]`,
 		},
 		{
 			name:    "exists carries no values",
-			filters: []*pgdozorv1.TagFilter{tagFilter("tenant", exists)},
+			filters: []*querysheriffv1.TagFilter{tagFilter("tenant", exists)},
 			want:    `[{"key":"tenant","op":"exists","values":[]}]`,
 		},
 		{
 			name: "filters are anded in order",
-			filters: []*pgdozorv1.TagFilter{
+			filters: []*querysheriffv1.TagFilter{
 				tagFilter("service", eq, "payments"),
 				tagFilter("operation", ne, "deliver_email"),
 			},
@@ -61,57 +61,57 @@ func TestBuildTagFilterJSON(t *testing.T) {
 		},
 		{
 			name:    "value keeps the collector charset verbatim",
-			filters: []*pgdozorv1.TagFilter{tagFilter("build", eq, "sha256:9f8e/7d+6c")},
+			filters: []*querysheriffv1.TagFilter{tagFilter("build", eq, "sha256:9f8e/7d+6c")},
 			want:    `[{"key":"build","op":"eq","values":["sha256:9f8e/7d+6c"]}]`,
 		},
 		{
 			name:    "exists with values is rejected",
-			filters: []*pgdozorv1.TagFilter{tagFilter("tenant", exists, "acme")},
+			filters: []*querysheriffv1.TagFilter{tagFilter("tenant", exists, "acme")},
 			wantErr: true,
 		},
 		{
 			name:    "equal with no values is rejected",
-			filters: []*pgdozorv1.TagFilter{tagFilter("service", eq)},
+			filters: []*querysheriffv1.TagFilter{tagFilter("service", eq)},
 			wantErr: true,
 		},
 		{
 			name:    "unspecified op is rejected",
-			filters: []*pgdozorv1.TagFilter{tagFilter("service", unspec, "payments")},
+			filters: []*querysheriffv1.TagFilter{tagFilter("service", unspec, "payments")},
 			wantErr: true,
 		},
 		{
 			name:    "empty value is rejected",
-			filters: []*pgdozorv1.TagFilter{tagFilter("service", eq, "")},
+			filters: []*querysheriffv1.TagFilter{tagFilter("service", eq, "")},
 			wantErr: true,
 		},
 		{
 			name:    "uppercase key is rejected",
-			filters: []*pgdozorv1.TagFilter{tagFilter("Service", eq, "payments")},
+			filters: []*querysheriffv1.TagFilter{tagFilter("Service", eq, "payments")},
 			wantErr: true,
 		},
 		{
 			name:    "leading underscore key is rejected",
-			filters: []*pgdozorv1.TagFilter{tagFilter("_svc", eq, "payments")},
+			filters: []*querysheriffv1.TagFilter{tagFilter("_svc", eq, "payments")},
 			wantErr: true,
 		},
 		{
 			name:    "leading digit key is rejected",
-			filters: []*pgdozorv1.TagFilter{tagFilter("9x", eq, "payments")},
+			filters: []*querysheriffv1.TagFilter{tagFilter("9x", eq, "payments")},
 			wantErr: true,
 		},
 		{
 			name:    "empty key is rejected",
-			filters: []*pgdozorv1.TagFilter{tagFilter("", eq, "payments")},
+			filters: []*querysheriffv1.TagFilter{tagFilter("", eq, "payments")},
 			wantErr: true,
 		},
 		{
 			name:    "too many values is rejected",
-			filters: []*pgdozorv1.TagFilter{tagFilter("service", eq, make([]string, maxTagFilterValues+1)...)},
+			filters: []*querysheriffv1.TagFilter{tagFilter("service", eq, make([]string, maxTagFilterValues+1)...)},
 			wantErr: true,
 		},
 		{
 			name:    "oversized value is rejected",
-			filters: []*pgdozorv1.TagFilter{tagFilter("service", eq, strings.Repeat("x", maxTagValueLen+1))},
+			filters: []*querysheriffv1.TagFilter{tagFilter("service", eq, strings.Repeat("x", maxTagValueLen+1))},
 			wantErr: true,
 		},
 	}
@@ -146,9 +146,9 @@ func TestBuildTagFilterJSON(t *testing.T) {
 func TestBuildTagFilterJSONRejectsTooManyFilters(t *testing.T) {
 	t.Parallel()
 
-	filters := make([]*pgdozorv1.TagFilter, maxTagFilters+1)
+	filters := make([]*querysheriffv1.TagFilter, maxTagFilters+1)
 	for i := range filters {
-		filters[i] = tagFilter("service", pgdozorv1.TagFilterOperator_TAG_FILTER_OPERATOR_EQUAL, "payments")
+		filters[i] = tagFilter("service", querysheriffv1.TagFilterOperator_TAG_FILTER_OPERATOR_EQUAL, "payments")
 	}
 
 	_, err := buildTagFilterJSON(filters)

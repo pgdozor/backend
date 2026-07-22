@@ -26,7 +26,7 @@ formatters:
       # with the given prefixes are grouped after 3rd-party packages.
       # Default: []
       local-prefixes:
-        - github.com/pgdozor/backend
+        - github.com/querysheriff/backend
 
     golines:
       # Target maximum line length.

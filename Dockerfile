@@ -9,17 +9,17 @@ COPY . .
 
 ENV CGO_ENABLED=1
 
-RUN go build -trimpath -ldflags "-s -w" -o /out/pgdozor-api ./cmd/api
-RUN go build -trimpath -ldflags "-s -w" -o /out/pgdozor-migrate ./cmd/migrate
-RUN go build -trimpath -ldflags "-s -w" -o /out/pgdozor-jobs ./cmd/jobs
+RUN go build -trimpath -ldflags "-s -w" -o /out/querysheriff-api ./cmd/api
+RUN go build -trimpath -ldflags "-s -w" -o /out/querysheriff-migrate ./cmd/migrate
+RUN go build -trimpath -ldflags "-s -w" -o /out/querysheriff-jobs ./cmd/jobs
 
 FROM gcr.io/distroless/base-debian12:nonroot
 
-COPY --from=build /out/pgdozor-api /pgdozor-api
-COPY --from=build /out/pgdozor-migrate /pgdozor-migrate
-COPY --from=build /out/pgdozor-jobs /pgdozor-jobs
+COPY --from=build /out/querysheriff-api /querysheriff-api
+COPY --from=build /out/querysheriff-migrate /querysheriff-migrate
+COPY --from=build /out/querysheriff-jobs /querysheriff-jobs
 
 EXPOSE 3000
 USER nonroot:nonroot
 
-ENTRYPOINT ["/pgdozor-api"]
+ENTRYPOINT ["/querysheriff-api"]

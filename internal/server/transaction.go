@@ -5,8 +5,8 @@ import (
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
-	"github.com/pgdozor/backend/internal/db"
+	querysheriffv1 "github.com/querysheriff/backend/gen/querysheriff/v1"
+	"github.com/querysheriff/backend/internal/db"
 )
 
 const (
@@ -16,9 +16,9 @@ const (
 )
 
 const (
-	statusActive  = pgdozorv1.TransactionEventStatus_TRANSACTION_EVENT_STATUS_ACTIVE
-	statusIdle    = pgdozorv1.TransactionEventStatus_TRANSACTION_EVENT_STATUS_IDLE
-	statusAborted = pgdozorv1.TransactionEventStatus_TRANSACTION_EVENT_STATUS_ABORTED
+	statusActive  = querysheriffv1.TransactionEventStatus_TRANSACTION_EVENT_STATUS_ACTIVE
+	statusIdle    = querysheriffv1.TransactionEventStatus_TRANSACTION_EVENT_STATUS_IDLE
+	statusAborted = querysheriffv1.TransactionEventStatus_TRANSACTION_EVENT_STATUS_ABORTED
 )
 
 type reconstructedEvent struct {
@@ -50,8 +50,8 @@ func reconstructedEventFromRow(row db.ListTransactionEventsRow) (reconstructedEv
 	}, nil
 }
 
-func buildTransactionEvents(start time.Time, events []reconstructedEvent) []*pgdozorv1.TransactionEvent {
-	out := make([]*pgdozorv1.TransactionEvent, len(events))
+func buildTransactionEvents(start time.Time, events []reconstructedEvent) []*querysheriffv1.TransactionEvent {
+	out := make([]*querysheriffv1.TransactionEvent, len(events))
 	for i, e := range events {
 		from := e.firstSeen
 		if i == 0 && start.Before(from) {
@@ -64,7 +64,7 @@ func buildTransactionEvents(start time.Time, events []reconstructedEvent) []*pgd
 		}
 
 		status := eventStatus(e.state)
-		event := &pgdozorv1.TransactionEvent{
+		event := &querysheriffv1.TransactionEvent{
 			From:          timestamppb.New(from),
 			To:            timestamppb.New(to),
 			Status:        status,
@@ -84,7 +84,7 @@ func buildTransactionEvents(start time.Time, events []reconstructedEvent) []*pgd
 	return out
 }
 
-func eventStatus(state string) pgdozorv1.TransactionEventStatus {
+func eventStatus(state string) querysheriffv1.TransactionEventStatus {
 	switch state {
 	case stateIdleInTransactionAborted:
 		return statusAborted
@@ -95,6 +95,6 @@ func eventStatus(state string) pgdozorv1.TransactionEventStatus {
 	}
 }
 
-func isRunningStatus(status pgdozorv1.TransactionEventStatus) bool {
+func isRunningStatus(status querysheriffv1.TransactionEventStatus) bool {
 	return status == statusActive
 }

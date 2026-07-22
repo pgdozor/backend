@@ -7,7 +7,7 @@ import (
 
 	pg "github.com/pganalyze/pg_query_go/v6"
 
-	pgdozorv1 "github.com/pgdozor/backend/gen/pgdozor/v1"
+	querysheriffv1 "github.com/querysheriff/backend/gen/querysheriff/v1"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 type Result struct {
 	Clean   string
 	Preview string
-	Kind    pgdozorv1.QueryKind
+	Kind    querysheriffv1.QueryKind
 }
 
 func Process(sql string) Result {
@@ -155,22 +155,22 @@ func previewText(clean string, summary *pg.SummaryResult, err error) string {
 	return capLen(clean, previewLimit)
 }
 
-func classify(sql string, summary *pg.SummaryResult, err error) pgdozorv1.QueryKind {
+func classify(sql string, summary *pg.SummaryResult, err error) querysheriffv1.QueryKind {
 	if isUtility(sql) || err != nil {
-		return pgdozorv1.QueryKind_QUERY_KIND_OTHERS
+		return querysheriffv1.QueryKind_QUERY_KIND_OTHERS
 	}
 
 	types := summary.GetStatementTypes()
 	for _, t := range types {
 		switch t {
 		case "InsertStmt", "UpdateStmt", "DeleteStmt", "MergeStmt":
-			return pgdozorv1.QueryKind_QUERY_KIND_WRITES
+			return querysheriffv1.QueryKind_QUERY_KIND_WRITES
 		}
 	}
 	if slices.Contains(types, "SelectStmt") {
-		return pgdozorv1.QueryKind_QUERY_KIND_READS
+		return querysheriffv1.QueryKind_QUERY_KIND_READS
 	}
-	return pgdozorv1.QueryKind_QUERY_KIND_OTHERS
+	return querysheriffv1.QueryKind_QUERY_KIND_OTHERS
 }
 
 func isUtility(sql string) bool {

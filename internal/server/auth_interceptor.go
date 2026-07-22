@@ -9,15 +9,15 @@ import (
 	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5"
 
-	"github.com/pgdozor/backend/gen/pgdozor/v1/pgdozorv1connect"
-	"github.com/pgdozor/backend/internal/auth"
-	"github.com/pgdozor/backend/internal/db"
+	"github.com/querysheriff/backend/gen/querysheriff/v1/querysheriffv1connect"
+	"github.com/querysheriff/backend/internal/auth"
+	"github.com/querysheriff/backend/internal/db"
 )
 
 const (
-	sessionCookieName  = "pgdozor_session"
+	sessionCookieName  = "querysheriff_session"
 	bearerPrefix       = "Bearer "
-	adminServicePrefix = "/pgdozor.v1.AdminService/"
+	adminServicePrefix = "/querysheriff.v1.AdminService/"
 )
 
 // NewAuthInterceptor authenticates every RPC.
@@ -30,7 +30,7 @@ func NewAuthInterceptor(queries *db.Queries) connect.UnaryInterceptorFunc {
 			procedure := req.Spec().Procedure
 
 			switch {
-			case procedure == pgdozorv1connect.AuthServiceLoginProcedure:
+			case procedure == querysheriffv1connect.AuthServiceLoginProcedure:
 				return next(ctx, req)
 
 			case isCollectorProcedure(procedure):
@@ -62,11 +62,11 @@ func NewAuthInterceptor(queries *db.Queries) connect.UnaryInterceptorFunc {
 
 func isCollectorProcedure(procedure string) bool {
 	switch procedure {
-	case pgdozorv1connect.ActivityServiceReportActivityProcedure,
-		pgdozorv1connect.StatementServiceReportStatementsProcedure,
-		pgdozorv1connect.StatementServiceReportStatementTextsProcedure,
-		pgdozorv1connect.LogServiceReportLogsProcedure,
-		pgdozorv1connect.HealthServiceReportHealthProcedure:
+	case querysheriffv1connect.ActivityServiceReportActivityProcedure,
+		querysheriffv1connect.StatementServiceReportStatementsProcedure,
+		querysheriffv1connect.StatementServiceReportStatementTextsProcedure,
+		querysheriffv1connect.LogServiceReportLogsProcedure,
+		querysheriffv1connect.HealthServiceReportHealthProcedure:
 		return true
 	default:
 		return false
