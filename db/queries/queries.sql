@@ -292,6 +292,7 @@ agreed AS (
     JOIN scoped ON scoped.id = ss.statement_id
     CROSS JOIN LATERAL jsonb_each_text(ss.tags) AS kv(key, value)
     WHERE ss.tags IS NOT NULL
+      AND kv.key NOT LIKE '%\_id'
       AND ss.collected_at >= sqlc.arg('since')::timestamptz
       AND ss.collected_at <= sqlc.arg('until')::timestamptz
       AND kv.key IN (SELECT f ->> 'key' FROM jsonb_array_elements(sqlc.arg('tag_filters')::jsonb) AS f)
@@ -332,6 +333,7 @@ WITH agreed AS (
     CROSS JOIN LATERAL jsonb_each_text(ss.tags) AS kv(key, value)
     WHERE ss.tags IS NOT NULL
       AND ss.statement_id IS NOT NULL
+      AND kv.key NOT LIKE '%\_id'
       AND ss.collected_at >= sqlc.arg('since')::timestamptz
       AND ss.collected_at <= sqlc.arg('until')::timestamptz
       AND (sqlc.narg('server_name')::text IS NULL OR ss.server_name = sqlc.narg('server_name'))
@@ -355,6 +357,7 @@ WITH agreed AS (
     FROM statement_samples ss
     JOIN statements s ON s.id = ss.statement_id
     WHERE ss.tags ? sqlc.arg('tag_key')::text
+      AND sqlc.arg('tag_key')::text NOT LIKE '%\_id'
       AND ss.statement_id IS NOT NULL
       AND ss.collected_at >= sqlc.arg('since')::timestamptz
       AND ss.collected_at <= sqlc.arg('until')::timestamptz
@@ -420,6 +423,7 @@ statement_tags AS (
               AND (sqlc.narg('until')::timestamptz IS NULL OR qs.collected_at <= sqlc.narg('until'))
         ) dt
         CROSS JOIN LATERAL jsonb_each_text(dt.tags) AS kv(key, value)
+        WHERE kv.key NOT LIKE '%\_id'
         GROUP BY dt.statement_id, kv.key
         HAVING min(kv.value) = max(kv.value)
     ) per_key
@@ -481,6 +485,7 @@ LEFT JOIN LATERAL (
         CROSS JOIN LATERAL jsonb_each_text(qs.tags) AS kv(key, value)
         WHERE qs.statement_id = s.id
           AND qs.tags IS NOT NULL
+          AND kv.key NOT LIKE '%\_id'
           AND (sqlc.narg('since')::timestamptz IS NULL OR qs.collected_at >= sqlc.narg('since'))
           AND (sqlc.narg('until')::timestamptz IS NULL OR qs.collected_at <= sqlc.narg('until'))
         GROUP BY kv.key

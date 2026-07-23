@@ -255,6 +255,7 @@ agreed AS (
     JOIN scoped ON scoped.id = ss.statement_id
     CROSS JOIN LATERAL jsonb_each_text(ss.tags) AS kv(key, value)
     WHERE ss.tags IS NOT NULL
+      AND kv.key NOT LIKE '%\_id'
       AND ss.collected_at >= $5::timestamptz
       AND ss.collected_at <= $6::timestamptz
       AND kv.key IN (SELECT f ->> 'key' FROM jsonb_array_elements($1::jsonb) AS f)
@@ -409,6 +410,7 @@ LEFT JOIN LATERAL (
         CROSS JOIN LATERAL jsonb_each_text(qs.tags) AS kv(key, value)
         WHERE qs.statement_id = s.id
           AND qs.tags IS NOT NULL
+          AND kv.key NOT LIKE '%\_id'
           AND ($1::timestamptz IS NULL OR qs.collected_at >= $1)
           AND ($2::timestamptz IS NULL OR qs.collected_at <= $2)
         GROUP BY kv.key
@@ -1107,6 +1109,7 @@ statement_tags AS (
               AND ($9::timestamptz IS NULL OR qs.collected_at <= $9)
         ) dt
         CROSS JOIN LATERAL jsonb_each_text(dt.tags) AS kv(key, value)
+        WHERE kv.key NOT LIKE '%\_id'
         GROUP BY dt.statement_id, kv.key
         HAVING min(kv.value) = max(kv.value)
     ) per_key
@@ -1263,6 +1266,7 @@ WITH agreed AS (
     CROSS JOIN LATERAL jsonb_each_text(ss.tags) AS kv(key, value)
     WHERE ss.tags IS NOT NULL
       AND ss.statement_id IS NOT NULL
+      AND kv.key NOT LIKE '%\_id'
       AND ss.collected_at >= $1::timestamptz
       AND ss.collected_at <= $2::timestamptz
       AND ($3::text IS NULL OR ss.server_name = $3)
@@ -1326,6 +1330,7 @@ WITH agreed AS (
     FROM statement_samples ss
     JOIN statements s ON s.id = ss.statement_id
     WHERE ss.tags ? $1::text
+      AND $1::text NOT LIKE '%\_id'
       AND ss.statement_id IS NOT NULL
       AND ss.collected_at >= $2::timestamptz
       AND ss.collected_at <= $3::timestamptz
